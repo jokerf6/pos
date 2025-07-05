@@ -1,0 +1,121 @@
+import { ipcMain } from "electron";
+import log from "electron-log";
+
+// Import individual handlers
+import * as authHandlers from "./auth.js";
+
+// Error handling wrapper
+const handleError = (handler) => {
+  return async (event, ...args) => {
+    try {
+      return await handler(event, ...args);
+    } catch (error) {
+      log.error("IPC Handler Error:", {
+        channel: event.frameId,
+        error: error.message,
+        stack: error.stack,
+      });
+
+      // Return structured error response
+      throw {
+        success: false,
+        error: error.message,
+        code: error.code || "UNKNOWN_ERROR",
+      };
+    }
+  };
+};
+
+// Rate limiting for IPC calls
+const rateLimiter = new Map();
+const RATE_LIMIT_WINDOW = 1000; // 1 second
+const RATE_LIMIT_MAX_CALLS = 100; // Max calls per window
+
+const rateLimit = (handler) => {
+  return async (event, ...args) => {
+    const senderId = event.sender.id;
+    const now = Date.now();
+
+    if (!rateLimiter.has(senderId)) {
+      rateLimiter.set(senderId, {
+        count: 0,
+        resetTime: now + RATE_LIMIT_WINDOW,
+      });
+    }
+
+    const limiter = rateLimiter.get(senderId);
+
+    if (now > limiter.resetTime) {
+      limiter.count = 0;
+      limiter.resetTime = now + RATE_LIMIT_WINDOW;
+    }
+
+    if (limiter.count >= RATE_LIMIT_MAX_CALLS) {
+      log.warn("Rate limit exceeded for sender:", senderId);
+      throw new Error("Rate limit exceeded");
+    }
+
+    limiter.count++;
+    return await handler(event, ...args);
+  };
+};
+
+// Combine error handling and rate limiting
+const secureHandler = (handler) => handleError(rateLimit(handler));
+
+function setupIPC() {
+  log.info("Setting up IPC handlers...");
+
+  // Authentication handlers
+  ipcMain.handle("auth:login", secureHandler(authHandlers.login));
+  ipcMain.handle("auth:logout", secureHandler(authHandlers.logout));
+  ipcMain.handle("auth:check", secureHandler(authHandlers.checkAuth));
+  ipcMain.handle("auth:register", secureHandler(authHandlers.register));
+
+  // TODO: Add other handlers when implemented
+  // Product handlers
+  // ipcMain.handle('products:getAll', secureHandler(productHandlers.getAll));
+  // ipcMain.handle('products:getById', secureHandler(productHandlers.getById));
+  // ipcMain.handle('products:create', secureHandler(productHandlers.create));
+  // ipcMain.handle('products:update', secureHandler(productHandlers.update));
+  // ipcMain.handle('products:delete', secureHandler(productHandlers.delete));
+  // ipcMain.handle('products:search', secureHandler(productHandlers.search));
+
+  // Transaction handlers
+  // ipcMain.handle('transactions:create', secureHandler(transactionHandlers.create));
+  // ipcMain.handle('transactions:getAll', secureHandler(transactionHandlers.getAll));
+  // ipcMain.handle('transactions:getById', secureHandler(transactionHandlers.getById));
+  // ipcMain.handle('transactions:getByDateRange', secureHandler(transactionHandlers.getByDateRange));
+
+  // Settings handlers
+  // ipcMain.handle('settings:get', secureHandler(settingsHandlers.get));
+  // ipcMain.handle('settings:update', secureHandler(settingsHandlers.update));
+
+  // System handlers
+  // ipcMain.handle('system:getVersion', secureHandler(systemHandlers.getVersion));
+  // ipcMain.handle('system:restart', secureHandler(systemHandlers.restart));
+  // ipcMain.handle('system:minimize', secureHandler(systemHandlers.minimize));
+  // ipcMain.handle('system:maximize', secureHandler(systemHandlers.maximize));
+  // ipcMain.handle('system:close', secureHandler(systemHandlers.close));
+
+  log.info("IPC handlers setup complete");
+
+  // Cleanup rate limiter periodically
+  setInterval(() => {
+    const now = Date.now();
+    for (const [senderId, limiter] of rateLimiter.entries()) {
+      if (now > limiter.resetTime + RATE_LIMIT_WINDOW) {
+        rateLimiter.delete(senderId);
+      }
+    }
+  }, RATE_LIMIT_WINDOW * 2);
+}
+
+// Cleanup function
+function cleanupIPC() {
+  log.info("Cleaning up IPC handlers...");
+  ipcMain.removeAllListeners();
+  rateLimiter.clear();
+}
+
+export { setupIPC, cleanupIPC };
