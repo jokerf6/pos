@@ -2,6 +2,8 @@ import { app, BrowserWindow, protocol } from "electron";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import isDev from "electron-is-dev";
+import updater from "electron-updater";
+const { autoUpdater } = updater;
 
 import { createWindow } from "./window/createWindow.js";
 import { setupIPC } from "./ipc/handlers/index.js";
@@ -64,10 +66,12 @@ app.whenReady().then(async () => {
 
     // Setup auto updater in production
     if (!isDev) {
-      autoUpdater.checkForUpdatesAndNotify();
+      autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+        console.warn("Auto update check failed:", err.message);
+      });
     }
   } catch (error) {
-    log.error("Error during app initialization:", error);
+    console.error("Error during app initialization:", error);
     app.quit();
   }
 });

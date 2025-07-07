@@ -1,5 +1,5 @@
-import { contextBridge, ipcRenderer } from "electron";
-import log from "electron-log";
+const { contextBridge, ipcRenderer } = require("electron");
+const log = require("electron-log");
 
 // Security: Validate channel names to prevent injection
 const validChannels = {
@@ -35,7 +35,6 @@ const validChannels = {
   "system:close": true,
 };
 
-// Helper function to validate and invoke IPC
 const safeInvoke = async (channel, ...args) => {
   if (!validChannels[channel]) {
     log.error("Invalid IPC channel:", channel);
@@ -50,7 +49,6 @@ const safeInvoke = async (channel, ...args) => {
   }
 };
 
-// Helper function for one-way communication
 const safeSend = (channel, ...args) => {
   if (!validChannels[channel]) {
     log.error("Invalid IPC channel:", channel);
@@ -65,18 +63,13 @@ const safeSend = (channel, ...args) => {
   }
 };
 
-// Expose protected methods that allow the renderer process to use
-// the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld("electronAPI", {
-  // Authentication API
   auth: {
     login: (credentials) => safeInvoke("auth:login", credentials),
     logout: () => safeInvoke("auth:logout"),
     checkAuth: () => safeInvoke("auth:check"),
     register: (userData) => safeInvoke("auth:register", userData),
   },
-
-  // Products API
   products: {
     getAll: () => safeInvoke("products:getAll"),
     getById: (id) => safeInvoke("products:getById", id),
@@ -85,23 +78,17 @@ contextBridge.exposeInMainWorld("electronAPI", {
     delete: (id) => safeInvoke("products:delete", id),
     search: (query) => safeInvoke("products:search", query),
   },
-
-  // Transactions API
   transactions: {
     create: (transaction) => safeInvoke("transactions:create", transaction),
     getAll: (options) => safeInvoke("transactions:getAll", options),
     getById: (id) => safeInvoke("transactions:getById", id),
-    getByDateRange: (startDate, endDate) =>
-      safeInvoke("transactions:getByDateRange", startDate, endDate),
+    getByDateRange: (start, end) =>
+      safeInvoke("transactions:getByDateRange", start, end),
   },
-
-  // Settings API
   settings: {
     get: (key) => safeInvoke("settings:get", key),
     update: (settings) => safeInvoke("settings:update", settings),
   },
-
-  // System API
   system: {
     getVersion: () => safeInvoke("system:getVersion"),
     restart: () => safeInvoke("system:restart"),
@@ -109,39 +96,29 @@ contextBridge.exposeInMainWorld("electronAPI", {
     maximize: () => safeInvoke("system:maximize"),
     close: () => safeInvoke("system:close"),
   },
-
-  // Event listeners for renderer process
   on: (channel, callback) => {
     if (!validChannels[channel]) {
       log.error("Invalid IPC channel for listener:", channel);
       return;
     }
-
     ipcRenderer.on(channel, callback);
   },
-
-  // Remove event listeners
   removeListener: (channel, callback) => {
     if (!validChannels[channel]) {
       log.error("Invalid IPC channel for removeListener:", channel);
       return;
     }
-
     ipcRenderer.removeListener(channel, callback);
   },
-
-  // Remove all listeners for a channel
   removeAllListeners: (channel) => {
     if (!validChannels[channel]) {
       log.error("Invalid IPC channel for removeAllListeners:", channel);
       return;
     }
-
     ipcRenderer.removeAllListeners(channel);
   },
 });
 
-// Expose environment information
 contextBridge.exposeInMainWorld("electronEnv", {
   platform: process.platform,
   arch: process.arch,
@@ -152,10 +129,9 @@ contextBridge.exposeInMainWorld("electronEnv", {
   },
 });
 
-// Log successful preload
 log.info("Preload script loaded successfully");
 
-// Security: Remove access to Node.js globals
+// OPTIONAL: remove node globals
 delete global.require;
 delete global.exports;
 delete global.module;

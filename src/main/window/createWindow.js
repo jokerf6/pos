@@ -3,7 +3,7 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import isDev from "electron-is-dev";
 import log from "electron-log";
-
+import * as path from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -26,7 +26,7 @@ function createWindow() {
       nodeIntegration: false, // Security: Disable Node.js integration
       contextIsolation: true, // Security: Enable context isolation
       enableRemoteModule: false, // Security: Disable remote module
-      preload: join(__dirname, "../security/preload.js"), // Load preload script
+      preload: join(__dirname, "../security/preload.cjs"), // Load preload script
       webSecurity: !isDev, // Enable web security in production
       allowRunningInsecureContent: false,
       experimentalFeatures: false,
@@ -35,11 +35,16 @@ function createWindow() {
   });
 
   // Load the app
-  const startUrl = isDev
-    ? "http://localhost:3000"
-    : `file://${join(__dirname, "../../renderer/build/index.html")}`;
+  // const startUrl = isDev
+  //   ? "http://localhost:3000"
+  //   : `file://${join(__dirname, "../../renderer/build/index.html")}`;
 
-  mainWindow.loadURL(startUrl);
+  // console.log(path.join(__dirname, "../../../build/renderer/index.html"));
+  mainWindow.loadURL(
+    `file://${path.join(__dirname, "../../renderer/build/index.html")}`
+  );
+
+  // mainWindow.loadURL(startUrl);
 
   // Show window when ready to prevent visual flash
   mainWindow.once("ready-to-show", () => {
