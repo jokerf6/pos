@@ -35,16 +35,16 @@ function createWindow() {
   });
 
   // Load the app
-  // const startUrl = isDev
-  //   ? "http://localhost:3000"
-  //   : `file://${join(__dirname, "../../renderer/build/index.html")}`;
+  const startUrl = isDev
+    ? "http://localhost:3000"
+    : `file://${join(__dirname, "../../renderer/build/index.html")}`;
 
   // console.log(path.join(__dirname, "../../../build/renderer/index.html"));
-  mainWindow.loadURL(
-    `file://${path.join(__dirname, "../../renderer/build/index.html")}`
-  );
+  // mainWindow.loadURL(
+  //   `file://${path.join(__dirname, "../../renderer/build/index.html")}`
+  // );
 
-  // mainWindow.loadURL(startUrl);
+  mainWindow.loadURL(startUrl);
 
   // Show window when ready to prevent visual flash
   mainWindow.once("ready-to-show", () => {

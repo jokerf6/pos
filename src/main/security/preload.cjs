@@ -9,6 +9,14 @@ const validChannels = {
   "auth:check": true,
   "auth:register": true,
 
+  // User channels
+  "users:create": true,
+  "users:getAll": true,
+  "users:getById": true,
+  "users:update": true,
+  "users:delete": true,
+  "users:search": true,
+
   // Product channels
   "products:getAll": true,
   "products:getById": true,
@@ -69,6 +77,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
     logout: () => safeInvoke("auth:logout"),
     checkAuth: () => safeInvoke("auth:check"),
     register: (userData) => safeInvoke("auth:register", userData),
+  },
+  users: {
+    create: (user) => safeInvoke("users:create", user),
   },
   products: {
     getAll: () => safeInvoke("products:getAll"),

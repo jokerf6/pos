@@ -1,6 +1,6 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { logoutUser } from '../../store/slices/authSlice';
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { logoutUser } from "../../store/slices/authSlice";
 
 const HomePage = () => {
   const dispatch = useDispatch();
@@ -30,7 +30,7 @@ const HomePage = () => {
                 disabled={loading}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 disabled:opacity-50"
               >
-                {loading ? 'Logging out...' : 'Logout'}
+                {loading ? "Logging out..." : "Logout"}
               </button>
             </div>
           </div>
@@ -134,8 +134,9 @@ const HomePage = () => {
                   </h3>
                   <div className="mt-2 text-sm text-blue-700">
                     <p>
-                      The Casher Desktop application is running successfully. 
-                      This is a basic implementation with authentication functionality.
+                      The Casher Desktop application is running successfully.
+                      This is a basic implementation with authentication
+                      functionality.
                     </p>
                   </div>
                 </div>
@@ -149,4 +150,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-
