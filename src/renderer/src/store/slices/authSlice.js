@@ -1,8 +1,8 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 // Async thunk for login
 export const loginUser = createAsyncThunk(
-  'auth/login',
+  "auth/login",
   async (credentials, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
@@ -10,29 +10,32 @@ export const loginUser = createAsyncThunk(
         return result;
       } else {
         // Fallback for development without Electron
-        if (credentials.username === 'admin' && credentials.password === 'admin123') {
+        if (
+          credentials.username === "admin" &&
+          credentials.password === "admin123"
+        ) {
           return {
             success: true,
             user: {
               id: 1,
-              username: 'admin',
-              email: 'admin@casher.local',
-              role: 'admin'
-            }
+              username: "admin",
+              email: "admin@casher.local",
+              role: "admin",
+            },
           };
         } else {
-          throw new Error('Invalid username or password');
+          throw new Error("اسم المستخدم أو كلمة المرور غير صحيحة");
         }
       }
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue("اسم المستخدم أو كلمة المرور غير صحيحة");
     }
   }
 );
 
 // Async thunk for logout
 export const logoutUser = createAsyncThunk(
-  'auth/logout',
+  "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
@@ -50,7 +53,7 @@ export const logoutUser = createAsyncThunk(
 
 // Async thunk for checking auth status
 export const checkAuth = createAsyncThunk(
-  'auth/checkAuth',
+  "auth/checkAuth",
   async (_, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
@@ -58,17 +61,17 @@ export const checkAuth = createAsyncThunk(
         return result;
       } else {
         // Fallback for development
-        const savedUser = localStorage.getItem('casher_user');
+        const savedUser = localStorage.getItem("casher_user");
         if (savedUser) {
           return {
             success: true,
             authenticated: true,
-            user: JSON.parse(savedUser)
+            user: JSON.parse(savedUser),
           };
         } else {
           return {
             success: false,
-            authenticated: false
+            authenticated: false,
           };
         }
       }
@@ -79,7 +82,7 @@ export const checkAuth = createAsyncThunk(
 );
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState: {
     user: null,
     isAuthenticated: false,
@@ -96,7 +99,7 @@ const authSlice = createSlice({
       state.error = null;
       // Clear localStorage in development
       if (!window.electronAPI) {
-        localStorage.removeItem('casher_user');
+        localStorage.removeItem("casher_user");
       }
     },
   },
@@ -114,15 +117,18 @@ const authSlice = createSlice({
           state.isAuthenticated = true;
           // Save to localStorage in development
           if (!window.electronAPI) {
-            localStorage.setItem('casher_user', JSON.stringify(action.payload.user));
+            localStorage.setItem(
+              "casher_user",
+              JSON.stringify(action.payload.user)
+            );
           }
         } else {
-          state.error = action.payload.message || 'Login failed';
+          state.error = action.payload.message || "Login failed";
         }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Login failed';
+        state.error = action.payload || "Login failed";
       })
       // Logout cases
       .addCase(logoutUser.pending, (state) => {
@@ -135,12 +141,12 @@ const authSlice = createSlice({
         state.error = null;
         // Clear localStorage in development
         if (!window.electronAPI) {
-          localStorage.removeItem('casher_user');
+          localStorage.removeItem("casher_user");
         }
       })
       .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Logout failed';
+        state.error = action.payload || "Logout failed";
       })
       // Check auth cases
       .addCase(checkAuth.pending, (state) => {
@@ -160,11 +166,10 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = null;
         state.isAuthenticated = false;
-        state.error = action.payload || 'Auth check failed';
+        state.error = action.payload || "Auth check failed";
       });
   },
 });
 
 export const { clearError, logout } = authSlice.actions;
 export default authSlice.reducer;
-

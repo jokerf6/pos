@@ -76,7 +76,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
     login: (credentials) => safeInvoke("auth:login", credentials),
     logout: () => safeInvoke("auth:logout"),
     checkAuth: () => safeInvoke("auth:check"),
-    register: (userData) => safeInvoke("auth:register", userData),
   },
   users: {
     create: (user) => safeInvoke("users:create", user),

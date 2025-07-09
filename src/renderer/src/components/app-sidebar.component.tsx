@@ -11,24 +11,29 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "./ui/sidebar";
+import { useSelector } from "react-redux";
 // Menu items.
 const items = [
   {
     title: "الرئيسية",
     url: "/",
     icon: Home,
+    user: true,
   },
   {
     title: "المستخدمين",
     url: "/users",
     icon: User,
+    user: false,
   },
 ];
-
 export function AppSidebar() {
+  const { user } = useSelector((state: any) => state.auth);
+
   const location = useLocation();
   const usedItems = items.map((item) => ({
     ...item,
+    hide: user.role !== "admin" && !item.user, // Hide items that are not for the current user
     active: location.pathname === item.url, // Check if the current path matches the item's URL
     // Filter out items that are not used in the current path
   }));
@@ -54,14 +59,17 @@ export function AppSidebar() {
                   key={item.title}
                   className="w-full text-xl font-semibold ease-in-out duration-200"
                 >
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton
+                    asChild
+                    className={` ${item.hide ? "hidden" : ""}`}
+                  >
                     <Link className="flex items-center gap-2" to={item.url}>
-                      <span className="text-blue-500">
+                      <span className="text-indigo-600">
                         <item.icon />
                       </span>
 
                       <span
-                        className={`text-xl ${item.active ? "text-blue-500" : ""}`}
+                        className={`text-xl ${item.active ? "text-indigo-600" : ""}`}
                       >
                         {item.title}
                       </span>

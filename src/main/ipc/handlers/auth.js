@@ -30,7 +30,7 @@ async function login(event, credentials) {
 
     // Find user in database
     const [users] = await db.execute(
-      "SELECT id, username, password_hash, email, role, created_at FROM users WHERE username = ? AND active = 1",
+      "SELECT id, username, password_hash, role, created_at FROM users WHERE username = ? AND active = 1",
       [username]
     );
 
@@ -64,7 +64,6 @@ async function login(event, credentials) {
     currentSession = {
       userId: user.id,
       username: user.username,
-      email: user.email,
       role: user.role,
       token: token,
       loginTime: new Date(),
@@ -82,7 +81,6 @@ async function login(event, credentials) {
       user: {
         id: user.id,
         username: user.username,
-        email: user.email,
         role: user.role,
       },
       token: token,
@@ -138,7 +136,6 @@ async function checkAuth(event) {
         user: {
           id: currentSession.userId,
           username: currentSession.username,
-          email: currentSession.email,
           role: currentSession.role,
         },
       };
@@ -161,55 +158,6 @@ async function checkAuth(event) {
 /**
  * Register new user handler
  */
-async function register(event, userData) {
-  log.info("Registration attempt for user:", userData.username);
-
-  const { username, password, email, role = "cashier" } = userData;
-
-  // Validate input
-  if (!username || !password || !email) {
-    throw new Error("Username, password, and email are required");
-  }
-
-  if (password.length < 6) {
-    throw new Error("Password must be at least 6 characters long");
-  }
-
-  try {
-    const db = getDatabase();
-
-    // Check if user already exists
-    const [existingUsers] = await db.execute(
-      "SELECT id FROM users WHERE username = ? OR email = ?",
-      [username, email]
-    );
-
-    if (existingUsers.length > 0) {
-      throw new Error("Username or email already exists");
-    }
-
-    // Hash password
-    const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
-
-    // Insert new user
-    const [result] = await db.execute(
-      "INSERT INTO users (username, password_hash, email, role, created_at) VALUES (?, ?, ?, ?, NOW())",
-      [username, passwordHash, email, role]
-    );
-
-    log.info("User registered successfully:", username);
-
-    return {
-      success: true,
-      message: "User registered successfully",
-      userId: result.insertId,
-    };
-  } catch (error) {
-    log.error("Registration error:", error.message);
-    throw error;
-  }
-}
 
 /**
  * Get current session
@@ -235,11 +183,4 @@ function validateSession() {
   }
 }
 
-export {
-  login,
-  logout,
-  checkAuth,
-  register,
-  getCurrentSession,
-  validateSession,
-};
+export { login, logout, checkAuth, getCurrentSession, validateSession };

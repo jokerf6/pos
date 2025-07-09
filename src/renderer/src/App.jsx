@@ -30,7 +30,7 @@ function App() {
         path="/login"
         element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
       />
-      {/* <Route
+      <Route
         path="/"
         element={
           isAuthenticated ? (
@@ -41,38 +41,54 @@ function App() {
             <Navigate to="/login" replace />
           )
         }
-      /> */}
+      />
       <Route
         path="/users"
         element={
-          <Layout>
-            <UsersPage />
-          </Layout>
+          isAuthenticated ? (
+            <Layout>
+              <UsersPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
       <Route
         path="/users/:id"
         element={
-          <Layout>
-            <EditUserPage />
-          </Layout>
+          isAuthenticated ? (
+            <Layout>
+              <EditUserPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
       <Route
         path="/users/create"
         element={
-          <Layout>
-            <CreateUserPage />
-          </Layout>
+          isAuthenticated ? (
+            <Layout>
+              <CreateUserPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
 
       <Route
         path="/"
         element={
-          <Layout>
-            <HomePage />
-          </Layout>
+          isAuthenticated ? (
+            <Layout>
+              <HomePage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
 

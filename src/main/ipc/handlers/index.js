@@ -67,7 +67,6 @@ function setupIPC() {
   ipcMain.handle("auth:login", secureHandler(authHandlers.login));
   ipcMain.handle("auth:logout", secureHandler(authHandlers.logout));
   ipcMain.handle("auth:check", secureHandler(authHandlers.checkAuth));
-  ipcMain.handle("auth:register", secureHandler(authHandlers.register));
 
   // TODO: Add other handlers when implemented
   // Users handlers
