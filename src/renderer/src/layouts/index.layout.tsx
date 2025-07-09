@@ -1,21 +1,64 @@
 import { AppSidebar } from "../components/app-sidebar.component";
-import { SidebarInset, SidebarProvider } from "../components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  useSidebar,
+} from "../components/ui/sidebar";
 import MainHeader from "../components/mainHeader.component";
+import ConfirmDeleteModal from "../components/common/confirm-delete.component";
+import { useDispatch, useSelector } from "react-redux";
+import { hideConfirmModal } from "../store/slices/confirmModalSlice";
+import { Toaster } from "../components/ui/sonner";
+
+const LayoutContent = ({ children }: { children: React.ReactNode }) => {
+  const dispatch = useDispatch();
+
+  const { open } = useSidebar();
+  const handleClose = () => dispatch(hideConfirmModal());
+  const {
+    open: OpenModel,
+    itemLabel,
+    onConfirm,
+  } = useSelector((state: any) => state.confirmModal);
+
+  const handleConfirm = () => {
+    if (onConfirm) onConfirm();
+    dispatch(hideConfirmModal());
+  };
+  return (
+    <div className="w-full flex flex-row" dir="rtl">
+      <ConfirmDeleteModal
+        open={OpenModel}
+        onClose={handleClose}
+        onConfirm={handleConfirm}
+        itemLabel={itemLabel}
+      />
+      <Toaster />
+
+      <div
+        className={`
+           transition-all duration-500 ease-in-out
+          ${open ? "w-[20%] opacity-100" : "w-0 opacity-0 overflow-hidden"}
+        `}
+        dir="rtl"
+      >
+        <AppSidebar />
+      </div>
+
+      <div className="flex-1" dir="rtl">
+        <SidebarInset>
+          <MainHeader />
+          <div className="p-4">{children}</div>
+        </SidebarInset>
+      </div>
+    </div>
+  );
+};
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider dir="rtl">
-      <div className=" w-full flex   flex-row ">
-        <div className="  w-[20%] h-full" dir="rtl">
-          <AppSidebar />
-        </div>
-        <div className="w-[80%] " dir="rtl">
-          <SidebarInset>
-            <MainHeader />
-            <div className="p-4">{children}</div>
-          </SidebarInset>
-        </div>
-      </div>
+      <LayoutContent>{children}</LayoutContent>
     </SidebarProvider>
   );
 };

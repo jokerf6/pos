@@ -3,6 +3,7 @@ import log from "electron-log";
 
 // Import individual handlers
 import * as authHandlers from "./auth.js";
+import * as usersH from "./users.js";
 
 // Error handling wrapper
 const handleError = (handler) => {
@@ -13,15 +14,11 @@ const handleError = (handler) => {
       log.error("IPC Handler Error:", {
         channel: event.frameId,
         error: error.message,
-        stack: error.stack,
+        stack: error.message,
       });
 
       // Return structured error response
-      throw {
-        success: false,
-        error: error.message,
-        code: error.code || "UNKNOWN_ERROR",
-      };
+      throw new Error(error.message);
     }
   };
 };
@@ -73,13 +70,13 @@ function setupIPC() {
   ipcMain.handle("auth:register", secureHandler(authHandlers.register));
 
   // TODO: Add other handlers when implemented
-  // Product handlers
-  // ipcMain.handle('products:getAll', secureHandler(productHandlers.getAll));
-  // ipcMain.handle('products:getById', secureHandler(productHandlers.getById));
-  // ipcMain.handle('products:create', secureHandler(productHandlers.create));
-  // ipcMain.handle('products:update', secureHandler(productHandlers.update));
-  // ipcMain.handle('products:delete', secureHandler(productHandlers.delete));
-  // ipcMain.handle('products:search', secureHandler(productHandlers.search));
+  // Users handlers
+  ipcMain.handle("users:getAll", secureHandler(usersH.getAll));
+  ipcMain.handle("users:getById", secureHandler(usersH.findById));
+  ipcMain.handle("users:create", secureHandler(usersH.createUser));
+  // ipcMain.handle("users:update", secureHandler(productHandlers.update));
+  // ipcMain.handle("users:delete", secureHandler(productHandlers.delete));
+  // ipcMain.handle("users:search", secureHandler(productHandlers.search));
 
   // Transaction handlers
   // ipcMain.handle('transactions:create', secureHandler(transactionHandlers.create));
