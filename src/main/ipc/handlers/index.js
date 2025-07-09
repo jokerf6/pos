@@ -74,9 +74,9 @@ function setupIPC() {
   ipcMain.handle("users:getAll", secureHandler(usersH.getAll));
   ipcMain.handle("users:getById", secureHandler(usersH.findById));
   ipcMain.handle("users:create", secureHandler(usersH.createUser));
-  // ipcMain.handle("users:update", secureHandler(productHandlers.update));
-  // ipcMain.handle("users:delete", secureHandler(productHandlers.delete));
-  // ipcMain.handle("users:search", secureHandler(productHandlers.search));
+  ipcMain.handle("users:update", secureHandler(usersH.update));
+  ipcMain.handle("users:delete", secureHandler(usersH.deleteUser));
+  ipcMain.handle("users:search", secureHandler(usersH.search));
 
   // Transaction handlers
   // ipcMain.handle('transactions:create', secureHandler(transactionHandlers.create));

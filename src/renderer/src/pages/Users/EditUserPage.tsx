@@ -6,12 +6,20 @@ import { updateUser, UserById } from "../../store/slices/usersSlice";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import toast from "react-hot-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
+import { showError, showSuccess } from "../../components/ui/sonner";
 
 function EditUserPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { selectedUser } = useSelector((state: any) => state.users);
+  const [selectedRole, setSelectedRole] = useState("");
 
   const [formData, setFormData] = useState({
     username: "",
@@ -22,7 +30,7 @@ function EditUserPage() {
   // Fetch user by ID
   useEffect(() => {
     if (id) {
-      dispatch(UserById(Number(id)));
+      dispatch(UserById({ id: Number(id) }));
     }
   }, [dispatch, id]);
 
@@ -30,6 +38,7 @@ function EditUserPage() {
   useEffect(() => {
     if (selectedUser) {
       console.log("Selected User:", selectedUser);
+      setSelectedRole(selectedUser.user.role || "");
       setFormData({
         username: selectedUser.user.username || "",
         role: selectedUser.user.role || "",
@@ -48,10 +57,10 @@ function EditUserPage() {
     const updatedUser = { id: Number(id), ...formData };
     const result = await dispatch(updateUser(updatedUser) as any);
     if (!result.error) {
-      toast.success("تم تحديث المستخدم بنجاح");
+      showSuccess("تم تحديث المستخدم بنجاح");
       navigate("/users");
     } else {
-      toast.error("حدث خطأ أثناء التحديث");
+      showError(result.payload || "حدث خطأ أثناء تحديث المستخدم");
     }
   };
 
@@ -65,14 +74,31 @@ function EditUserPage() {
           onChange={handleChange}
           placeholder="اسم المستخدم"
         />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="w-full border p-2 rounded-md text-right">
+              {selectedRole || "اختر الصلاحيات"}
+            </button>
+          </DropdownMenuTrigger>
 
-        <Input
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          placeholder="الدور (admin/user)"
-        />
-
+          <DropdownMenuContent
+            align="start"
+            className="w-[--radix-dropdown-menu-trigger-width] mt-[-10px] shadow  bg-white border gap-2  text-right"
+          >
+            {["admin", "cashier"].map((role) => (
+              <DropdownMenuItem
+                key={role}
+                onClick={() => {
+                  setSelectedRole(role);
+                  setFormData((prev) => ({ ...prev, role }));
+                }}
+                className="cursor-pointer p-2"
+              >
+                {role}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Input
           name="password"
           value={formData.password}

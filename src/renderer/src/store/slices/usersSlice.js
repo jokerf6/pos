@@ -3,18 +3,39 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 // Get all users
 export const getUsers = createAsyncThunk(
   "users/getAll",
-  async (_, { rejectWithValue }) => {
+  async (data, { rejectWithValue }) => {
     try {
-      console.log("Fetching users...");
+      console.log("Fetching users10...");
       if (window.electronAPI) {
         console.log("Using Electron API to fetch users");
-        const result = await window.electronAPI.users.getAll();
+        const result = await window.electronAPI.users.getAll(data);
+        console.log(result);
+
         console.log("Users fetched:", result);
         return result;
       } else {
         // Development fallback
         const local = localStorage.getItem("casher_users") || "[]";
         return JSON.parse(local);
+      }
+    } catch (error) {
+      console.log("Error fetching users:", error);
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const searchUsers = createAsyncThunk(
+  "users/search",
+  async (name, { rejectWithValue }) => {
+    try {
+      console.log("Fetching users...");
+      if (window.electronAPI) {
+        const result = await window.electronAPI.users.search(name);
+        return result;
+      } else {
+        // Development fallback
+        return null;
       }
     } catch (error) {
       console.log("Error fetching users:", error);
@@ -50,15 +71,11 @@ export const updateUser = createAsyncThunk(
         const result = await window.electronAPI.users.update(updatedUser);
         return result;
       } else {
-        const users = JSON.parse(localStorage.getItem("casher_users") || "[]");
-        const index = users.findIndex((u) => u.id === updatedUser.id);
-        if (index === -1) throw new Error("User not found");
-        users[index] = updatedUser;
-        localStorage.setItem("casher_users", JSON.stringify(users));
-        return updatedUser;
+        return null;
       }
     } catch (error) {
-      return rejectWithValue(error.message);
+      const message = error?.message || error?.error || "Unknown error";
+      return rejectWithValue(message.split("Error: ")[1] || message);
     }
   }
 );
@@ -89,10 +106,7 @@ export const deleteUser = createAsyncThunk(
         const result = await window.electronAPI.users.delete(userId);
         return result;
       } else {
-        const users = JSON.parse(localStorage.getItem("casher_users") || "[]");
-        const filtered = users.filter((u) => u.id !== userId);
-        localStorage.setItem("casher_users", JSON.stringify(filtered));
-        return userId;
+        return null;
       }
     } catch (error) {
       return rejectWithValue(error.message);
@@ -104,6 +118,7 @@ const usersSlice = createSlice({
   name: "users",
   initialState: {
     users: [],
+    total: 0,
     loading: false,
     selectedUser: null,
     error: null,
@@ -132,8 +147,10 @@ const usersSlice = createSlice({
         state.loading = true;
       })
       .addCase(getUsers.fulfilled, (state, action) => {
+        console.log("action", action.payload);
         state.loading = false;
-        state.users = action.payload;
+        state.users = action.payload.users;
+        state.total = action.payload.total; // Assuming payload is an array of users
       })
       .addCase(getUsers.rejected, (state, action) => {
         state.loading = false;

@@ -2,12 +2,17 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { createUser } from "../../store/slices/usersSlice";
-import { toast } from "sonner";
 
 // import toast from "react-hot-toast";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { showError, showSuccess } from "../../components/ui/sonner";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "../../components/ui/dropdown-menu";
 
 function CreateUserPage() {
   const navigate = useNavigate();
@@ -18,6 +23,7 @@ function CreateUserPage() {
     role: "",
     password: "",
   });
+  const [selectedRole, setSelectedRole] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -45,13 +51,31 @@ function CreateUserPage() {
           onChange={handleChange}
           placeholder="اسم المستخدم"
         />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="w-full border p-2 rounded-md text-right">
+              {selectedRole || "اختر الصلاحيات"}
+            </button>
+          </DropdownMenuTrigger>
 
-        <Input
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          placeholder="الدور (admin/user)"
-        />
+          <DropdownMenuContent
+            align="start"
+            className="w-[--radix-dropdown-menu-trigger-width] bg-white text-right"
+          >
+            {["admin", "cashier"].map((role) => (
+              <DropdownMenuItem
+                key={role}
+                onClick={() => {
+                  setSelectedRole(role);
+                  setFormData((prev) => ({ ...prev, role }));
+                }}
+                className="cursor-pointer"
+              >
+                {role}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Input
           name="password"

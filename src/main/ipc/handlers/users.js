@@ -10,15 +10,22 @@ async function createUser(event, credentials) {
 
   // Validate input
   if (!username || !password || !role) {
-    throw new Error("Fields Missed");
+    throw new Error("برجاء إدخال اسم المستخدم وكلمة المرور والدور");
   }
   if (role !== "cashier" && role !== "admin" && role !== "manager") {
-    throw new Error("صلاحيات غير صحيحة (يجب أن تكون: cashier, admin, manager)");
+    throw new Error("صلاحيات غير صحيحة (يجب أن تكون: cashier, admin)");
   }
 
   try {
     const db = getDatabase();
 
+    const [rows] = await db.execute(
+      "SELECT * FROM users WHERE username LIKE ?",
+      [`%${username}%`]
+    );
+    if (rows.length > 0) {
+      throw new Error("اسم المستخدم موجود بالفعل");
+    }
     // Hash password
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
@@ -37,16 +44,26 @@ async function createUser(event, credentials) {
   }
 }
 
-async function getAll() {
+async function getAll(
+  event,
+  { page = 1, limit = 10 } = { page: 1, limit: 10 }
+) {
   try {
     const db = getDatabase();
+    console.log(page, limit);
+    const offset = (page - 1) * limit;
 
     // Find user in database
-    const [users] = await db.execute("SELECT * FROM users");
-
+    const [users] = await db.execute("SELECT * FROM users LIMIT ? OFFSET ?", [
+      limit,
+      offset,
+    ]);
+    const [rows] = await db.execute("SELECT COUNT(*) as total FROM users");
+    console.log("Total users:", users);
     return {
       success: true,
       users,
+      total: rows[0].total,
     };
   } catch (error) {
     log.error("users error:", error.message);
@@ -80,10 +97,10 @@ async function getByName(name) {
   }
 }
 
-async function findById(event, id) {
+async function findById(event, { id }) {
   try {
     const db = getDatabase();
-
+    console.log("Finding user by ID:", id);
     // Find user in database
     const [rows] = await db.execute("SELECT * FROM users WHERE id = ?", [id]);
     if (rows.length === 0) {
@@ -102,4 +119,98 @@ async function findById(event, id) {
   }
 }
 
-export { createUser, getAll, findById, getByName };
+async function search(
+  event,
+  { name, page = 1, limit = 10 } = { name: "", page: 1, limit: 10 }
+) {
+  try {
+    const db = getDatabase();
+    const offset = (page - 1) * limit;
+
+    // Find user in database
+    const [rows] = await db.execute(
+      "SELECT * FROM users WHERE username LIKE ? LIMIT ? OFFSET ?",
+      [`%${name}%`, limit, offset]
+    );
+    const [search] = await db.execute(
+      "SELECT COUNT(*) as total FROM users WHERE username LIKE ?",
+      [`%${name}%`]
+    );
+
+    return {
+      success: true,
+      users: rows,
+      total: search[0].total,
+    };
+  } catch (error) {
+    log.error("users error:", error.message);
+    throw error;
+  }
+}
+
+async function update(event, user) {
+  console.log("Updating user:", user);
+  const { id, username, password, role } = user;
+
+  // Validate input
+  if (!username || !password || !role) {
+    throw new Error("برجاء إدخال اسم المستخدم وكلمة المرور والدور");
+  }
+  if (role !== "cashier" && role !== "admin" && role !== "manager") {
+    throw new Error("صلاحيات غير صحيحة (يجب أن تكون: cashier, admin)");
+  }
+
+  try {
+    const db = getDatabase();
+
+    const [rows] = await db.execute(
+      "SELECT * FROM users WHERE username LIKE ?",
+      [`%${username}%`]
+    );
+    if (rows.length > 0 && rows[0].id !== id) {
+      throw new Error("اسم المستخدم موجود بالفعل");
+    }
+    // Hash password
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+    await db.execute(
+      "UPDATE users SET username = ?, password_hash = ?, role = ? WHERE id = ?",
+      [username, passwordHash, role, id]
+    );
+
+    return {
+      success: true,
+      message: "User updated successfully",
+    };
+  } catch (error) {
+    log.error("User updated error:", error.message);
+    throw error;
+  }
+}
+
+async function deleteUser(event, id) {
+  // Validate input
+  if (!id) {
+    throw new Error("مستخدم غير موجود");
+  }
+
+  try {
+    const db = getDatabase();
+    const [rows] = await db.execute("SELECT * FROM users WHERE id LIKE ?", [
+      `%${id}%`,
+    ]);
+    if (rows.length === 0) {
+      throw new Error("مستخدم غير موجود");
+    }
+    await db.execute("DELETE FROM users WHERE id LIKE ?", [`%${id}%`]);
+
+    return {
+      success: true,
+      message: "User deleted successfully",
+    };
+  } catch (error) {
+    log.error("User deleted error:", error.message);
+    throw error;
+  }
+}
+export { createUser, getAll, findById, getByName, search, update, deleteUser };

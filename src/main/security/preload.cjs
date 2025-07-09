@@ -80,10 +80,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   },
   users: {
     create: (user) => safeInvoke("users:create", user),
-    getAll: () => safeInvoke("users:getAll"),
+    getAll: (data) => safeInvoke("users:getAll", data),
     getById: (id) => safeInvoke("users:getById", id),
-    search: (name) => safeInvoke("users:getById", name),
-    update: (id, user) => safeInvoke("users:update", id, user),
+    search: (data) => safeInvoke("users:search", data),
+    update: (data) => safeInvoke("users:update", data),
     delete: (id) => safeInvoke("users:delete", id),
   },
   products: {

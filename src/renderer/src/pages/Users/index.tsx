@@ -1,14 +1,15 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getUsers } from "../../store/slices/usersSlice";
+import { getUsers, deleteUser } from "../../store/slices/usersSlice";
 import DataTable from "./components/data-table.component";
 import columns from "./components/columns.component";
 import { useNavigate } from "react-router-dom";
 
 import { showConfirmModal } from "../../store/slices/confirmModalSlice";
+import { showSuccess } from "../../components/ui/sonner";
 function UsersPage() {
   const dispatch = useDispatch();
-  const { users } = useSelector((state: any) => state.users);
+  const { users, total } = useSelector((state: any) => state.users);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,7 +18,7 @@ function UsersPage() {
 
   const formattedUsers =
     users &&
-    users?.users?.map((item) => ({
+    users?.map((item) => ({
       ...item,
       createdAt: new Date(item.created_at).toISOString().split("T")[0], // Format date to YYYY-MM-DD
     }));
@@ -27,10 +28,13 @@ function UsersPage() {
       showConfirmModal({
         itemLabel: user.username,
         onConfirm: () => {
-          // dispatch(deleteUser(user.id))
-          //   .unwrap()
-          //   .then(() => toast.success("تم حذف المستخدم بنجاح"))
-          //   .catch(() => toast.error("فشل حذف المستخدم"));
+          dispatch(deleteUser(user.id))
+            .unwrap()
+            .then(() => {
+              showSuccess("تم حذف المستخدم بنجاح");
+              dispatch(getUsers());
+            })
+            .catch(() => showSuccess("فشل حذف المستخدم"));
         },
       })
     );
@@ -44,6 +48,7 @@ function UsersPage() {
         <DataTable
           columns={columns}
           data={formattedUsers}
+          dataTotal={total}
           onDelete={handleDelete}
           onEdit={handelEdit}
         />
