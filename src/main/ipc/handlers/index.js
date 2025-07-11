@@ -4,6 +4,7 @@ import log from "electron-log";
 // Import individual handlers
 import * as authHandlers from "./auth.js";
 import * as usersH from "./users.js";
+import * as categoriesH from "./categories.js";
 
 // Error handling wrapper
 const handleError = (handler) => {
@@ -76,6 +77,20 @@ function setupIPC() {
   ipcMain.handle("users:update", secureHandler(usersH.update));
   ipcMain.handle("users:delete", secureHandler(usersH.deleteUser));
   ipcMain.handle("users:search", secureHandler(usersH.search));
+
+  // Categories handlers
+  ipcMain.handle("categories:getAll", secureHandler(categoriesH.getAll));
+  ipcMain.handle("categories:getById", secureHandler(categoriesH.findById));
+  ipcMain.handle(
+    "categories:create",
+    secureHandler(categoriesH.createCategory)
+  );
+  ipcMain.handle("categories:update", secureHandler(categoriesH.update));
+  ipcMain.handle(
+    "categories:delete",
+    secureHandler(categoriesH.deleteCategory)
+  );
+  ipcMain.handle("categories:search", secureHandler(categoriesH.search));
 
   // Transaction handlers
   // ipcMain.handle('transactions:create', secureHandler(transactionHandlers.create));

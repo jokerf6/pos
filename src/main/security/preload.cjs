@@ -17,6 +17,14 @@ const validChannels = {
   "users:delete": true,
   "users:search": true,
 
+  // Category channels
+  "categories:create": true,
+  "categories:getAll": true,
+  "categories:getById": true,
+  "categories:update": true,
+  "categories:delete": true,
+  "categories:search": true,
+
   // Product channels
   "products:getAll": true,
   "products:getById": true,
@@ -84,6 +92,14 @@ contextBridge.exposeInMainWorld("electronAPI", {
     search: (data) => safeInvoke("users:search", data),
     update: (data) => safeInvoke("users:update", data),
     delete: (id) => safeInvoke("users:delete", id),
+  },
+  categories: {
+    create: (data) => safeInvoke("categories:create", data),
+    getAll: (data) => safeInvoke("categories:getAll", data),
+    getById: (id) => safeInvoke("categories:getById", id),
+    search: (data) => safeInvoke("categories:search", data),
+    update: (data) => safeInvoke("categories:update", data),
+    delete: (id) => safeInvoke("categories:delete", id),
   },
   products: {
     getAll: () => safeInvoke("products:getAll"),
