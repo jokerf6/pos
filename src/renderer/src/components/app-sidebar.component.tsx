@@ -26,6 +26,12 @@ const items = [
     icon: User,
     user: false,
   },
+  {
+    title: "الاقسام",
+    url: "/categories",
+    icon: User,
+    user: false,
+  },
 ];
 export function AppSidebar() {
   const { user } = useSelector((state: any) => state.auth);

@@ -9,17 +9,24 @@ import ConfirmDeleteModal from "../components/common/confirm-delete.component";
 import { useDispatch, useSelector } from "react-redux";
 import { hideConfirmModal } from "../store/slices/confirmModalSlice";
 import { Toaster } from "../components/ui/sonner";
+import ConfirmImageModal from "../components/common/image-model.component";
+import { hideImageModal } from "../store/slices/imageModal";
 
 const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
 
   const { open } = useSidebar();
   const handleClose = () => dispatch(hideConfirmModal());
+
   const {
     open: OpenModel,
     itemLabel,
     onConfirm,
   } = useSelector((state: any) => state.confirmModal);
+
+  const { open: OpenImage, image } = useSelector(
+    (state: any) => state.imageModal
+  );
 
   const handleConfirm = () => {
     if (onConfirm) onConfirm();
@@ -35,6 +42,11 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
         onClose={handleClose}
         onConfirm={handleConfirm}
         itemLabel={itemLabel}
+      />
+      <ConfirmImageModal
+        open={OpenImage}
+        onClose={() => dispatch(hideImageModal())}
+        image={image} // Assuming 'image' is available in the state
       />
       <Toaster />
 
