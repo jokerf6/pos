@@ -1,16 +1,14 @@
-import { app, BrowserWindow, protocol } from "electron";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { app, BrowserWindow } from "electron";
 import isDev from "electron-is-dev";
 import updater from "electron-updater";
 const { autoUpdater } = updater;
 
-import { createWindow } from "./window/createWindow.js";
-import { setupIPC } from "./ipc/handlers/index.js";
 import { initDatabase } from "./database/connection.js";
+import { setupIPC } from "./ipc/handlers/index.js";
+import { createWindow } from "./window/createWindow.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
 
 // Configure logging
 
