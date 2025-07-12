@@ -1,9 +1,8 @@
 import { BrowserWindow, screen } from "electron";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
 import isDev from "electron-is-dev";
 import log from "electron-log";
-import * as path from "path";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 

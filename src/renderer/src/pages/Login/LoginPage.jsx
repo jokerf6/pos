@@ -134,7 +134,7 @@ const LoginPage = () => {
 
             <div className="text-center">
               <p className="text-xs text-gray-500">
-                © 2024 Sailentra - جميع الحقوق محفوظة
+                © {new Date().getFullYear()} Sailentra - جميع الحقوق محفوظة
               </p>
             </div>
           </form>
