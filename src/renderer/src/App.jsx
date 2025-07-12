@@ -11,6 +11,8 @@ import CreateUserPage from "./pages/Users/CreateUserPage"; // ✅
 import CategoriesPage from "./pages/Categories/index"; // ✅
 import CreateCategoryPage from "./pages/Categories/CreateCategoryPage"; // ✅
 import EditCategoryPage from "./pages/Categories/EditCategoryPage"; // ✅
+import ProductsPage from "./pages/Products/index"; // ✅
+import CreateProductPage from "./pages/Products/CreateProductPage"; // ✅
 function App() {
   const dispatch = useDispatch();
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
@@ -120,6 +122,45 @@ function App() {
           )
         }
       />
+
+      <Route
+        path="/products"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <ProductsPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/products/create"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <CreateProductPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      {/* <Route
+        path="/categories/:id"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <EditCategoryPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      /> */}
 
       <Route
         path="/"

@@ -6,32 +6,47 @@ import { getDatabase } from "../../database/connection.js";
  * Product handler
  */
 async function createProduct(event, data) {
-  const { name, description, quantity, price, buy_price } = data;
-  const user_id = 1;
-  const barcode = "";
+  const {
+    name,
+    description,
+    quantity,
+    price,
+    buy_price,
+    user_id,
+    category_id,
+    barcode,
+  } = data;
 
   // Validate input
-  if (!name || !quantity || !quantity || !price || !buy_price) {
-    throw new Error("برجاء إدخال اسم المنتج والكمية والسعر وسعر الشراء");
+  if (!name || !quantity || !price || !buy_price || !category_id || !barcode) {
+    throw new Error(
+      "برجاء إدخال اسم المنتج والكمية والسعر وسعر الشراءوالفئة والباركود"
+    );
   }
 
   try {
     const db = getDatabase();
 
-    // Hash password
-    const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
     await db.execute(
-      "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
-      [username, passwordHash, role]
+      "INSERT INTO items (name, barcode, description,quantity, price,buy_price,user_id,category_id) VALUES (?, ?, ?)",
+      [
+        name,
+        barcode,
+        description,
+        quantity,
+        price,
+        buy_price,
+        user_id,
+        category_id,
+      ]
     );
 
     return {
       success: true,
-      message: "User created successfully",
+      message: "Product created successfully",
     };
   } catch (error) {
-    log.error("User creation error:", error.message);
+    log.error("Product creation error:", error.message);
     throw error;
   }
 }
@@ -42,23 +57,21 @@ async function getAll(
 ) {
   try {
     const db = getDatabase();
-    console.log(page, limit);
     const offset = (page - 1) * limit;
 
     // Find user in database
-    const [users] = await db.execute("SELECT * FROM users LIMIT ? OFFSET ?", [
-      limit,
-      offset,
-    ]);
-    const [rows] = await db.execute("SELECT COUNT(*) as total FROM users");
-    console.log("Total users:", users);
+    const [products] = await db.execute(
+      "SELECT * FROM items LIMIT ? OFFSET ?",
+      [limit, offset]
+    );
+    const [rows] = await db.execute("SELECT COUNT(*) as total FROM items");
     return {
       success: true,
-      users,
+      products,
       total: rows[0].total,
     };
   } catch (error) {
-    log.error("users error:", error.message);
+    log.error("products error:", error.message);
     throw error;
   }
 }
@@ -68,23 +81,15 @@ async function getByName(name) {
     const db = getDatabase();
 
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE username LIKE ?",
-      [`%${name}%`]
+      "SELECT * FROM items WHERE name LIKE ? OR barcode LIKE ?",
+      [`%${name}%`, `%${name}%`]
     );
-
-    if (rows.length === 0) {
-      return {
-        success: false,
-        message: "No users found",
-      };
-    }
 
     return {
       success: true,
       users: rows,
     };
   } catch (error) {
-    log.error("users error:", error.message);
     throw error;
   }
 }
@@ -92,13 +97,12 @@ async function getByName(name) {
 async function findById(event, { id }) {
   try {
     const db = getDatabase();
-    console.log("Finding user by ID:", id);
     // Find user in database
-    const [rows] = await db.execute("SELECT * FROM users WHERE id = ?", [id]);
+    const [rows] = await db.execute("SELECT * FROM items WHERE id = ?", [id]);
     if (rows.length === 0) {
       return {
         success: false,
-        message: "User not found",
+        message: "Product not found",
       };
     }
     return {
@@ -106,7 +110,6 @@ async function findById(event, { id }) {
       user: rows[0],
     };
   } catch (error) {
-    log.error("users error:", error.message);
     throw error;
   }
 }
@@ -121,58 +124,44 @@ async function search(
 
     // Find user in database
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE username LIKE ? LIMIT ? OFFSET ?",
-      [`%${name}%`, limit, offset]
+      "SELECT * FROM items WHERE name LIKE ? OR barcode LIKE ? LIMIT ? OFFSET ?",
+      [`%${name}%`, `%${name}%`, limit, offset]
     );
     const [search] = await db.execute(
-      "SELECT COUNT(*) as total FROM users WHERE username LIKE ?",
-      [`%${name}%`]
+      "SELECT COUNT(*) as total FROM items WHERE name LIKE ? OR barcode LIKE ?",
+      [`%${name}%`, `%${name}%`]
     );
 
     return {
       success: true,
-      users: rows,
+      products: rows,
       total: search[0].total,
     };
   } catch (error) {
-    log.error("users error:", error.message);
+    log.error("products error:", error.message);
     throw error;
   }
 }
 
-async function update(event, user) {
-  console.log("Updating user:", user);
-  const { id, username, password, role } = user;
+async function update(event, data) {
+  const { name, description, quantity, price, buy_price } = data;
 
   // Validate input
-  if (!username || !password || !role) {
-    throw new Error("برجاء إدخال اسم المستخدم وكلمة المرور والدور");
-  }
-  if (role !== "cashier" && role !== "admin" && role !== "manager") {
-    throw new Error("صلاحيات غير صحيحة (يجب أن تكون: cashier, admin)");
+  if (!name || !quantity || !price || !buy_price) {
+    throw new Error("برجاء إدخال اسم المنتج والكمية والسعر وسعر الشراء");
   }
 
   try {
     const db = getDatabase();
 
-    const [rows] = await db.execute(
-      "SELECT * FROM users WHERE username LIKE ?",
-      [`%${username}%`]
-    );
-    if (rows.length > 0 && rows[0].id !== id) {
-      throw new Error("اسم المستخدم موجود بالفعل");
-    }
-    // Hash password
-    const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
     await db.execute(
-      "UPDATE users SET username = ?, password_hash = ?, role = ? WHERE id = ?",
-      [username, passwordHash, role, id]
+      "UPDATE items SET name = ?, quantity = ?, price = ?, buy_price=? WHERE id = ?",
+      [name, quantity, price, buy_price, id]
     );
 
     return {
       success: true,
-      message: "User updated successfully",
+      message: "Product updated successfully",
     };
   } catch (error) {
     log.error("User updated error:", error.message);
@@ -180,29 +169,37 @@ async function update(event, user) {
   }
 }
 
-async function deleteUser(event, id) {
+async function deleteProduct(event, id) {
   // Validate input
   if (!id) {
-    throw new Error("مستخدم غير موجود");
+    throw new Error("lمنتج غير موجود");
   }
 
   try {
     const db = getDatabase();
-    const [rows] = await db.execute("SELECT * FROM users WHERE id LIKE ?", [
+    const [rows] = await db.execute("SELECT * FROM items WHERE id LIKE ?", [
       `%${id}%`,
     ]);
     if (rows.length === 0) {
-      throw new Error("مستخدم غير موجود");
+      throw new Error("منتج غير موجود");
     }
-    await db.execute("DELETE FROM users WHERE id LIKE ?", [`%${id}%`]);
+    await db.execute("DELETE FROM items WHERE id LIKE ?", [`%${id}%`]);
 
     return {
       success: true,
-      message: "User deleted successfully",
+      message: "Product deleted successfully",
     };
   } catch (error) {
-    log.error("User deleted error:", error.message);
+    log.error("Product deleted error:", error.message);
     throw error;
   }
 }
-export { createUser, getAll, findById, getByName, search, update, deleteUser };
+export {
+  createProduct,
+  getAll,
+  findById,
+  getByName,
+  search,
+  update,
+  deleteProduct,
+};
