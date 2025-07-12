@@ -8,6 +8,9 @@ import { Layout } from "./layouts/index.layout"; // ✅
 import UsersPage from "./pages/Users/index"; // ✅
 import EditUserPage from "./pages/Users/EditUserPage";
 import CreateUserPage from "./pages/Users/CreateUserPage"; // ✅
+import CategoriesPage from "./pages/Categories/index"; // ✅
+import CreateCategoryPage from "./pages/Categories/CreateCategoryPage"; // ✅
+import EditCategoryPage from "./pages/Categories/EditCategoryPage"; // ✅
 function App() {
   const dispatch = useDispatch();
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
@@ -72,6 +75,45 @@ function App() {
           isAuthenticated ? (
             <Layout>
               <CreateUserPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/categories"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <CategoriesPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/categories/create"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <CreateCategoryPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/categories/:id"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <EditCategoryPage />
             </Layout>
           ) : (
             <Navigate to="/login" replace />
