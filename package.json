@@ -31,7 +31,7 @@
     "build:renderer": "cd src/renderer && npm run build",
     "clean": "rimraf dist",
     "build:main": "electron-builder",
-    "build:win": "npm run build:renderer && electron-builder --win",
+    "build:win": "npm run build:renderer && electron-builder --win --x64",
     "test": "npm run test:main && npm run test:renderer",
     "test:main": "jest --config=tests/main/jest.config.js",
     "test:renderer": "cd src/renderer && npm test",
@@ -60,6 +60,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@tanstack/react-table": "^8.21.3",
     "bcryptjs": "^2.4.3",
+    "builder-util-runtime": "^9.3.1",
     "class-variance-authority": "^0.7.1",
     "dotenv": "^16.3.1",
     "electron-is-dev": "^3.0.1",
@@ -67,11 +68,17 @@
     "electron-reload": "^2.0.0-alpha.1",
     "electron-updater": "^6.1.7",
     "fs-extra": "^10.1.0",
+    "graceful-fs": "^4.2.11",
+    "jsonfile": "^6.1.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.525.0",
     "mysql2": "^3.6.5",
     "react-hot-toast": "^2.5.2",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "tailwind-variants": "^1.0.0",
+    "tailwindcss": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "universalify": "^2.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -96,28 +103,44 @@
     "appId": "com.yourcompany.casher",
     "productName": "Casher Desktop",
     "directories": {
-      "buildResources": "build"
+      "buildResources": "build",
+      "output": "dist"
     },
     "files": [
-      "dist",
-      "build",
       "src/main/**/*",
-      "build/renderer/**/*",
       "src/renderer/build/**/*",
       "src/shared/**/*",
-      "resources/**/*",
-      "node_modules/**/*"
+      "package.json",
+      "!node_modules/**/*",
+      "node_modules/electron-is-dev/**/*",
+      "node_modules/electron-log/**/*",
+      "node_modules/electron-updater/**/*",
+      "node_modules/fs-extra/**/*",
+      "node_modules/graceful-fs/**/*",
+      "node_modules/jsonfile/**/*",
+      "node_modules/universalify/**/*",
+      "node_modules/mysql2/**/*",
+      "node_modules/bcryptjs/**/*",
+      "node_modules/jsonwebtoken/**/*",
+      "node_modules/dotenv/**/*"
     ],
     "mac": {
       "category": "public.app-category.business",
       "icon": "build/icons/icon.icns"
     },
     "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico",
-      "sign": false,
-      "verifyUpdateCodeSignature": false,
-      "signingHashAlgorithms": []
+      "forceCodeSigning": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signDlls": false,
+      "certificateFile": null,
+      "certificatePassword": null
     },
     "linux": {
       "target": "AppImage",
@@ -125,8 +148,13 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "afterSign": null,
+    "afterAllArtifactBuild": null,
+    "forceCodeSigning": false
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
