@@ -82,10 +82,19 @@ function setupIPC() {
   // Products handlers
   ipcMain.handle("products:getAll", secureHandler(productsH.getAll));
   ipcMain.handle("products:getById", secureHandler(productsH.findById));
-  ipcMain.handle("products:create", secureHandler(productsH.createUser));
+  ipcMain.handle("products:create", secureHandler(productsH.createProduct));
   ipcMain.handle("products:update", secureHandler(productsH.update));
-  ipcMain.handle("products:delete", secureHandler(productsH.deleteUser));
+  ipcMain.handle("products:delete", secureHandler(productsH.deleteProduct));
   ipcMain.handle("products:search", secureHandler(productsH.search));
+  ipcMain.handle(
+    "products:generateBarCode",
+    secureHandler(productsH.generateBarCode)
+  );
+
+  ipcMain.handle(
+    "products:getByBarcode",
+    secureHandler(productsH.getBybarcode)
+  );
 
   // Categories handlers
   ipcMain.handle("categories:getAll", secureHandler(categoriesH.getAll));

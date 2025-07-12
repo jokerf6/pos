@@ -13,6 +13,7 @@ import CreateCategoryPage from "./pages/Categories/CreateCategoryPage"; // ✅
 import EditCategoryPage from "./pages/Categories/EditCategoryPage"; // ✅
 import ProductsPage from "./pages/Products/index"; // ✅
 import CreateProductPage from "./pages/Products/CreateProductPage"; // ✅
+import EditProductPage from "./pages/Products/EditProductPage"; // ✅
 function App() {
   const dispatch = useDispatch();
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
@@ -111,7 +112,7 @@ function App() {
       />
 
       <Route
-        path="/categories/:id"
+        path="/categories/:barcode"
         element={
           isAuthenticated ? (
             <Layout>
@@ -149,18 +150,18 @@ function App() {
         }
       />
 
-      {/* <Route
-        path="/categories/:id"
+      <Route
+        path="/products/:id"
         element={
           isAuthenticated ? (
             <Layout>
-              <EditCategoryPage />
+              <EditProductPage />
             </Layout>
           ) : (
             <Navigate to="/login" replace />
           )
         }
-      /> */}
+      />
 
       <Route
         path="/"

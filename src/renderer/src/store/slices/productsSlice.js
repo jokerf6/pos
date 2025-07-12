@@ -16,6 +16,24 @@ export const getProducts = createAsyncThunk(
   }
 );
 
+export const generateBarCode = createAsyncThunk(
+  "products/generateBarCode",
+  async (_, { rejectWithValue }) => {
+    try {
+      if (window.electronAPI) {
+        const result = await window.electronAPI.products.generateBarCode();
+        console.log("Generating barcode...", result);
+
+        return result.barcode;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 export const searchProducts = createAsyncThunk(
   "products/search",
   async (name, { rejectWithValue }) => {
@@ -73,6 +91,24 @@ export const ProductById = createAsyncThunk(
       if (window.electronAPI) {
         const result = await window.electronAPI.products.getById(id);
         return result;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const ProductByBarcode = createAsyncThunk(
+  "products/getByBarcode",
+  async (data, { rejectWithValue }) => {
+    console.log("Barcode data:", data);
+    try {
+      if (window.electronAPI) {
+        const result = await window.electronAPI.products.getByBarcode(data);
+        console.log("getByBarcode result:", result);
+        return result.product;
       } else {
         return null;
       }

@@ -38,8 +38,8 @@ function ProductsPage() {
       })
     );
   };
-  const handelEdit = (user: any) => {
-    navigate(`/products/${user.id}`);
+  const handelEdit = (item: any) => {
+    navigate(`/products/${item.barcode}`);
   };
   return (
     <div className="flex flex-1 h-[85vh] ">

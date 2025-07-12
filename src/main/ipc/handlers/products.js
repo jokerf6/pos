@@ -12,13 +12,22 @@ async function createProduct(event, data) {
     quantity,
     price,
     buy_price,
-    user_id,
     category_id,
     barcode,
+    generated_code,
   } = data;
 
+  console.log("Creating product with data:", data);
+
   // Validate input
-  if (!name || !quantity || !price || !buy_price || !category_id || !barcode) {
+  if (
+    !name ||
+    !quantity ||
+    !price ||
+    !buy_price ||
+    !category_id ||
+    (!barcode && !generated_code)
+  ) {
     throw new Error(
       "برجاء إدخال اسم المنتج والكمية والسعر وسعر الشراءوالفئة والباركود"
     );
@@ -26,21 +35,43 @@ async function createProduct(event, data) {
 
   try {
     const db = getDatabase();
+    if (generated_code) {
+      const [rows] = await db.execute(
+        "SELECT * FROM items WHERE barcode = ? LIMIT 1",
+        [generated_code]
+      );
+      if (rows.length > 0) {
+        throw new Error("الباركود موجود بالفعل");
+      }
 
-    await db.execute(
-      "INSERT INTO items (name, barcode, description,quantity, price,buy_price,user_id,category_id) VALUES (?, ?, ?)",
-      [
-        name,
-        barcode,
-        description,
-        quantity,
-        price,
-        buy_price,
-        user_id,
-        category_id,
-      ]
-    );
+      await db.execute(
+        "INSERT INTO items (name, barcode, description,quantity, price,buy_price,category_id) VALUES (?, ?, ?,?,?,?,?)",
+        [
+          name,
+          generated_code,
+          description,
+          quantity,
+          price,
+          buy_price,
+          category_id,
+        ]
+      );
+    } else {
+      const [rows] = await db.execute(
+        "SELECT * FROM items WHERE barcode = ? LIMIT 1",
+        [barcode]
+      );
+      if (rows.length === 0) {
+        throw new Error("الباركود غير موجود");
+      }
 
+      await db.execute(
+        `UPDATE items 
+         SET name = ?, description = ?, quantity = ?, price = ?, buy_price = ?, category_id = ?
+         WHERE barcode = ?`,
+        [name, description, quantity, price, buy_price, category_id, barcode]
+      );
+    }
     return {
       success: true,
       message: "Product created successfully",
@@ -88,6 +119,49 @@ async function getByName(name) {
     return {
       success: true,
       users: rows,
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function generateBarCode(event) {
+  const db = getDatabase();
+
+  const [lastProduct] = await db.execute(
+    "SELECT * FROM items ORDER BY id DESC LIMIT 1"
+  );
+  if (lastProduct.length === 0) {
+    return {
+      success: true,
+      barcode: "100",
+    };
+  } else {
+    const lastBarcode = lastProduct[0].barcode;
+    const newBarcode = parseInt(lastBarcode) + 1;
+    return {
+      success: true,
+      barcode: newBarcode.toString(),
+    };
+  }
+}
+async function getBybarcode(event, data) {
+  const { name } = data;
+  console.log(data);
+  console.log("getBybarcode name:", name);
+  try {
+    const db = getDatabase();
+
+    const [rows] = await db.execute(
+      "SELECT * FROM items WHERE barcode LIKE ? LIMIT 1",
+      [`%${name}%`]
+    );
+
+    console.log("getBybarcode rows:", rows);
+
+    return {
+      success: true,
+      product: rows.length > 0 ? rows[0] : null,
     };
   } catch (error) {
     throw error;
@@ -202,4 +276,6 @@ export {
   search,
   update,
   deleteProduct,
+  generateBarCode,
+  getBybarcode,
 };

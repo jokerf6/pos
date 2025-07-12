@@ -32,6 +32,8 @@ const validChannels = {
   "products:update": true,
   "products:delete": true,
   "products:search": true,
+  "products:getByBarcode": true,
+  "products:generateBarCode": true,
 
   // Transaction channels
   "transactions:create": true,
@@ -108,6 +110,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     update: (id, product) => safeInvoke("products:update", id, product),
     delete: (id) => safeInvoke("products:delete", id),
     search: (query) => safeInvoke("products:search", query),
+    getByBarcode: (data) => safeInvoke("products:getByBarcode", data),
+    generateBarCode: () => safeInvoke("products:generateBarCode"),
   },
   transactions: {
     create: (transaction) => safeInvoke("transactions:create", transaction),

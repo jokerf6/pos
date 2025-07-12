@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   createProduct,
@@ -24,7 +24,9 @@ import {
 } from "../../components/ui/dropdown-menu";
 import Modal from "../../components/common/dynamic-modal.component";
 
-const CreateProductPage = () => {
+const EditProductPage = () => {
+  const barcode = useParams();
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const categories = useSelector((state: any) => state.categories);
@@ -157,6 +159,14 @@ const CreateProductPage = () => {
     searchInputRef.current?.focus();
   }, []);
 
+  useEffect(() => {
+    console.log("barcode->", barcode);
+    handleSearch(barcode.id);
+    setFormData((prev) => ({
+      ...prev,
+      barcode: barcode.id || prev.barcode,
+    }));
+  }, []);
   const GenerateBarCode = async () => {
     const result = await dispatch(generateBarCode() as any);
     console.log("generateBarCode result", result);
@@ -250,11 +260,6 @@ const CreateProductPage = () => {
             <span className=" text-sm">{field.placeholder}</span>
             {field.type !== "select" ? (
               <div className="flex gap-2 flex-row-reverse">
-                {field.name === "barcode" && (
-                  <Button type="button" onClick={GenerateBarCode}>
-                    توليد
-                  </Button>
-                )}
                 <Input
                   ref={field.name === "barcode" ? searchInputRef : null}
                   key={field.name}
@@ -327,4 +332,4 @@ const CreateProductPage = () => {
   );
 };
 
-export default CreateProductPage;
+export default EditProductPage;

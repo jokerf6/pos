@@ -160,7 +160,7 @@ const DataTable = <T extends Record<string, any>>({
         <Button onClick={() => navigate("/products/create")}>
           <span className="flex items-center gap-2">
             <Pencil size={16} />
-            إنشاء
+            إضافة
           </span>
         </Button>
       </div>

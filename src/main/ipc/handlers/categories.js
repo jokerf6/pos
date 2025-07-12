@@ -89,7 +89,8 @@ async function getByName(name) {
   }
 }
 
-async function findById(event, { id }) {
+async function findById(event, id) {
+  console.log("findById id:", id);
   try {
     const db = getDatabase();
     // Find user in database
