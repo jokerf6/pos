@@ -1,13 +1,10 @@
-import { useDispatch, useSelector } from "react-redux";
-import { logoutUser } from "../../store/slices/authSlice";
-
 const HomePage = () => {
-  const dispatch = useDispatch();
-  const { user, loading } = useSelector((state) => state.auth);
+  // const dispatch = useDispatch();
+  // const { user, loading } = useSelector((state) => state.auth);
 
-  const handleLogout = () => {
-    dispatch(logoutUser());
-  };
+  // const handleLogout = () => {
+  //   dispatch(logoutUser());
+  // };
 
   return (
     <div className="">
