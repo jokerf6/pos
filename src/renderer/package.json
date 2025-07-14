@@ -41,6 +41,13 @@
       "react-app/jest"
     ]
   },
+  "asar": false,
+  "extraResources": [
+    {
+      "from": "node_modules",
+      "to": "node_modules"
+    }
+  ],
   "browserslist": {
     "production": [
       ">0.2%",
