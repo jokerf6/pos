@@ -135,6 +135,7 @@
       "node_modules/",
       "node_modules/jsonfile/**/*",
       "node_modules/universalify/**/*",
+      "node_modules/sax/**/*",
       "node_modules/mysql2/**/*",
       "node_modules/bcryptjs/**/*",
       "node_modules/jsonwebtoken/**/*",
