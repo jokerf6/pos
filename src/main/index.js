@@ -7,10 +7,12 @@ import { initDatabase } from "./database/connection.js";
 import { setupIPC } from "./ipc/handlers/index.js";
 import { createWindow } from "./window/createWindow.js";
 
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = dirname(__filename);
-
-// Configure logging
+// Configure logging for better error visibility
+console.log("Starting Casher Desktop application");
+console.log("Node version:", process.versions.node);
+console.log("Electron version:", process.versions.electron);
+console.log("Chrome version:", process.versions.chrome);
+console.log("Is development mode:", isDev);
 
 // Enable live reload for Electron in development
 if (isDev) {
@@ -47,18 +49,38 @@ app.on("web-contents-created", (event, contents) => {
   });
 });
 
+// Global error handler
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+});
+
 // App event handlers
 app.whenReady().then(async () => {
   try {
+    console.log("App is ready, initializing...");
+
     // Initialize database
+    console.log("Initializing database...");
     await initDatabase();
     console.info("Database initialized successfully");
 
     // Create main window
+    console.log("Creating main window...");
     mainWindow = createWindow();
     console.info("Main window created");
 
+    // Add error handler to window
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.on(
+        "did-fail-load",
+        (event, errorCode, errorDescription) => {
+          console.error(`Failed to load: ${errorDescription} (${errorCode})`);
+        }
+      );
+    }
+
     // Setup IPC handlers
+    console.log("Setting up IPC handlers...");
     setupIPC();
     console.info("IPC handlers setup complete");
 

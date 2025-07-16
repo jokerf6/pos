@@ -22,7 +22,7 @@
     "point-of-sale"
   ],
   "type": "module",
-  "main": "src/main/index.js",
+  "main": "./src/main/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:main\" ",
     "dev:renderer": "cd src/renderer && npm start",
@@ -33,6 +33,12 @@
     "build:main": "electron-builder",
     "prebuild:win": "taskkill /f /im \"Casher Desktop.exe\" 2>nul & rmdir /s /q dist 2>nul & exit 0",
     "build:win": "npm run build:renderer && electron-builder --win --x64",
+    "build:win:smart": "node scripts/build-windows.cjs",
+    "analyze:deps": "node scripts/analyze-dependencies.js",
+    "debug:app": "node scripts/debug-app.js",
+    "debug:app:cjs": "node scripts/debug-app.cjs",
+    "debug:build": "node scripts/debug-build.js",
+    "build:win:fix": "node scripts/build-windows-fix.cjs",
     "test": "npm run test:main && npm run test:renderer",
     "test:main": "jest --config=tests/main/jest.config.js",
     "test:renderer": "cd src/renderer && npm test",
@@ -69,6 +75,7 @@
     "electron-log": "^5.0.1",
     "electron-reload": "^2.0.0-alpha.1",
     "electron-updater": "^6.1.7",
+    "fs": "0.0.1-security",
     "fs-extra": "^10.1.0",
     "graceful-fs": "^4.2.11",
     "jsbarcode": "^3.12.1",
@@ -79,18 +86,12 @@
     "mysql2": "^3.6.5",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
+    "semver": "^7.7.2",
     "tailwind-variants": "^1.0.0",
     "tailwindcss": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "universalify": "^2.0.1"
   },
-  "asar": false,
-  "extraResources": [
-    {
-      "from": "node_modules",
-      "to": "node_modules"
-    }
-  ],
   "devDependencies": {
     "@types/node": "^20.10.0",
     "@types/react": "^19.1.8",
@@ -108,7 +109,10 @@
     "prettier": "^3.1.0",
     "rimraf": "^6.0.1",
     "typescript": "^5.3.0",
-    "wait-on": "^7.2.0"
+    "wait-on": "^7.2.0",
+    "webpack": "^5.100.2",
+    "webpack-cli": "^6.0.1",
+    "webpack-node-externals": "^3.0.0"
   },
   "build": {
     "appId": "com.yourcompany.casher",
@@ -117,32 +121,21 @@
       "buildResources": "build",
       "output": "dist"
     },
-    "npmRebuild": false,
+    "npmRebuild": true,
     "nodeGypRebuild": false,
+    "asar": false,
+    "asarUnpack": [
+      "node_modules/bcryptjs/**/*",
+      "node_modules/mysql2/**/*",
+      "node_modules/fs-extra/**/*",
+      "node_modules/jsonwebtoken/**/*"
+    ],
     "files": [
       "src/main/**/*",
       "src/renderer/build/**/*",
       "src/shared/**/*",
       "package.json",
-      "!node_modules/**/*",
-      "node_modules/electron-is-dev/**/*",
-      "node_modules/electron-log/**/*",
-      "node_modules/electron-updater/**/*",
-      "node_modules/fs-extra/**/*",
-      "node_modules/graceful-fs/**/*",
-      "node_modules/builder-util-runtime/**/*",
-      "node_modules/debug/**/*",
-      "node_modules/",
-      "node_modules/jsonfile/**/*",
-      "node_modules/universalify/**/*",
-      "node_modules/sax/**/*",
-      "node_modules/mysql2/**/*",
-      "node_modules/bcryptjs/**/*",
-      "node_modules/jsonwebtoken/**/*",
-      "node_modules/**/*",
-      "!node_modules/.cache/**/*",
-      "!node_modules/.bin/**/*",
-      "node_modules/dotenv/**/*"
+      "node_modules/**/*"
     ],
     "mac": {
       "category": "public.app-category.business",

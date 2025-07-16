@@ -1,0 +1,30 @@
+Debug session started at 2025-07-16T15:46:28.766Z
+[2025-07-16T15:46:28.769Z] OS: win32 10.0.26100 x64
+[2025-07-16T15:46:28.770Z] Node version: v22.14.0
+[2025-07-16T15:46:28.770Z] Looking for executable at: C:\work\desktop\pos\dist\win-unpacked\Casher Desktop.exe
+[2025-07-16T15:46:28.771Z] Found executable at: C:\work\desktop\pos\dist\win-unpacked\Casher Desktop.exe
+[2025-07-16T15:46:28.772Z] Resources directory exists.
+[2025-07-16T15:46:28.773Z] App directory exists. Contents:
+[2025-07-16T15:46:28.774Z] - node_modules
+[2025-07-16T15:46:28.774Z] - package.json
+[2025-07-16T15:46:28.775Z] - src
+[2025-07-16T15:46:28.777Z] Found package.json with main: ./src/main/index.js
+[2025-07-16T15:46:28.778Z] Main file exists at: C:\work\desktop\pos\dist\win-unpacked\resources\app\src\main\index.js
+[2025-07-16T15:46:28.779Z] node_modules directory exists.
+[2025-07-16T15:46:28.780Z] First 20 node_modules: @alloc, @floating-ui, @isaacs, @jridgewell, @nodelib, @pkgjs, @radix-ui, @tanstack, ansi-regex, ansi-styles, any-promise, anymatch, arg, argparse, aria-hidden, aws-ssl-profiles, balanced-match, bcryptjs, binary-extensions, brace-expansion
+[2025-07-16T15:46:28.781Z] ✓ Module electron-is-dev exists
+[2025-07-16T15:46:28.782Z] ✓ Module electron-updater exists
+[2025-07-16T15:46:28.783Z] ✓ Module mysql2 exists
+[2025-07-16T15:46:28.784Z] ✓ Module fs-extra exists
+[2025-07-16T15:46:28.784Z] ✓ Module jsonwebtoken exists
+[2025-07-16T15:46:28.785Z] Attempting to launch the app with debugging...
+[2025-07-16T15:46:28.786Z] Command: "C:\work\desktop\pos\dist\win-unpacked\Casher Desktop.exe" --enable-logging --v=1
+[2025-07-16T15:46:28.903Z] App launched. Monitoring for startup issues...
+[2025-07-16T15:46:29.064Z] App output: 
+
+[2025-07-16T15:46:33.399Z] App output: 18:46:33.396 > Initializing database connection...
+
+[2025-07-16T15:46:33.486Z] App exited successfully with code 0
+[2025-07-16T15:46:33.907Z] Checking for app logs in user data directory: C:\Users\Mahmoud\AppData\Roaming\Casher Desktop
+[2025-07-16T15:46:33.908Z] User data directory not found
+[2025-07-16T15:46:33.909Z] Debug session complete. Check the logs for details.
