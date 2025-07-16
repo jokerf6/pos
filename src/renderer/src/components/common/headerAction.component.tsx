@@ -6,7 +6,6 @@ import {
 } from "@radix-ui/react-dropdown-menu";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "../../store/slices/authSlice";
-
 export function HeaderActions() {
   const dispatch = useDispatch();
 
@@ -19,7 +18,7 @@ export function HeaderActions() {
   return (
     <div
       dir="rtl"
-      className="flex flex-row-reverse items-start w-full ml-auto space-x-4"
+      className="flex flex-row-reverse items-start w-full space-x-4"
     >
       <div className="w-fit">
         <DropdownMenu>

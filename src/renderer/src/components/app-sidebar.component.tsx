@@ -41,6 +41,20 @@ const items = [
     user: false,
   },
   {
+    title: "الفواتير",
+    url: "/pos",
+    group: [],
+    icon: User,
+    user: false,
+  },
+  {
+    title: "المصروفات",
+    url: "/credit",
+    group: [],
+    icon: User,
+    user: false,
+  },
+  {
     title: "إداره الاصناف",
     group: [
       {

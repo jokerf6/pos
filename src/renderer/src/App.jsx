@@ -14,6 +14,8 @@ import EditCategoryPage from "./pages/Categories/EditCategoryPage"; // ✅
 import ProductsPage from "./pages/Products/index"; // ✅
 import CreateProductPage from "./pages/Products/CreateProductPage"; // ✅
 import EditProductPage from "./pages/Products/EditProductPage"; // ✅
+import PosPage from "./pages/Pos/PosPage";
+import CreditPage from "./pages/Credit/CreditPage";
 function App() {
   const dispatch = useDispatch();
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
@@ -117,6 +119,31 @@ function App() {
           isAuthenticated ? (
             <Layout>
               <EditCategoryPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/pos"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <PosPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/credit"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <CreditPage />
             </Layout>
           ) : (
             <Navigate to="/login" replace />

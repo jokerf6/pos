@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import log from "electron-log";
 import { getDatabase } from "../../database/connection.js";
+import Store from "electron-store";
 
 // JWT secret - in production, this should be loaded from environment variables
 const JWT_SECRET =
@@ -40,6 +41,9 @@ async function login(event, credentials) {
     }
 
     const user = users[0];
+
+    const store = new Store();
+    store.set("user.id", user.id);
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
