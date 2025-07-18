@@ -111,3 +111,4 @@ Desktop.ini
 *.temp
 
 src/main/public/uploads
+src/main/window/createWindow.js

@@ -1,5 +1,6 @@
 import { BrowserWindow, screen } from "electron";
 import isDev from "electron-is-dev";
+
 import log from "electron-log";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
@@ -23,7 +24,7 @@ function createWindow() {
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
     webPreferences: {
       nodeIntegration: false, // Security: Disable Node.js integration
-      contextIsolation: true, // Security: Enable context isolation
+      contextIsolation: false, // Security: Enable context isolation
       enableRemoteModule: false, // Security: Disable remote module
       preload: join(__dirname, "../security/preload.cjs"), // Load preload script
       webSecurity: !isDev, // Enable web security in production
@@ -36,7 +37,8 @@ function createWindow() {
   // Load the app
   const startUrl = isDev
     ? "http://localhost:3000"
-    : `file://${join(__dirname, "../../renderer/build/index.html")}`;
+    : `file://${join(__dirname, "../../renderer/build/index.html").replace(/\\/g, "/")}`;
+  console.log(startUrl);
 
   // console.log(path.join(__dirname, "../../../build/renderer/index.html"));
   // mainWindow.loadURL(
