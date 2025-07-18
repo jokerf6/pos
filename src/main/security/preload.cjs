@@ -35,6 +35,17 @@ const validChannels = {
   "products:getByBarcode": true,
   "products:generateBarCode": true,
 
+  // Daily channels
+  "daily:get": true,
+  "daily:open": true,
+  "daily:close": true,
+
+  // Credit channels
+  "credit:create": true,
+  "credit:getAll": true,
+  "credit:getByDaily": true,
+  "credit:delete": true,
+
   // Transaction channels
   "transactions:create": true,
   "transactions:getAll": true,
@@ -112,6 +123,17 @@ contextBridge.exposeInMainWorld("electronAPI", {
     search: (query) => safeInvoke("products:search", query),
     getByBarcode: (data) => safeInvoke("products:getByBarcode", data),
     generateBarCode: () => safeInvoke("products:generateBarCode"),
+  },
+  credit: {
+    getAll: () => safeInvoke("credit:getAll"),
+    getByDaily: () => safeInvoke("credit:getByDaily"),
+    create: (data) => safeInvoke("credit:create", data),
+    delete: (id) => safeInvoke("credit:delete", id),
+  },
+  daily: {
+    get: () => safeInvoke("daily:get"),
+    open: () => safeInvoke("daily:open"),
+    close: () => safeInvoke("daily:close"),
   },
   transactions: {
     create: (transaction) => safeInvoke("transactions:create", transaction),

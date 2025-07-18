@@ -64,9 +64,9 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
         className="flex-1 border-r rounded-2xl border-t border-b shadow  "
         dir="rtl"
       >
-        <SidebarInset className=" rounded-t-2xl  ">
+        <SidebarInset className=" rounded-t-2xl ">
           <MainHeader />
-          <div className="p-4">{children}</div>
+          <div className="p-4 h-[90vh]">{children}</div>
         </SidebarInset>
       </div>
     </div>

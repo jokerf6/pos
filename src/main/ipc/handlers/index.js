@@ -6,6 +6,8 @@ import * as authHandlers from "./auth.js";
 import * as usersH from "./users.js";
 import * as categoriesH from "./categories.js";
 import * as productsH from "./products.js"; // Import products handlers
+import * as dailyH from "./daily.js"; // Import daily handlers
+import * as creditH from "./credit.js"; // Import credit handlers
 
 // Error handling wrapper
 const handleError = (handler) => {
@@ -110,11 +112,16 @@ function setupIPC() {
   );
   ipcMain.handle("categories:search", secureHandler(categoriesH.search));
 
-  // Transaction handlers
-  // ipcMain.handle('transactions:create', secureHandler(transactionHandlers.create));
-  // ipcMain.handle('transactions:getAll', secureHandler(transactionHandlers.getAll));
-  // ipcMain.handle('transactions:getById', secureHandler(transactionHandlers.getById));
-  // ipcMain.handle('transactions:getByDateRange', secureHandler(transactionHandlers.getByDateRange));
+  // Daily handlers
+  ipcMain.handle("daily:open", secureHandler(dailyH.openDaily));
+  ipcMain.handle("daily:close", secureHandler(dailyH.closeDaily));
+  ipcMain.handle("daily:get", secureHandler(dailyH.getDaily));
+
+  // Credit handlers
+  ipcMain.handle("credit:create", secureHandler(creditH.createCredit));
+  ipcMain.handle("credit:getAll", secureHandler(creditH.getAllCredit));
+  ipcMain.handle("credit:getByDaily", secureHandler(creditH.getCreditByDaily));
+  ipcMain.handle("credit:delete", secureHandler(creditH.deleteCredit));
 
   // Settings handlers
   // ipcMain.handle('settings:get', secureHandler(settingsHandlers.get));

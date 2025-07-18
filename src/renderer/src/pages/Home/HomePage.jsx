@@ -9,10 +9,10 @@ const HomePage = () => {
       console.log(e.key);
       if (e.ctrlKey && e.key.toLowerCase() === "f") {
         e.preventDefault();
-        navigate("/pos");
+        navigate("/invoice/create");
       } else if (e.ctrlKey && e.key.toLowerCase() === "m") {
         e.preventDefault();
-        navigate("/credit");
+        navigate("/credit/daily");
       }
     };
 
@@ -25,8 +25,8 @@ const HomePage = () => {
   return (
     <main>
       <div className=" flex   ">
-        <Card title="إنشاء فاتورة" description="ctlr + f" />
-        <Card title="عمل مصروف" description="ctlr + m" />
+        <Card title="إنشاء فاتورة" description="ctrl + f" />
+        <Card title="عمل مصروف" description="ctrl + m" />
       </div>
     </main>
   );

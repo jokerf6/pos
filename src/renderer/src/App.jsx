@@ -14,8 +14,11 @@ import EditCategoryPage from "./pages/Categories/EditCategoryPage"; // ✅
 import ProductsPage from "./pages/Products/index"; // ✅
 import CreateProductPage from "./pages/Products/CreateProductPage"; // ✅
 import EditProductPage from "./pages/Products/EditProductPage"; // ✅
-import PosPage from "./pages/Pos/PosPage";
 import CreditPage from "./pages/Credit/CreditPage";
+import CreditDailyPage from "./pages/Credit/CreditDailyPage";
+import InvoicePage from "./pages/Invoice/InvoicePage"; // ✅
+import CreateInvoicePage from "./pages/Invoice/create-invoicePage"; // ✅
+
 function App() {
   const dispatch = useDispatch();
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
@@ -125,13 +128,38 @@ function App() {
           )
         }
       />
-
       <Route
-        path="/pos"
+        path="/invoice/create"
         element={
           isAuthenticated ? (
             <Layout>
-              <PosPage />
+              <CreateInvoicePage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/invoice"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <InvoicePage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/credit"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <CreditPage />
             </Layout>
           ) : (
             <Navigate to="/login" replace />
@@ -139,11 +167,11 @@ function App() {
         }
       />
       <Route
-        path="/credit"
+        path="/credit/daily"
         element={
           isAuthenticated ? (
             <Layout>
-              <CreditPage />
+              <CreditDailyPage />
             </Layout>
           ) : (
             <Navigate to="/login" replace />

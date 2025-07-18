@@ -1,4 +1,4 @@
-const PosPage = () => {
+const InvoicePage = () => {
   // useEffect(() => {
   //   const handleKeyDown = (e) => {
   //     console.log(e.key);
@@ -27,4 +27,4 @@ const PosPage = () => {
   );
 };
 
-export default PosPage;
+export default InvoicePage;

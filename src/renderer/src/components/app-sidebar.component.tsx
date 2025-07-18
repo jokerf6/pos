@@ -41,16 +41,42 @@ const items = [
     user: false,
   },
   {
-    title: "الفواتير",
-    url: "/pos",
-    group: [],
+    title: "إدارة الفواتير",
+    url: "/",
+    group: [
+      {
+        title: "إنشاء فاتورة",
+        url: "/invoice/create",
+        icon: User,
+        user: false,
+      },
+      {
+        title: "كل الفواتير",
+        url: "/invoice",
+        icon: User,
+        user: false,
+      },
+    ],
     icon: User,
     user: false,
   },
   {
-    title: "المصروفات",
-    url: "/credit",
-    group: [],
+    title: "إداره المصروفات",
+    group: [
+      {
+        title: "مصروفات اليوم",
+        url: "/credit/daily",
+        icon: User,
+        user: false,
+      },
+      {
+        title: "كل المصروفات",
+        url: "/credit",
+        icon: User,
+        user: false,
+      },
+    ],
+    url: "/products",
     icon: User,
     user: false,
   },

@@ -4,25 +4,25 @@ import { useNavigate } from "react-router-dom";
 import { showConfirmModal } from "../../store/slices/confirmModalSlice";
 import { showSuccess } from "../../components/ui/sonner";
 import columns from "./components/columns.component";
-import DataTable from "./components/data-table.component";
-import { deleteCredit, getCredit } from "../../store/slices/creditSlice";
+import DataDailyTable from "./components/data-table.daily.component";
+import { deleteCredit, CreditByDaily } from "../../store/slices/creditSlice";
 import { formatDate } from "../../utils/formDate";
 function CreditPage() {
   const dispatch = useDispatch();
-  const { credits, total } = useSelector((state) => state.credit);
+  const { dailyCredits, total } = useSelector((state) => state.credit);
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(getCredit());
+    dispatch(CreditByDaily());
   }, [dispatch]);
 
   const formattedProducts =
-    credits &&
-    credits?.map((item) => ({
+    dailyCredits &&
+    dailyCredits?.map((item) => ({
       ...item,
       createdAt: formatDate(item.created_at), // Format date to YYYY-MM-DD
     }));
-  console.log("formattedCredits", credits);
+  console.log("formattedCredits", dailyCredits);
   const handleDelete = (item) => {
     dispatch(
       showConfirmModal({
@@ -32,7 +32,7 @@ function CreditPage() {
             .unwrap()
             .then(() => {
               showSuccess("تم حذف المصروف بنجاح");
-              dispatch(getCredit());
+              dispatch(CreditByDaily());
             })
             .catch(() => showSuccess("فشل حذف المصروف"));
         },
@@ -43,7 +43,7 @@ function CreditPage() {
   return (
     <div className="flex flex-1 h-[85vh] ">
       {formattedProducts && (
-        <DataTable
+        <DataDailyTable
           columns={columns}
           data={formattedProducts}
           dataTotal={total}
