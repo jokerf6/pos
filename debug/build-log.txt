@@ -1,0 +1,36 @@
+Build debug started at 2025-07-16T15:31:46.728Z
+Step 1: Cleaning up previous builds...
+No running instances to kill (this is normal)
+Removed dist directory
+
+Step 2: Validating main process file...
+Main process file exists (3680 bytes)
+Found 6 imports in main process file:
+  import { app, BrowserWindow } from "electron";
+  import isDev from "electron-is-dev";
+  import updater from "electron-updater";
+  import { initDatabase } from "./database/connection.js";
+  import { setupIPC } from "./ipc/handlers/index.js";
+  import { createWindow } from "./window/createWindow.js";
+
+Step 3: Validating package.json...
+package.json is valid JSON
+Main entry point: ./src/main/index.js
+Build configuration:
+  productName: Casher Desktop
+  asar: true
+  target: [{"target":"nsis","arch":["x64"]}]
+
+Step 4: Building renderer...
+ERROR: Renderer build failed: Command failed: npm run build:renderer
+See renderer-build-error.log for details
+
+Step 5: Building with electron-builder...
+Running: npx electron-builder --win --x64 --config.asar=false
+ERROR: Electron build failed: Command failed: npx electron-builder --win --x64 --config.asar=false
+See electron-builder-error.log for details
+
+Step 6: Launching the app...
+ERROR: Executable does not exist at: C:\work\desktop\pos\dist\win-unpacked\Casher Desktop.exe
+
+Debug process complete. Check the logs in the debug directory for more information.
