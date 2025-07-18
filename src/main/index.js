@@ -28,26 +28,34 @@ let mainWindow;
 
 // Security: Prevent new window creation
 app.on("web-contents-created", (event, contents) => {
+  // Block new window creation
   contents.on("new-window", (event, navigationUrl) => {
     event.preventDefault();
     console.warn("Blocked new window creation:", navigationUrl);
   });
-});
 
-// Security: Prevent navigation to external URLs
-app.on("web-contents-created", (event, contents) => {
+  // Block navigation to unknown protocols
   contents.on("will-navigate", (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl);
+    console.log("🔍 Attempted navigation to:", navigationUrl);
 
     if (
-      parsedUrl.origin !== "http://localhost:3000" &&
-      parsedUrl.origin !== "file://"
+      parsedUrl.protocol !== "file:" &&
+      parsedUrl.origin !== "http://localhost:3000"
     ) {
       event.preventDefault();
-      console.warn("Blocked navigation to:", navigationUrl);
+      console.warn("🚫 Blocked navigation to:", navigationUrl);
     }
   });
+
+  // Strip unsafe preload and disable Node integration in webviews
+  contents.on("will-attach-webview", (event, webPreferences, params) => {
+    delete webPreferences.preload;
+    delete webPreferences.preloadURL;
+    webPreferences.nodeIntegration = false;
+  });
 });
+// Security: Prevent navigation to external URLs
 
 // Global error handler
 process.on("uncaughtException", (error) => {
@@ -108,18 +116,6 @@ app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     mainWindow = createWindow();
   }
-});
-
-// Security: Prevent protocol handler hijacking
-app.on("web-contents-created", (event, contents) => {
-  contents.on("will-attach-webview", (event, webPreferences, params) => {
-    // Strip away preload scripts if unused or verify their location is legitimate
-    delete webPreferences.preload;
-    delete webPreferences.preloadURL;
-
-    // Disable Node.js integration
-    webPreferences.nodeIntegration = false;
-  });
 });
 
 // Handle certificate errors
