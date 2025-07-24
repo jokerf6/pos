@@ -18,10 +18,10 @@ export const getDaily = createAsyncThunk(
 
 export const openDaily = createAsyncThunk(
   "daily/open",
-  async (_, { rejectWithValue }) => {
+  async (data, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.daily.open();
+        const result = await window.electronAPI.daily.open(data);
 
         return result;
       } else {
@@ -32,13 +32,14 @@ export const openDaily = createAsyncThunk(
     }
   }
 );
-
+//
 export const closeDaily = createAsyncThunk(
   "daily/close",
-  async (_, { rejectWithValue }) => {
+  async (data, { rejectWithValue }) => {
+    console.log("closeDaily called with data:", data);
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.daily.close();
+        const result = await window.electronAPI.daily.close(data);
 
         return result;
       } else {

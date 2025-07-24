@@ -34,7 +34,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   };
   return (
     <div
-      className="w-full py-2 flex flex-row border-r border-t border-b"
+      className="w-full py-2 flex flex-row border-r border-t border-b h-full"
       dir="rtl"
     >
       <ConfirmDeleteModal
@@ -53,7 +53,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       <div
         className={` border-r
            transition-all duration-500 ease-in-out
-          ${open ? "w-[20%] opacity-100" : "w-0 opacity-0 overflow-hidden"}
+          ${open ? "w-[20%] opacity-100" : "w-0 opacity-0 "}
         `}
         dir="rtl"
       >
@@ -66,7 +66,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       >
         <SidebarInset className=" rounded-t-2xl ">
           <MainHeader />
-          <div className="p-4 h-[90vh]">{children}</div>
+          <div className="p-4 h-full">{children}</div>
         </SidebarInset>
       </div>
     </div>

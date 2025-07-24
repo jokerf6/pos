@@ -27,6 +27,25 @@ const Toaster = ({ ...props }: ToasterProps) => {
     />
   );
 };
+export const showWarning = (message: string, description?: string) =>
+  toast.warning?.(message, {
+    description,
+    style: {
+      direction: "rtl",
+      backgroundColor: "#fef3c7", // لون خلفية أصفر فاتح
+      color: "#92400e", // لون نص بني داكن
+      border: "1px solid #f59e0b", // إطار برتقالي
+    },
+  }) ??
+  toast(message, {
+    description,
+    style: {
+      direction: "rtl",
+      backgroundColor: "#fef3c7",
+      color: "#92400e",
+      border: "1px solid #f59e0b",
+    },
+  });
 
 export const showSuccess = (message: string, description?: string) =>
   toast.success(message, {

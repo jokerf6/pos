@@ -100,6 +100,13 @@ const items = [
     icon: User,
     user: false,
   },
+  {
+    title: "الاعدادات",
+    url: "/settings",
+    group: [],
+    icon: User,
+    user: false,
+  },
 ];
 export function AppSidebar() {
   const { user } = useSelector((state: any) => state.auth);

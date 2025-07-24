@@ -35,6 +35,13 @@ const validChannels = {
   "products:getByBarcode": true,
   "products:generateBarCode": true,
 
+  // Invoice channels
+  "invoice:create": true,
+  "invoice:before": true,
+  "invoice:after": true,
+  "invoice:getAll": true,
+  "invoice:update": true,
+
   // Daily channels
   "daily:get": true,
   "daily:open": true,
@@ -53,7 +60,9 @@ const validChannels = {
   "transactions:getByDateRange": true,
 
   // Settings channels
-  "settings:get": true,
+  "settings:getByDomain": true,
+  "settings:getByKey": true,
+  "settings:getAll": true,
   "settings:update": true,
 
   // System channels
@@ -106,6 +115,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
     update: (data) => safeInvoke("users:update", data),
     delete: (id) => safeInvoke("users:delete", id),
   },
+  settings: {
+    getAll: () => safeInvoke("settings:getAll"),
+    getByDomain: (key) => safeInvoke("settings:getByDomain", key),
+    update: (data) => safeInvoke("settings:update", data),
+    getByKey: (key) => safeInvoke("settings:getByKey", key),
+  },
   categories: {
     create: (data) => safeInvoke("categories:create", data),
     getAll: (data) => safeInvoke("categories:getAll", data),
@@ -124,6 +139,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getByBarcode: (data) => safeInvoke("products:getByBarcode", data),
     generateBarCode: () => safeInvoke("products:generateBarCode"),
   },
+  invoice: {
+    create: (data) => safeInvoke("invoice:create", data),
+    after: (data) => safeInvoke("invoice:after", data),
+    before: (data) => safeInvoke("invoice:before", data),
+    getAll: (data) => safeInvoke("invoice:getAll", data),
+    update: (data) => safeInvoke("invoice:update", data),
+  },
   credit: {
     getAll: () => safeInvoke("credit:getAll"),
     getByDaily: () => safeInvoke("credit:getByDaily"),
@@ -132,8 +154,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   },
   daily: {
     get: () => safeInvoke("daily:get"),
-    open: () => safeInvoke("daily:open"),
-    close: () => safeInvoke("daily:close"),
+    open: (data) => safeInvoke("daily:open", data),
+    close: (data) => safeInvoke("daily:close", data),
   },
   transactions: {
     create: (transaction) => safeInvoke("transactions:create", transaction),
@@ -142,10 +164,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getByDateRange: (start, end) =>
       safeInvoke("transactions:getByDateRange", start, end),
   },
-  settings: {
-    get: (key) => safeInvoke("settings:get", key),
-    update: (settings) => safeInvoke("settings:update", settings),
-  },
+
   system: {
     getVersion: () => safeInvoke("system:getVersion"),
     restart: () => safeInvoke("system:restart"),

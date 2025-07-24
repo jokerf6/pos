@@ -8,6 +8,8 @@ import * as categoriesH from "./categories.js";
 import * as productsH from "./products.js"; // Import products handlers
 import * as dailyH from "./daily.js"; // Import daily handlers
 import * as creditH from "./credit.js"; // Import credit handlers
+import * as invoiceH from "./invoice.js"; // Import credit handlers
+import * as settingsHandlers from "./settings.js"; // Import settings handlers
 
 // Error handling wrapper
 const handleError = (handler) => {
@@ -81,6 +83,18 @@ function setupIPC() {
   ipcMain.handle("users:delete", secureHandler(usersH.deleteUser));
   ipcMain.handle("users:search", secureHandler(usersH.search));
 
+  // Settings handlers
+  ipcMain.handle("settings:getAll", secureHandler(settingsHandlers.getAll));
+  ipcMain.handle(
+    "settings:getByDomain",
+    secureHandler(settingsHandlers.getByDomain)
+  );
+  ipcMain.handle("settings:getByKey", secureHandler(settingsHandlers.getByKey));
+  ipcMain.handle(
+    "settings:update",
+    secureHandler(settingsHandlers.updateSettings)
+  );
+
   // Products handlers
   ipcMain.handle("products:getAll", secureHandler(productsH.getAll));
   ipcMain.handle("products:getById", secureHandler(productsH.findById));
@@ -122,6 +136,13 @@ function setupIPC() {
   ipcMain.handle("credit:getAll", secureHandler(creditH.getAllCredit));
   ipcMain.handle("credit:getByDaily", secureHandler(creditH.getCreditByDaily));
   ipcMain.handle("credit:delete", secureHandler(creditH.deleteCredit));
+
+  // Invoice handlers
+  ipcMain.handle("invoice:create", secureHandler(invoiceH.createInvoice));
+  ipcMain.handle("invoice:after", secureHandler(invoiceH.afterInvoice));
+  ipcMain.handle("invoice:before", secureHandler(invoiceH.beforeInvoice));
+  ipcMain.handle("invoice:getAll", secureHandler(invoiceH.getAllInvoices));
+  ipcMain.handle("invoice:update", secureHandler(invoiceH.updateInvoice));
 
   // Settings handlers
   // ipcMain.handle('settings:get', secureHandler(settingsHandlers.get));

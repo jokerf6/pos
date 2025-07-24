@@ -18,6 +18,7 @@ import CreditPage from "./pages/Credit/CreditPage";
 import CreditDailyPage from "./pages/Credit/CreditDailyPage";
 import InvoicePage from "./pages/Invoice/InvoicePage"; // ✅
 import CreateInvoicePage from "./pages/Invoice/create-invoicePage"; // ✅
+import SettingsPage from "./pages/Settings/index"; // ✅
 
 function App() {
   const dispatch = useDispatch();
@@ -154,6 +155,18 @@ function App() {
         }
       />
 
+      <Route
+        path="/settings"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <SettingsPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
       <Route
         path="/credit"
         element={

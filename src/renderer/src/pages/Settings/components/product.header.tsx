@@ -1,0 +1,97 @@
+import { useDispatch, useSelector } from "react-redux";
+import { Input } from "../../../components/ui/input";
+import {
+  getByDomain,
+  updateSettings,
+} from "../../../store/slices/settingsSlice";
+import { useEffect, useState } from "react";
+import { showError, showSuccess } from "../../../components/ui/sonner";
+
+export default function ProductHeader() {
+  const dispatch = useDispatch();
+  const { settings } = useSelector((state: any) => state.settings);
+
+  const [localSettings, setLocalSettings] = useState([]);
+
+  useEffect(() => {
+    dispatch(getByDomain("products"));
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (settings) {
+      setLocalSettings(settings);
+    }
+  }, [settings]);
+  const handelSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = await dispatch(updateSettings(localSettings));
+    if (!result.error) {
+      showSuccess("تم تحديث الاعدادات بنجاح");
+    } else {
+      showError(result.payload || "حدث خطأ أثناء تحديث الاعدادات");
+    }
+  };
+
+  const handleChange = (index: number, newValue: any) => {
+    const updated = [...localSettings];
+    // Create a shallow copy of the object to avoid mutating a frozen one
+    const updatedItem = { ...updated[index], value: newValue };
+    updated[index] = updatedItem;
+    setLocalSettings(updated);
+  };
+  const renderInput = (item: any, index: number) => {
+    const value = item.value;
+
+    // Detect type automatically
+    const isNumber = !isNaN(value) && value !== "" && value !== null;
+    const isBoolean = value === "true" || value === "false";
+    const inputType = isBoolean ? "checkbox" : isNumber ? "number" : "text";
+
+    return (
+      <div key={item.key} className="mb-4">
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          {item.name}
+        </label>
+
+        {inputType === "checkbox" ? (
+          <input
+            type="checkbox"
+            checked={value === "true"}
+            onChange={(e) =>
+              handleChange(index, e.target.checked ? "true" : "false")
+            }
+            className="w-5 h-5"
+          />
+        ) : (
+          <Input
+            type={inputType}
+            value={value}
+            min={0}
+            onChange={(e) => handleChange(index, e.target.value)}
+            className="border-blue-600"
+          />
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <form className="flex flex-col p-4 bg-gray-100 rounded-md">
+      <div className="flex justify-between items-center w-full">
+        <h1 className="text-xl font-bold">إعدادات المنتجات</h1>
+        <button
+          type="submit"
+          className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+          onClick={handelSubmit}
+        >
+          حفظ التغييرات
+        </button>
+      </div>
+
+      <div className="my-4">
+        {localSettings &&
+          localSettings.map((item, index) => renderInput(item, index))}
+      </div>
+    </form>
+  );
+}
