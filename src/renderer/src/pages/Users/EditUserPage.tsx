@@ -29,8 +29,8 @@ function EditUserPage() {
 
   // Fetch user by ID
   useEffect(() => {
-    if (id) {
-      dispatch(UserById({ id: Number(id) }));
+    if (id !== undefined) {
+      dispatch(UserById({ id: Number(id) }) as any);
     }
   }, [dispatch, id]);
 

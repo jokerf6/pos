@@ -19,10 +19,13 @@ import CreditDailyPage from "./pages/Credit/CreditDailyPage";
 import InvoicePage from "./pages/Invoice/InvoicePage"; // ✅
 import CreateInvoicePage from "./pages/Invoice/create-invoicePage"; // ✅
 import SettingsPage from "./pages/Settings/index"; // ✅
+import { RootState, AppDispatch } from "./store";
 
-function App() {
-  const dispatch = useDispatch();
-  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+const App: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { isAuthenticated, loading } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   useEffect(() => {
     dispatch(checkAuth());
@@ -50,7 +53,7 @@ function App() {
               <HomePage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
@@ -62,19 +65,7 @@ function App() {
               <UsersPage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/users/:id"
-        element={
-          isAuthenticated ? (
-            <Layout>
-              <EditUserPage />
-            </Layout>
-          ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
@@ -86,11 +77,22 @@ function App() {
               <CreateUserPage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
-
+      <Route
+        path="/users/edit/:id"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <EditUserPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
       <Route
         path="/categories"
         element={
@@ -99,11 +101,10 @@ function App() {
               <CategoriesPage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
-
       <Route
         path="/categories/create"
         element={
@@ -112,58 +113,55 @@ function App() {
               <CreateCategoryPage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
-
       <Route
-        path="/categories/:barcode"
+        path="/categories/edit/:id"
         element={
           isAuthenticated ? (
             <Layout>
               <EditCategoryPage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
       <Route
-        path="/invoice/create"
+        path="/products"
         element={
           isAuthenticated ? (
             <Layout>
-              <CreateInvoicePage />
+              <ProductsPage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
-
       <Route
-        path="/invoice"
+        path="/products/create"
         element={
           isAuthenticated ? (
             <Layout>
-              <InvoicePage />
+              <CreateProductPage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
-
       <Route
-        path="/settings"
+        path="/products/edit/:id"
         element={
           isAuthenticated ? (
             <Layout>
-              <SettingsPage />
+              <EditProductPage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
@@ -175,7 +173,7 @@ function App() {
               <CreditPage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
@@ -187,66 +185,48 @@ function App() {
               <CreditDailyPage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
-
       <Route
-        path="/products"
+        path="/invoice"
         element={
           isAuthenticated ? (
             <Layout>
-              <ProductsPage />
+              <InvoicePage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
-
       <Route
-        path="/products/create"
+        path="/invoice/create"
         element={
           isAuthenticated ? (
             <Layout>
-              <CreateProductPage />
+              <CreateInvoicePage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
-
       <Route
-        path="/products/:id"
+        path="/settings"
         element={
           isAuthenticated ? (
             <Layout>
-              <EditProductPage />
+              <SettingsPage />
             </Layout>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" />
           )
         }
       />
-
-      <Route
-        path="/"
-        element={
-          isAuthenticated ? (
-            <Layout>
-              <HomePage />
-            </Layout>
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-
-      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
-}
+};
 
 export default App;

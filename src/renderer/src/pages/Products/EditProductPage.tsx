@@ -36,7 +36,7 @@ const EditProductPage = () => {
   const printRef = useRef(null);
 
   useEffect(() => {
-    dispatch(getCategories());
+    dispatch(getCategories() as any);
   }, [dispatch]);
 
   const [formData, setFormData] = useState({

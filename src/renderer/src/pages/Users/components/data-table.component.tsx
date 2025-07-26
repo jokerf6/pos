@@ -42,7 +42,10 @@ const DataTable = <T extends Record<string, any>>({
   const navigate = useNavigate();
 
   const [visibleColumns, setVisibleColumns] = useState(() =>
-    columns.map((col) => ({ ...col, visible: col.visible !== false }))
+    columns.map((col: Column<T>) => ({
+      ...col,
+      visible: col.visible !== false,
+    }))
   );
 
   const [search, setSearch] = useState("");

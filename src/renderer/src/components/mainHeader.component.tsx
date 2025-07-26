@@ -19,16 +19,18 @@ export default function MainHeader() {
   const { daily } = useSelector((state: any) => state.daily);
   useEffect(() => {
     async function fetchData() {
-      const openResult = await dispatch(getByKey("open"));
+      const openResult = dispatch(getByKey("open"));
       console.log("openResult", openResult);
-      setOpenSettings(openResult.payload.data.value === "true");
+      // Type assertion to handle the unknown payload type
+      const payload = openResult.payload as { data: { value: string } };
+      setOpenSettings(payload.data.value === "true");
       dispatch(getDaily());
     }
     fetchData();
   }, [dispatch]);
   //
   const handleOpen = async () => {
-    await dispatch(openDaily(openPrice));
+    dispatch(openDaily(openPrice));
     dispatch(getDaily());
     setOpenPrice(0);
     setClosePrice(0);
@@ -36,7 +38,7 @@ export default function MainHeader() {
   };
 
   const handleClose = async () => {
-    await dispatch(closeDaily(closePrice));
+    dispatch(closeDaily(closePrice));
     dispatch(getDaily());
     setOpenPrice(0);
     setClosePrice(0);
