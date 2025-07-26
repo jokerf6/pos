@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useAppDispatch, useAppSelector } from "../../store";
 import {
   createProduct,
   ProductByBarcode,
@@ -26,8 +26,8 @@ import Modal from "../../components/common/dynamic-modal.component";
 
 const CreateProductPage = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const categories = useSelector((state: any) => state.categories);
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector((state) => state.categories);
   const [categoryData, setCategoryData] = useState(null);
   const [barcodeNumber, setBarcodeNumber] = useState(0);
   const [openPrint, setOpenPrint] = useState(false);
@@ -47,7 +47,7 @@ const CreateProductPage = () => {
     generated_code: undefined,
     category_id: "",
   });
-  const handleSearch = async (name) => {
+  const handleSearch = async (name: string) => {
     try {
       if (name.length === 0) {
         setFormData({
@@ -63,7 +63,7 @@ const CreateProductPage = () => {
         setCategoryData(null);
         return;
       }
-      const result = await dispatch(ProductByBarcode({ name }) as any);
+      const result = await dispatch(ProductByBarcode({ name }));
       if (!result.error) {
         const data = result.payload || {};
         // setCategoryData(

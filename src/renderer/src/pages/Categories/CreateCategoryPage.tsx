@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useAppDispatch } from "../../store";
 import { createCategory } from "../../store/slices/categoriesSlice"; // Adjust the import path as necessary
 
 // import toast from "react-hot-toast";
@@ -10,7 +10,7 @@ import { showError, showSuccess } from "../../components/ui/sonner";
 
 function CreateCategoryPage() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const [formData, setFormData] = useState<{
     name: string;
@@ -44,13 +44,13 @@ function CreateCategoryPage() {
         image: imageData,
       };
 
-      const result = await dispatch(createCategory(payload) as any);
+      const result = await dispatch(createCategory(payload));
 
-      if (!result.error) {
+      if (result.meta.requestStatus === "fulfilled") {
         showSuccess("تم انشاء القسم بنجاح");
         navigate("/categories");
       } else {
-        showError(result?.payload);
+        showError((result.payload as string) || "حدث خطأ");
       }
     } catch (err) {
       console.error("Error uploading category", err);

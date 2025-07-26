@@ -1,8 +1,56 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
+// Types
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  quantity: number;
+  price: number;
+  buy_price: number;
+  barcode?: string;
+  generated_code?: string;
+  category_id: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface ProductPayload {
+  name: string;
+  description: string;
+  quantity: number;
+  price: number;
+  buy_price: number;
+  barcode?: string;
+  generated_code?: string;
+  category_id: number;
+}
+
+interface UpdateProductPayload extends ProductPayload {
+  id: number;
+}
+
+interface ProductsState {
+  products: Product[];
+  total: number;
+  loading: boolean;
+  selectedProduct: Product | null;
+  error: string | null;
+}
+
+interface GetProductsPayload {
+  limit?: number;
+  offset?: number;
+}
+
+interface BarcodeSearchPayload {
+  name: string;
+}
+
+// Async thunks
 export const getProducts = createAsyncThunk(
   "products/getAll",
-  async (data, { rejectWithValue }) => {
+  async (data: GetProductsPayload, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.products.getAll(data);
@@ -10,7 +58,7 @@ export const getProducts = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
@@ -18,17 +66,16 @@ export const getProducts = createAsyncThunk(
 
 export const generateBarCode = createAsyncThunk(
   "products/generateBarCode",
-  async (_, { rejectWithValue }) => {
+  async (data: any, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.products.generateBarCode();
+        const result = await window.electronAPI.products.generateBarCode(data);
         console.log("Generating barcode...", result);
-
         return result.barcode;
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
@@ -36,7 +83,7 @@ export const generateBarCode = createAsyncThunk(
 
 export const searchProducts = createAsyncThunk(
   "products/search",
-  async (name, { rejectWithValue }) => {
+  async (name: string, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.products.search(name);
@@ -44,7 +91,7 @@ export const searchProducts = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
@@ -52,7 +99,7 @@ export const searchProducts = createAsyncThunk(
 
 export const createProduct = createAsyncThunk(
   "products/create",
-  async (data, { rejectWithValue }) => {
+  async (data: ProductPayload, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.products.create(data);
@@ -60,7 +107,7 @@ export const createProduct = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       const message = error?.message || error?.error || "Unknown error";
       return rejectWithValue(message.split("Error: ")[1] || message);
     }
@@ -69,7 +116,7 @@ export const createProduct = createAsyncThunk(
 
 export const updateProduct = createAsyncThunk(
   "products/update",
-  async (data, { rejectWithValue }) => {
+  async (data: UpdateProductPayload, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.products.update(data);
@@ -77,7 +124,7 @@ export const updateProduct = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       const message = error?.message || error?.error || "Unknown error";
       return rejectWithValue(message.split("Error: ")[1] || message);
     }
@@ -86,7 +133,7 @@ export const updateProduct = createAsyncThunk(
 
 export const ProductById = createAsyncThunk(
   "products/getById",
-  async (id, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.products.getById(id);
@@ -94,7 +141,7 @@ export const ProductById = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
@@ -102,17 +149,19 @@ export const ProductById = createAsyncThunk(
 
 export const ProductByBarcode = createAsyncThunk(
   "products/getByBarcode",
-  async (data, { rejectWithValue }) => {
+  async (data: BarcodeSearchPayload, { rejectWithValue }) => {
     console.log("Barcode data:", data);
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.products.getByBarcode(data);
+        const result = await window.electronAPI.products.getByBarcode(
+          data.name
+        );
         console.log("getByBarcode result:", result);
         return result.product;
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
@@ -120,7 +169,7 @@ export const ProductByBarcode = createAsyncThunk(
 
 export const deleteProduct = createAsyncThunk(
   "products/delete",
-  async (id, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.products.delete(id);
@@ -128,21 +177,24 @@ export const deleteProduct = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
 );
 
+// Initial state
+const initialState: ProductsState = {
+  products: [],
+  total: 0,
+  loading: false,
+  selectedProduct: null,
+  error: null,
+};
+
 const productsSlice = createSlice({
   name: "products",
-  initialState: {
-    products: [],
-    total: 0,
-    loading: false,
-    selectedProduct: null,
-    error: null,
-  },
+  initialState,
   reducers: {
     clearProductsError: (state) => {
       state.error = null;
@@ -159,7 +211,7 @@ const productsSlice = createSlice({
       })
       .addCase(ProductById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
       .addCase(getProducts.pending, (state) => {
@@ -168,12 +220,12 @@ const productsSlice = createSlice({
       .addCase(getProducts.fulfilled, (state, action) => {
         console.log("action", action.payload);
         state.loading = false;
-        state.products = action.payload.products;
-        state.total = action.payload.total;
+        state.products = action.payload?.products || [];
+        state.total = action.payload?.total || 0;
       })
       .addCase(getProducts.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
       .addCase(createProduct.pending, (state) => {
@@ -184,7 +236,7 @@ const productsSlice = createSlice({
       })
       .addCase(createProduct.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
       .addCase(updateProduct.pending, (state) => {
@@ -195,7 +247,7 @@ const productsSlice = createSlice({
       })
       .addCase(updateProduct.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
       .addCase(deleteProduct.pending, (state) => {
@@ -206,7 +258,7 @@ const productsSlice = createSlice({
       })
       .addCase(deleteProduct.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       });
   },
 });

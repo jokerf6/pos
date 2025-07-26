@@ -1,16 +1,43 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// Get all users
+// Types
+interface User {
+  id: number;
+  username: string;
+  password: string;
+  role: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface UserPayload {
+  username: string;
+  password: string;
+  role: string;
+}
+
+interface UpdateUserPayload extends UserPayload {
+  id: number;
+}
+
+interface UsersState {
+  users: User[];
+  total: number;
+  loading: boolean;
+  selectedUser: User | null;
+  error: string | null;
+}
+
+// Async thunks
 export const getUsers = createAsyncThunk(
   "users/getAll",
-  async (data, { rejectWithValue }) => {
+  async (data: any, { rejectWithValue }) => {
     try {
-      console.log("Fetching users10...");
+      console.log("Fetching users...");
       if (window.electronAPI) {
         console.log("Using Electron API to fetch users");
         const result = await window.electronAPI.users.getAll(data);
         console.log(result);
-
         console.log("Users fetched:", result);
         return result;
       } else {
@@ -18,7 +45,7 @@ export const getUsers = createAsyncThunk(
         const local = localStorage.getItem("casher_users") || "[]";
         return JSON.parse(local);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error fetching users:", error);
       return rejectWithValue(error.message);
     }
@@ -27,27 +54,25 @@ export const getUsers = createAsyncThunk(
 
 export const searchUsers = createAsyncThunk(
   "users/search",
-  async (name, { rejectWithValue }) => {
+  async (name: string, { rejectWithValue }) => {
     try {
-      console.log("Fetching users...");
+      console.log("Searching users...");
       if (window.electronAPI) {
         const result = await window.electronAPI.users.search(name);
         return result;
       } else {
-        // Development fallback
         return null;
       }
-    } catch (error) {
-      console.log("Error fetching users:", error);
+    } catch (error: any) {
+      console.log("Error searching users:", error);
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Create user
 export const createUser = createAsyncThunk(
   "users/create",
-  async (newUser, { rejectWithValue }) => {
+  async (newUser: UserPayload, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.users.create(newUser);
@@ -55,82 +80,81 @@ export const createUser = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       const message = error?.message || error?.error || "Unknown error";
       return rejectWithValue(message.split("Error: ")[1] || message);
     }
   }
 );
 
-// Update user
 export const updateUser = createAsyncThunk(
   "users/update",
-  async (updatedUser, { rejectWithValue }) => {
+  async (userData: UpdateUserPayload, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.users.update(updatedUser);
+        const result = await window.electronAPI.users.update(userData);
         return result;
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       const message = error?.message || error?.error || "Unknown error";
       return rejectWithValue(message.split("Error: ")[1] || message);
     }
   }
 );
 
-// Delete user
 export const UserById = createAsyncThunk(
   "users/getById",
-  async (userId, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.users.getById(userId);
+        const result = await window.electronAPI.users.getById(id);
         return result;
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Delete user
 export const deleteUser = createAsyncThunk(
   "users/delete",
-  async (userId, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.users.delete(userId);
+        const result = await window.electronAPI.users.delete(id);
         return result;
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
 );
+
+// Initial state
+const initialState: UsersState = {
+  users: [],
+  total: 0,
+  loading: false,
+  selectedUser: null,
+  error: null,
+};
 
 const usersSlice = createSlice({
   name: "users",
-  initialState: {
-    users: [],
-    total: 0,
-    loading: false,
-    selectedUser: null,
-    error: null,
-  },
+  initialState,
   reducers: {
-    clearUserError: (state) => {
+    clearUsersError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      // Get Users
       .addCase(UserById.pending, (state) => {
         state.loading = true;
       })
@@ -140,24 +164,22 @@ const usersSlice = createSlice({
       })
       .addCase(UserById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
       .addCase(getUsers.pending, (state) => {
         state.loading = true;
       })
       .addCase(getUsers.fulfilled, (state, action) => {
-        console.log("action", action.payload);
         state.loading = false;
-        state.users = action.payload.users;
-        state.total = action.payload.total; // Assuming payload is an array of users
+        state.users = action.payload?.data || [];
+        state.total = action.payload?.total || 0;
       })
       .addCase(getUsers.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
-      // Create User
       .addCase(createUser.pending, (state) => {
         state.loading = true;
       })
@@ -166,39 +188,32 @@ const usersSlice = createSlice({
       })
       .addCase(createUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
-      // Update User
       .addCase(updateUser.pending, (state) => {
         state.loading = true;
       })
       .addCase(updateUser.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.users.findIndex((u) => u.id === action.payload.id);
-        if (index !== -1) {
-          state.users[index] = action.payload;
-        }
       })
       .addCase(updateUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
-      // Delete User
       .addCase(deleteUser.pending, (state) => {
         state.loading = true;
       })
       .addCase(deleteUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = state.users.filter((u) => u.id !== action.payload);
       })
       .addCase(deleteUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       });
   },
 });
 
-export const { clearUserError } = usersSlice.actions;
+export const { clearUsersError } = usersSlice.actions;
 export default usersSlice.reducer;

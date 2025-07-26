@@ -1,18 +1,52 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
+// Types
+interface Category {
+  id: number;
+  name: string;
+  image?: {
+    name: string;
+    type: string;
+    buffer: number[];
+  } | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface CategoryPayload {
+  name: string;
+  image?: {
+    name: string;
+    type: string;
+    buffer: number[];
+  } | null;
+}
+
+interface UpdateCategoryPayload extends CategoryPayload {
+  id: number;
+}
+
+interface CategoryState {
+  categories: Category[];
+  loading: boolean;
+  selectedCategory: Category | null;
+  error: string | null;
+}
+
+// Async thunks
 export const getCategories = createAsyncThunk(
   "categories/getAll",
-  async (data, { rejectWithValue }) => {
+  async (data: void, { rejectWithValue }) => {
     console.log(window.electronAPI);
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.categories.getAll(data);
+        const result = await window.electronAPI.categories.getAll();
         console.log("getCategories result", result);
         return result;
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("error", error);
       return rejectWithValue(error.message);
     }
@@ -21,7 +55,7 @@ export const getCategories = createAsyncThunk(
 
 export const searchCategories = createAsyncThunk(
   "categories/search",
-  async (name, { rejectWithValue }) => {
+  async (name: string, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.categories.search(name);
@@ -29,7 +63,7 @@ export const searchCategories = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
@@ -37,7 +71,7 @@ export const searchCategories = createAsyncThunk(
 
 export const createCategory = createAsyncThunk(
   "categories/create",
-  async (data, { rejectWithValue }) => {
+  async (data: CategoryPayload, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.categories.create(data);
@@ -45,7 +79,7 @@ export const createCategory = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       const message = error?.message || error?.error || "Unknown error";
       return rejectWithValue(message.split("Error: ")[1] || message);
     }
@@ -54,7 +88,7 @@ export const createCategory = createAsyncThunk(
 
 export const updateCategory = createAsyncThunk(
   "categories/update",
-  async (data, { rejectWithValue }) => {
+  async (data: UpdateCategoryPayload, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.categories.update(data);
@@ -62,7 +96,7 @@ export const updateCategory = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       const message = error?.message || error?.error || "Unknown error";
       return rejectWithValue(message.split("Error: ")[1] || message);
     }
@@ -71,7 +105,7 @@ export const updateCategory = createAsyncThunk(
 
 export const CategoryById = createAsyncThunk(
   "categories/getById",
-  async (id, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.categories.getById(id);
@@ -79,7 +113,7 @@ export const CategoryById = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
@@ -87,7 +121,7 @@ export const CategoryById = createAsyncThunk(
 
 export const deleteCategory = createAsyncThunk(
   "categories/delete",
-  async (id, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.categories.delete(id);
@@ -95,20 +129,23 @@ export const deleteCategory = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       return rejectWithValue(error.message);
     }
   }
 );
 
+// Initial state
+const initialState: CategoryState = {
+  categories: [],
+  loading: false,
+  selectedCategory: null,
+  error: null,
+};
+
 const categorySlice = createSlice({
   name: "categories",
-  initialState: {
-    categories: [],
-    loading: false,
-    selectedCategory: null,
-    error: null,
-  },
+  initialState,
   reducers: {
     clearCategoryError: (state) => {
       state.error = null;
@@ -125,7 +162,7 @@ const categorySlice = createSlice({
       })
       .addCase(CategoryById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
       .addCase(getCategories.pending, (state) => {
@@ -134,11 +171,11 @@ const categorySlice = createSlice({
       .addCase(getCategories.fulfilled, (state, action) => {
         console.log("action", action.payload);
         state.loading = false;
-        state.categories = action.payload.data;
+        state.categories = action.payload?.data || [];
       })
       .addCase(getCategories.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
       .addCase(createCategory.pending, (state) => {
@@ -149,7 +186,7 @@ const categorySlice = createSlice({
       })
       .addCase(createCategory.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
       .addCase(updateCategory.pending, (state) => {
@@ -160,7 +197,7 @@ const categorySlice = createSlice({
       })
       .addCase(updateCategory.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
 
       .addCase(deleteCategory.pending, (state) => {
@@ -171,7 +208,7 @@ const categorySlice = createSlice({
       })
       .addCase(deleteCategory.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       });
   },
 });

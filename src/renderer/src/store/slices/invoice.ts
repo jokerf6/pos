@@ -1,10 +1,35 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
+// Types
+interface InvoiceItem {
+  product_id: number;
+  quantity: number;
+  price: number;
+  total: number;
+}
+
+interface InvoicePayload {
+  items: InvoiceItem[];
+  total_amount: number;
+  customer_info?: any;
+  payment_method?: string;
+}
+
+interface UpdateInvoicePayload extends InvoicePayload {
+  id: number;
+}
+
+interface InvoiceState {
+  loading: boolean;
+  error: string | null;
+  currentInvoice: any | null;
+}
+
+// Async thunks
 export const createInvoice = createAsyncThunk(
   "invoice/create",
-  async (data, { rejectWithValue }) => {
+  async (data: InvoicePayload, { rejectWithValue }) => {
     console.log("in->", data);
-
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.invoice.create(data);
@@ -12,7 +37,7 @@ export const createInvoice = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       const message = error?.message || error?.error || "Unknown error";
       return rejectWithValue(message.split("Error: ")[1] || message);
     }
@@ -21,7 +46,7 @@ export const createInvoice = createAsyncThunk(
 
 export const updateInvoice = createAsyncThunk(
   "invoice/update",
-  async (data, { rejectWithValue }) => {
+  async (data: UpdateInvoicePayload, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.invoice.update(data);
@@ -29,7 +54,7 @@ export const updateInvoice = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       const message = error?.message || error?.error || "Unknown error";
       return rejectWithValue(message.split("Error: ")[1] || message);
     }
@@ -38,7 +63,7 @@ export const updateInvoice = createAsyncThunk(
 
 export const beforeInvoice = createAsyncThunk(
   "invoice/before",
-  async (data, { rejectWithValue }) => {
+  async (data: any, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.invoice.before(data);
@@ -46,55 +71,23 @@ export const beforeInvoice = createAsyncThunk(
       } else {
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       const message = error?.message || error?.error || "Unknown error";
       return rejectWithValue(message.split("Error: ")[1] || message);
     }
   }
 );
 
-export const getInvoice = createAsyncThunk(
-  "invoice/getAll",
-  async (data, { rejectWithValue }) => {
-    try {
-      if (window.electronAPI) {
-        const result = await window.electronAPI.invoice.getAll(data);
-        return result;
-      } else {
-        return null;
-      }
-    } catch (error) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
-export const afterInvoice = createAsyncThunk(
-  "invoice/after",
-  async (data, { rejectWithValue }) => {
-    try {
-      if (window.electronAPI) {
-        const result = await window.electronAPI.invoice.after(data);
-        return result;
-      } else {
-        return null;
-      }
-    } catch (error) {
-      const message = error?.message || error?.error || "Unknown error";
-      return rejectWithValue(message.split("Error: ")[1] || message);
-    }
-  }
-);
+// Initial state
+const initialState: InvoiceState = {
+  loading: false,
+  error: null,
+  currentInvoice: null,
+};
 
 const invoiceSlice = createSlice({
   name: "invoice",
-  initialState: {
-    invoice: [],
-    total: 0,
-    loading: false,
-    selectedInvoice: null,
-    error: null,
-  },
+  initialState,
   reducers: {
     clearInvoiceError: (state) => {
       state.error = null;
@@ -102,39 +95,39 @@ const invoiceSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(getInvoice.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(getInvoice.fulfilled, (state, action) => {
-        console.log("action", action.payload);
-        state.loading = false;
-        state.invoice = action.payload.data;
-        state.total = action.payload.total;
-      })
-      .addCase(getInvoice.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
       .addCase(createInvoice.pending, (state) => {
         state.loading = true;
       })
       .addCase(createInvoice.fulfilled, (state, action) => {
         state.loading = false;
+        state.currentInvoice = action.payload;
       })
       .addCase(createInvoice.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       })
+
       .addCase(updateInvoice.pending, (state) => {
         state.loading = true;
       })
       .addCase(updateInvoice.fulfilled, (state, action) => {
         state.loading = false;
+        state.currentInvoice = action.payload;
       })
       .addCase(updateInvoice.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
+      })
+
+      .addCase(beforeInvoice.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(beforeInvoice.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(beforeInvoice.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

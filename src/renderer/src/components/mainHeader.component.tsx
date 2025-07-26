@@ -10,21 +10,24 @@ import { closeDaily } from "../store/slices/dailySlice";
 import { getByKey } from "../store/slices/settingsSlice";
 import Modal from "./common/dynamic-modal.component";
 import { Input } from "./ui/input";
+import { RootState, AppDispatch } from "../store";
+
 export default function MainHeader() {
   const [openSettings, setOpenSettings] = useState(false);
   const [openPrice, setOpenPrice] = useState(0);
   const [closePrice, setClosePrice] = useState(0);
   const [open, setOpen] = useState(false);
-  const dispatch = useDispatch();
-  const { daily } = useSelector((state: any) => state.daily);
+  const dispatch = useDispatch<AppDispatch>();
+  const { daily } = useSelector((state: RootState) => state.daily);
   useEffect(() => {
     async function fetchData() {
-      const openResult = dispatch(getByKey("open"));
-      console.log("openResult", openResult);
-      // Type assertion to handle the unknown payload type
-      const payload = openResult.payload as { data: { value: string } };
-      setOpenSettings(payload.data.value === "true");
-      dispatch(getDaily());
+      try {
+        const openResult = await dispatch(getByKey("open")).unwrap();
+        setOpenSettings(openResult.data.value === "true");
+        dispatch(getDaily());
+      } catch (error) {
+        console.error("Failed to fetch settings:", error);
+      }
     }
     fetchData();
   }, [dispatch]);

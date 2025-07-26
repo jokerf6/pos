@@ -75,6 +75,25 @@ interface ElectronAPI {
     generateBarCode: (data: any) => Promise<any>;
   };
 
+  invoice: {
+    create: (data: any) => Promise<any>;
+    update: (data: any) => Promise<any>;
+    before: (data: any) => Promise<any>;
+  };
+
+  daily: {
+    get: () => Promise<any>;
+    open: (data: number) => Promise<any>;
+    close: (data: number) => Promise<any>;
+  };
+
+  credit: {
+    getAll: () => Promise<any>;
+    getByDaily: () => Promise<any>;
+    create: (data: any) => Promise<any>;
+    delete: (id: number) => Promise<any>;
+  };
+
   transactions: {
     create: (data: any) => Promise<any>;
     getAll: (data?: any) => Promise<any>;
@@ -84,6 +103,8 @@ interface ElectronAPI {
 
   settings: {
     get: () => Promise<any>;
+    getByKey: (key: string) => Promise<any>;
+    getByDomain: (domain: string) => Promise<any>;
     update: (data: any) => Promise<any>;
   };
 
@@ -95,7 +116,6 @@ interface ElectronAPI {
     close: () => Promise<void>;
   };
 }
-
 declare global {
   interface Window {
     electronAPI: ElectronAPI;
