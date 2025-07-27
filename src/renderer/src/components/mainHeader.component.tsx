@@ -1,16 +1,25 @@
-import { SidebarTrigger } from "./ui/sidebar";
-import { HeaderActions } from "./common/headerAction.component";
-import { Button } from "./ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import { getDaily } from "../store/slices/dailySlice";
-import { formatDate } from "../utils/formDate.js";
-import { openDaily } from "../store/slices/dailySlice";
-import { closeDaily } from "../store/slices/dailySlice";
-import { getByKey } from "../store/slices/settingsSlice";
+import { AppDispatch, RootState } from "store";
+import { getByKey } from "store/slices/settingsSlice";
+import { closeDaily, getDaily, openDaily } from "store/slices/dailySlice";
+import { SidebarTrigger } from "./ui/sidebar";
 import Modal from "./common/dynamic-modal.component";
 import { Input } from "./ui/input";
-import { RootState, AppDispatch } from "../store";
+import { Button } from "./ui/button";
+import { HeaderActions } from "./common/headerAction.component";
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleString("ar-EG", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
 
 export default function MainHeader() {
   const [openSettings, setOpenSettings] = useState(false);
@@ -86,20 +95,20 @@ export default function MainHeader() {
           <div>
             <div className="flex gap-2">
               <span>المبلغ الكلي:</span>
-              <span>{parseInt(daily[0]?.cashInDrawer).toFixed(2)}</span>
+              <span>{Number(daily[0]?.cashInDrawer).toFixed(2)}</span>
             </div>
             <div className="flex gap-2">
               <span>اجمالي المبيعات:</span>
-              <span>{parseInt(daily[0]?.total_sales).toFixed(2)}</span>
+              <span>{Number(daily[0]?.total_sales).toFixed(2)}</span>
             </div>
 
             <div className="flex gap-2">
               <span>اجمالي المصروفات:</span>
-              <span>{parseInt(daily[0]?.total_expenses).toFixed(2)}</span>
+              <span>{Number(daily[0]?.total_expenses).toFixed(2)}</span>
             </div>
             <div className="flex gap-2">
               <span>اجمالي المرتجعات:</span>
-              <span>{parseInt(daily[0]?.total_returns).toFixed(2)}</span>
+              <span>{Number(daily[0]?.total_returns).toFixed(2)}</span>
             </div>
           </div>
         )}
@@ -119,7 +128,11 @@ export default function MainHeader() {
           {daily.length > 0 && (
             <span>
               تاريخ بداية اليومية :{" "}
-              {formatDate(daily[0].opened_at.toISOString())}
+              {formatDate(
+                typeof daily[0].opened_at === "string"
+                  ? daily[0].opened_at
+                  : new Date(daily[0].opened_at).toISOString()
+              )}
             </span>
           )}
           <Button

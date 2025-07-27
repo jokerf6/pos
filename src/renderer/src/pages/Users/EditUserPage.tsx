@@ -29,7 +29,7 @@ function EditUserPage() {
   // Fetch user by ID
   useEffect(() => {
     if (id !== undefined) {
-      dispatch(UserById({ id: Number(id) }) as any);
+      dispatch(UserById(Number(id)) as any);
     }
   }, [dispatch, id]);
 

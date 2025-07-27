@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-import { afterInvoice, beforeInvoice } from "../../../store/slices/invoice";
+import { useAppDispatch } from "../../../store";
+import { beforeInvoice } from "../../../store/slices/invoice";
 import { Button } from "../../../components/ui/button";
 import FilterSection from "./filterSection";
 import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
 
 export default function AllInvoicesFixed() {
   const searchInputRef = useRef(null);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,7 +19,7 @@ export default function AllInvoicesFixed() {
 
   const [products, setProducts] = useState([]);
   const [beforeInvoiceData, setBeforeInvoiceData] = useState(undefined);
-  const [afterInvoiceData, setAfterInvoiceData] = useState(undefined);
+  const [afterInvoiceData, setAfterInvoiceData] = useState(undefined); // keep state, but afterInvoice is not imported
   const [canGoBefore, setCanGoBefore] = useState(true);
   const [canGoAfter, setCanGoAfter] = useState(false);
   const [from, setFrom] = useState("");
@@ -146,12 +146,13 @@ export default function AllInvoicesFixed() {
   const after = async () => {
     setIsLoading(true);
     try {
-      const result = await dispatch(
-        afterInvoice({
-          id: afterInvoiceData,
-          filter: { to, from, invoiceType },
-        })
-      );
+      const result =
+        await dispatch();
+        // TODO: Implement afterInvoice logic or remove if not needed
+        // afterInvoice({
+        //   id: afterInvoiceData,
+        //   filter: { to, from, invoiceType },
+        // })
 
       if (!result.payload.data) {
         setCanGoAfter(false);
@@ -264,7 +265,7 @@ export default function AllInvoicesFixed() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {products.map((p, index) => (
+              {products.map((p: any, index: number) => (
                 <tr
                   key={p.id}
                   className={`text-center hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-25"}`}

@@ -41,7 +41,7 @@ const DataTable = <T extends Record<string, any>>({
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [visibleColumns, setVisibleColumns] = useState(() =>
+  const [visibleColumns] = useState(() =>
     columns.map((col: Column<T>) => ({
       ...col,
       visible: col.visible !== false,
@@ -56,7 +56,7 @@ const DataTable = <T extends Record<string, any>>({
   useEffect(() => {
     setTotal(dataTotal || 0);
     setCurrentData(data);
-  }, [data]);
+  }, [data, dataTotal]);
 
   // useEffect(() => {
   //   setPage(1);
@@ -67,9 +67,10 @@ const DataTable = <T extends Record<string, any>>({
     setSearch(value);
 
     try {
-      const result = await dispatch(searchUsers({ name: value, page }) as any);
+      // searchUsers expects a string (name), not an object
+      const result = await dispatch(searchUsers(value) as any);
       if (!result.error) {
-        const formatedUsers = result?.payload?.users?.map((item) => ({
+        const formatedUsers = result?.payload?.users?.map((item: any) => ({
           ...item,
           createdAt: new Date(item.created_at).toISOString().split("T")[0], // Format date to YYYY-MM-DD
         }));
@@ -87,10 +88,10 @@ const DataTable = <T extends Record<string, any>>({
     setPage((prev) => page);
 
     try {
-      const result = await dispatch(getUsers({ page }) as any);
+      const result = await dispatch(getUsers(page) as any);
       console.log("paginated", result);
       if (!result.error) {
-        const formatedUsers = result?.payload?.users?.map((item) => ({
+        const formatedUsers = result?.payload?.users?.map((item: any) => ({
           ...item,
           createdAt: new Date(item.created_at).toISOString().split("T")[0], // Format date to YYYY-MM-DD
         }));
@@ -109,7 +110,7 @@ const DataTable = <T extends Record<string, any>>({
     if (!search) return currentData;
     return currentData?.filter((row) =>
       visibleColumns.some(
-        (col) =>
+        (col: Column<T>) =>
           col.visible &&
           String(row[col.accessorKey] ?? "")
             .toLowerCase()
@@ -144,7 +145,7 @@ const DataTable = <T extends Record<string, any>>({
           <TableHeader>
             <TableRow>
               {visibleColumns.map(
-                (column, index) =>
+                (column: Column<T>, index: number) =>
                   column.visible && (
                     <TableHead
                       key={index}
@@ -165,7 +166,7 @@ const DataTable = <T extends Record<string, any>>({
               filteredData.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
                   {visibleColumns.map(
-                    (column, colIndex) =>
+                    (column: Column<T>, colIndex: number) =>
                       column.visible && (
                         <TableCell
                           key={colIndex}
