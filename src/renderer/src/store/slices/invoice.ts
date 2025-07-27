@@ -128,21 +128,9 @@ const invoiceSlice = createSlice({
       .addCase(beforeInvoice.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      })
-
-      .addCase(afterInvoice.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(afterInvoice.fulfilled, (state, action) => {
-        state.loading = false;
-      })
-      .addCase(afterInvoice.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
       });
   },
 });
 
 export const { clearInvoiceError } = invoiceSlice.actions;
 export default invoiceSlice.reducer;
-

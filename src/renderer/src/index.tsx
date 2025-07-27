@@ -7,7 +7,9 @@ import { Provider } from "react-redux";
 import store from "./store";
 import { HashRouter } from "react-router-dom";
 
-const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
+const root = ReactDOM.createRoot(
+  document.getElementById("root") as HTMLElement
+);
 
 root.render(
   <React.StrictMode>
@@ -20,4 +22,3 @@ root.render(
 );
 
 reportWebVitals();
-

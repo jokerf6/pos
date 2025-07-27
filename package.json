@@ -26,7 +26,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:main\" ",
     "dev:renderer": "cd src/renderer && npm start",
-    "dev:main": "wait-on http://localhost:3000 && electron .",
+    "dev:main": "electron .",
     "build": "npm run build:renderer && npm run build:main",
     "build:renderer": "cd src/renderer && npm run build",
     "clean": "rimraf dist",
@@ -98,6 +98,7 @@
   "devDependencies": {
     "@types/node": "^20.10.0",
     "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
     "concurrently": "^8.2.2",
     "electron": "^28.0.0",
     "electron-builder": "^24.13.3",

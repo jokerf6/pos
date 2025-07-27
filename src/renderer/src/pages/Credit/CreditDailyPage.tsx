@@ -10,7 +10,7 @@ import { formatDate } from "../../utils/formDate";
 import { RootState, AppDispatch } from "../../store";
 
 interface CreditItem {
-  id: number;
+  id?: number;
   reason: string;
   created_at: string;
   createdAt?: string;
@@ -28,7 +28,7 @@ const CreditDailyPage: React.FC = () => {
     dispatch(CreditByDaily());
   }, [dispatch]);
 
-  const formattedProducts = dailyCredits?.map((item: CreditItem) => ({
+  const formattedProducts = dailyCredits?.map((item: any) => ({
     ...item,
     createdAt: formatDate(item.created_at), // Format date to YYYY-MM-DD
   }));
@@ -40,7 +40,7 @@ const CreditDailyPage: React.FC = () => {
       showConfirmModal({
         itemLabel: item.reason,
         onConfirm: () => {
-          dispatch(deleteCredit(item.id))
+          dispatch(deleteCredit(item?.id as number))
             .unwrap()
             .then(() => {
               showSuccess("تم حذف المصروف بنجاح");

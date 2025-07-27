@@ -1,3 +1,4 @@
+
 import { app, BrowserWindow } from "electron";
 import isDev from "electron-is-dev";
 import updater from "electron-updater";
@@ -7,12 +8,10 @@ import { initDatabase } from "./database/connection.js";
 import { setupIPC } from "./ipc/handlers/index.js";
 import { createWindow } from "./window/createWindow.js";
 
-// Configure logging for better error visibility
-console.log("Starting Casher Desktop application");
-console.log("Node version:", process.versions.node);
-console.log("Electron version:", process.versions.electron);
-console.log("Chrome version:", process.versions.chrome);
-console.log("Is development mode:", isDev);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
+
+// Configure logging
 
 // Enable live reload for Electron in development
 if (isDev) {
@@ -24,71 +23,43 @@ if (isDev) {
 }
 
 // Keep a global reference of the window object
-let mainWindow: BrowserWindow | null = null;
+let mainWindow;
 
 // Security: Prevent new window creation
 app.on("web-contents-created", (event, contents) => {
-  // Block new window creation
   contents.on("new-window", (event, navigationUrl) => {
     event.preventDefault();
     console.warn("Blocked new window creation:", navigationUrl);
   });
+});
 
-  // Block navigation to unknown protocols
+// Security: Prevent navigation to external URLs
+app.on("web-contents-created", (event, contents) => {
   contents.on("will-navigate", (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl);
-    console.log("🔍 Attempted navigation to:", navigationUrl);
 
     if (
-      parsedUrl.protocol !== "file:" &&
-      parsedUrl.origin !== "http://localhost:3000"
+      parsedUrl.origin !== "http://localhost:3000" &&
+      parsedUrl.origin !== "file://"
     ) {
       event.preventDefault();
-      console.warn("🚫 Blocked navigation to:", navigationUrl);
+      console.warn("Blocked navigation to:", navigationUrl);
     }
   });
-
-  // Strip unsafe preload and disable Node integration in webviews
-  contents.on("will-attach-webview", (event, webPreferences, params) => {
-    delete webPreferences.preload;
-    delete webPreferences.preloadURL;
-    webPreferences.nodeIntegration = false;
-  });
-});
-// Security: Prevent navigation to external URLs
-
-// Global error handler
-process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
 });
 
 // App event handlers
 app.whenReady().then(async () => {
   try {
-    console.log("App is ready, initializing...");
-
     // Initialize database
-    console.log("Initializing database...");
     await initDatabase();
     console.info("Database initialized successfully");
 
     // Create main window
-    console.log("Creating main window...");
     mainWindow = createWindow();
     console.info("Main window created");
 
-    // Add error handler to window
-    if (mainWindow && mainWindow.webContents) {
-      mainWindow.webContents.on(
-        "did-fail-load",
-        (event, errorCode, errorDescription) => {
-          console.error(`Failed to load: ${errorDescription} (${errorCode})`);
-        }
-      );
-    }
-
     // Setup IPC handlers
-    console.log("Setting up IPC handlers...");
     setupIPC();
     console.info("IPC handlers setup complete");
 
@@ -116,6 +87,18 @@ app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     mainWindow = createWindow();
   }
+});
+
+// Security: Prevent protocol handler hijacking
+app.on("web-contents-created", (event, contents) => {
+  contents.on("will-attach-webview", (event, webPreferences, params) => {
+    // Strip away preload scripts if unused or verify their location is legitimate
+    delete webPreferences.preload;
+    delete webPreferences.preloadURL;
+
+    // Disable Node.js integration
+    webPreferences.nodeIntegration = false;
+  });
 });
 
 // Handle certificate errors
@@ -146,4 +129,3 @@ process.on("SIGINT", () => {
 
 // Export for testing
 export { app, mainWindow };
-

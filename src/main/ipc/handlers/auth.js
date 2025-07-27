@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import log from "electron-log";
 import { getDatabase } from "../../database/connection.js";
 import Store from "electron-store";
-import { IpcMainInvokeEvent } from "electron";
 
 // JWT secret - in production, this should be loaded from environment variables
 const JWT_SECRET =
@@ -11,61 +10,13 @@ const JWT_SECRET =
   "your-super-secret-jwt-key-change-this-in-production";
 const JWT_EXPIRES_IN = "24h";
 
-// Types
-interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-interface User {
-  id: number;
-  username: string;
-  password_hash: string;
-  role: string;
-  created_at: string;
-}
-
-interface Session {
-  userId: number;
-  username: string;
-  role: string;
-  token: string;
-  loginTime: Date;
-}
-
-interface LoginResponse {
-  success: boolean;
-  user: {
-    id: number;
-    username: string;
-    role: string;
-  };
-  token: string;
-}
-
-interface LogoutResponse {
-  success: boolean;
-  message: string;
-}
-
-interface AuthCheckResponse {
-  success: boolean;
-  authenticated: boolean;
-  message?: string;
-  user?: {
-    id: number;
-    username: string;
-    role: string;
-  };
-}
-
 // Current session storage
-let currentSession: Session | null = null;
+let currentSession = null;
 
 /**
  * Login handler
  */
-async function login(event: IpcMainInvokeEvent, credentials: LoginCredentials): Promise<LoginResponse> {
+async function login(event, credentials) {
   log.info("Login attempt for user:", credentials.username);
 
   const { username, password } = credentials;
@@ -82,7 +33,7 @@ async function login(event: IpcMainInvokeEvent, credentials: LoginCredentials): 
     const [users] = await db.execute(
       "SELECT id, username, password_hash, role, created_at FROM users WHERE username = ? AND active = 1",
       [username]
-    ) as [User[], any];
+    );
 
     if (users.length === 0) {
       log.warn("Login failed: User not found:", username);
@@ -138,7 +89,7 @@ async function login(event: IpcMainInvokeEvent, credentials: LoginCredentials): 
       },
       token: token,
     };
-  } catch (error: any) {
+  } catch (error) {
     log.error("Login error:", error.message);
     throw error;
   }
@@ -147,7 +98,7 @@ async function login(event: IpcMainInvokeEvent, credentials: LoginCredentials): 
 /**
  * Logout handler
  */
-async function logout(event: IpcMainInvokeEvent): Promise<LogoutResponse> {
+async function logout(event) {
   log.info("Logout request");
 
   try {
@@ -160,7 +111,7 @@ async function logout(event: IpcMainInvokeEvent): Promise<LogoutResponse> {
       success: true,
       message: "Logged out successfully",
     };
-  } catch (error: any) {
+  } catch (error) {
     log.error("Logout error:", error.message);
     throw error;
   }
@@ -169,7 +120,7 @@ async function logout(event: IpcMainInvokeEvent): Promise<LogoutResponse> {
 /**
  * Check authentication status
  */
-async function checkAuth(event: IpcMainInvokeEvent): Promise<AuthCheckResponse> {
+async function checkAuth(event) {
   try {
     if (!currentSession) {
       return {
@@ -192,7 +143,7 @@ async function checkAuth(event: IpcMainInvokeEvent): Promise<AuthCheckResponse> 
           role: currentSession.role,
         },
       };
-    } catch (jwtError: any) {
+    } catch (jwtError) {
       log.warn("JWT verification failed:", jwtError.message);
       currentSession = null;
 
@@ -202,7 +153,7 @@ async function checkAuth(event: IpcMainInvokeEvent): Promise<AuthCheckResponse> 
         message: "Session expired",
       };
     }
-  } catch (error: any) {
+  } catch (error) {
     log.error("Auth check error:", error.message);
     throw error;
   }
@@ -215,14 +166,14 @@ async function checkAuth(event: IpcMainInvokeEvent): Promise<AuthCheckResponse> 
 /**
  * Get current session
  */
-function getCurrentSession(): Session | null {
+function getCurrentSession() {
   return currentSession;
 }
 
 /**
  * Validate session for other handlers
  */
-function validateSession(): Session {
+function validateSession() {
   if (!currentSession) {
     throw new Error("Authentication required");
   }

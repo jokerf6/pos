@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 interface CreditItem {
-  id: number;
-  reason: string;
-  amount: number;
-  created_at: string;
+  id?: number;
+  reason?: string;
+  amount?: number;
+  created_at?: string;
   [key: string]: any;
 }
 

@@ -7,23 +7,13 @@ import log from "electron-log";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-let database: mysql.Pool | null = null;
-let connectionPool: mysql.Pool | null = null;
+let database = null;
+let connectionPool = null;
 
 // Database configuration
-interface DbConfig {
-  host: string;
-  port: number;
-  user: string;
-  password: string;
-  database?: string;
-  charset: string;
-  timezone: string;
-}
-
-const dbConfig: DbConfig = {
+const dbConfig = {
   host: process.env.DB_HOST || "localhost",
-  port: parseInt(process.env.DB_PORT || "3307"),
+  port: process.env.DB_PORT || 3307,
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "fahd200",
   database: process.env.DB_NAME || "casher",
@@ -34,7 +24,7 @@ const dbConfig: DbConfig = {
 /**
  * Initialize database connection
  */
-async function initDatabase(): Promise<mysql.Pool> {
+async function initDatabase() {
   try {
     log.info("Initializing database connection...");
 
@@ -55,7 +45,7 @@ async function initDatabase(): Promise<mysql.Pool> {
     database = connectionPool;
 
     return database;
-  } catch (error: any) {
+  } catch (error) {
     log.error("Database initialization failed:", error.message);
 
     // If database doesn't exist, try to create it
@@ -71,7 +61,7 @@ async function initDatabase(): Promise<mysql.Pool> {
 /**
  * Create database if it doesn't exist
  */
-async function createDatabase(): Promise<void> {
+async function createDatabase() {
   try {
     log.info("Creating database...");
 
@@ -86,7 +76,7 @@ async function createDatabase(): Promise<void> {
     await tempConnection.end();
 
     log.info("Database created successfully");
-  } catch (error: any) {
+  } catch (error) {
     log.error("Database creation failed:", error.message);
     throw error;
   }
@@ -95,13 +85,9 @@ async function createDatabase(): Promise<void> {
 /**
  * Run database migrations
  */
-async function runMigrations(): Promise<void> {
+async function runMigrations() {
   try {
     log.info("Running database migrations...");
-
-    if (!connectionPool) {
-      throw new Error("Connection pool not initialized");
-    }
 
     // Create migrations table if it doesn't exist
     await connectionPool.execute(`
@@ -115,9 +101,9 @@ async function runMigrations(): Promise<void> {
     // Get list of executed migrations
     const [executedMigrations] = await connectionPool.execute(
       "SELECT filename FROM migrations ORDER BY id"
-    ) as [any[], any];
+    );
 
-    const executedFiles = executedMigrations.map((row: any) => row.filename);
+    const executedFiles = executedMigrations.map((row) => row.filename);
 
     // Read migration files
     const migrationsDir = join(__dirname, "migrations");
@@ -134,7 +120,7 @@ async function runMigrations(): Promise<void> {
           await executeMigration(file);
         }
       }
-    } catch (dirError: any) {
+    } catch (dirError) {
       if (dirError.code === "ENOENT") {
         log.warn("Migrations directory not found, creating initial schema...");
         await createInitialSchema();
@@ -144,7 +130,7 @@ async function runMigrations(): Promise<void> {
     }
 
     log.info("Database migrations completed");
-  } catch (error: any) {
+  } catch (error) {
     log.error("Migration failed:", error.message);
     throw error;
   }
@@ -153,13 +139,9 @@ async function runMigrations(): Promise<void> {
 /**
  * Execute a single migration file
  */
-async function executeMigration(filename: string): Promise<void> {
+async function executeMigration(filename) {
   try {
     log.info("Executing migration:", filename);
-
-    if (!connectionPool) {
-      throw new Error("Connection pool not initialized");
-    }
 
     const migrationPath = join(__dirname, "migrations", filename);
     const migrationSQL = await fs.readFile(migrationPath, "utf8");
@@ -182,7 +164,7 @@ async function executeMigration(filename: string): Promise<void> {
     );
 
     log.info("Migration executed successfully:", filename);
-  } catch (error: any) {
+  } catch (error) {
     log.error("Migration execution failed:", filename, error.message);
     throw error;
   }
@@ -191,13 +173,9 @@ async function executeMigration(filename: string): Promise<void> {
 /**
  * Create initial database schema
  */
-async function createInitialSchema(): Promise<void> {
+async function createInitialSchema() {
   try {
     log.info("Creating initial database schema...");
-
-    if (!connectionPool) {
-      throw new Error("Connection pool not initialized");
-    }
 
     // Users table
     await connectionPool.execute(`
@@ -303,7 +281,7 @@ async function createInitialSchema(): Promise<void> {
     );
 
     // Insert default settings
-    const defaultSettings: [string, string, string][] = [
+    const defaultSettings = [
       ["store_name", "Casher Store", "Name of the store"],
       ["currency", "USD", "Default currency"],
       ["tax_rate", "0.10", "Default tax rate (10%)"],
@@ -325,7 +303,7 @@ async function createInitialSchema(): Promise<void> {
     }
 
     log.info("Initial database schema created successfully");
-  } catch (error: any) {
+  } catch (error) {
     log.error("Initial schema creation failed:", error.message);
     throw error;
   }
@@ -334,7 +312,7 @@ async function createInitialSchema(): Promise<void> {
 /**
  * Get database connection
  */
-function getDatabase(): mysql.Pool {
+function getDatabase() {
   if (!database) {
     throw new Error("Database not initialized. Call initDatabase() first.");
   }
@@ -344,7 +322,7 @@ function getDatabase(): mysql.Pool {
 /**
  * Close database connection
  */
-async function closeDatabase(): Promise<void> {
+async function closeDatabase() {
   if (connectionPool) {
     await connectionPool.end();
     database = null;
@@ -356,21 +334,16 @@ async function closeDatabase(): Promise<void> {
 /**
  * Health check
  */
-async function healthCheck(): Promise<{ status: string; timestamp: Date; error?: string }> {
+async function healthCheck() {
   try {
-    if (!connectionPool) {
-      throw new Error("Connection pool not initialized");
-    }
-    
     const connection = await connectionPool.getConnection();
     await connection.ping();
     connection.release();
     return { status: "healthy", timestamp: new Date() };
-  } catch (error: any) {
+  } catch (error) {
     log.error("Database health check failed:", error.message);
     return { status: "unhealthy", error: error.message, timestamp: new Date() };
   }
 }
 
 export { initDatabase, getDatabase, closeDatabase, healthCheck };
-

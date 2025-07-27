@@ -1,4 +1,4 @@
-import { ipcMain, IpcMainInvokeEvent } from "electron";
+import { ipcMain } from "electron";
 import log from "electron-log";
 
 // Import individual handlers
@@ -11,15 +11,12 @@ import * as creditH from "./credit.js"; // Import credit handlers
 import * as invoiceH from "./invoice.js"; // Import credit handlers
 import * as settingsHandlers from "./settings.js"; // Import settings handlers
 
-// Type for IPC handler function
-type IpcHandler = (event: IpcMainInvokeEvent, ...args: any[]) => Promise<any>;
-
 // Error handling wrapper
-const handleError = (handler: IpcHandler): IpcHandler => {
-  return async (event: IpcMainInvokeEvent, ...args: any[]) => {
+const handleError = (handler) => {
+  return async (event, ...args) => {
     try {
       return await handler(event, ...args);
-    } catch (error: any) {
+    } catch (error) {
       log.error("IPC Handler Error:", {
         channel: event.frameId,
         error: error.message,
@@ -33,17 +30,12 @@ const handleError = (handler: IpcHandler): IpcHandler => {
 };
 
 // Rate limiting for IPC calls
-interface RateLimiter {
-  count: number;
-  resetTime: number;
-}
-
-const rateLimiter = new Map<number, RateLimiter>();
+const rateLimiter = new Map();
 const RATE_LIMIT_WINDOW = 1000; // 1 second
 const RATE_LIMIT_MAX_CALLS = 100; // Max calls per window
 
-const rateLimit = (handler: IpcHandler): IpcHandler => {
-  return async (event: IpcMainInvokeEvent, ...args: any[]) => {
+const rateLimit = (handler) => {
+  return async (event, ...args) => {
     const senderId = event.sender.id;
     const now = Date.now();
 
@@ -54,7 +46,7 @@ const rateLimit = (handler: IpcHandler): IpcHandler => {
       });
     }
 
-    const limiter = rateLimiter.get(senderId)!;
+    const limiter = rateLimiter.get(senderId);
 
     if (now > limiter.resetTime) {
       limiter.count = 0;
@@ -72,9 +64,9 @@ const rateLimit = (handler: IpcHandler): IpcHandler => {
 };
 
 // Combine error handling and rate limiting
-const secureHandler = (handler: IpcHandler): IpcHandler => handleError(rateLimit(handler));
+const secureHandler = (handler) => handleError(rateLimit(handler));
 
-function setupIPC(): void {
+function setupIPC() {
   log.info("Setting up IPC handlers...");
 
   // Authentication handlers
@@ -177,11 +169,10 @@ function setupIPC(): void {
 }
 
 // Cleanup function
-function cleanupIPC(): void {
+function cleanupIPC() {
   log.info("Cleaning up IPC handlers...");
   ipcMain.removeAllListeners();
   rateLimiter.clear();
 }
 
 export { setupIPC, cleanupIPC };
-

@@ -25,7 +25,7 @@ const CreditPage: React.FC = () => {
     dispatch(getCredit());
   }, [dispatch]);
 
-  const formattedProducts = credits?.map((item: CreditItem) => ({
+  const formattedProducts = credits?.map((item: any) => ({
     ...item,
     createdAt: formatDate(item.created_at), // Format date to YYYY-MM-DD
   }));

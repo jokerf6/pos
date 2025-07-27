@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../../../store";
-import { beforeInvoice, afterInvoice } from "../../../store/slices/invoice";
+import { beforeInvoice } from "../../../store/slices/invoice";
 import { Button } from "../../../components/ui/button";
 import FilterSection from "./filterSection";
 import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
@@ -147,7 +147,7 @@ export default function AllInvoicesFixed() {
     setIsLoading(true);
     try {
       const result = await dispatch(
-        afterInvoice({
+        afterInvoiceData({
           id: afterInvoiceData,
           filter: { to, from, invoiceType },
         })
