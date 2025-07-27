@@ -28,7 +28,7 @@ const CreateProductPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const categories = useAppSelector((state) => state.categories);
-  const [categoryData, setCategoryData] = useState(null);
+  const [categoryData, setCategoryData] = useState<{ id: number; name: string } | null>(null);
   const [barcodeNumber, setBarcodeNumber] = useState(0);
   const [openPrint, setOpenPrint] = useState(false);
   const printRef = useRef(null);
@@ -45,7 +45,7 @@ const CreateProductPage = () => {
     buy_price: 0,
     barcode: undefined,
     generated_code: undefined,
-    category_id: "",
+    category_id: 0,
   });
   const handleSearch = async (name: string) => {
     try {
@@ -58,13 +58,13 @@ const CreateProductPage = () => {
           buy_price: 0,
           barcode: undefined,
           generated_code: undefined,
-          category_id: "",
+          category_id: 0,
         });
         setCategoryData(null);
         return;
       }
       const result = await dispatch(ProductByBarcode({ name }));
-      if (!result.error) {
+      if (!result.payload.error) {
         const data = result.payload || {};
         // setCategoryData(
         //   categories?.filter((item) => item.id === data.category_id) || null
@@ -78,7 +78,7 @@ const CreateProductPage = () => {
             generated_code: undefined,
             buy_price: 0,
             barcode: undefined,
-            category_id: "",
+            category_id: 0,
           });
         }
         if (data.category_id) {
@@ -158,7 +158,7 @@ const CreateProductPage = () => {
   }, []);
 
   const GenerateBarCode = async () => {
-    const result = await dispatch(generateBarCode() as any);
+    const result = await dispatch(generateBarCode({}) as any);
     console.log("generateBarCode result", result);
     const data = result?.payload || null;
     console.log("generateBarCode data", data);
@@ -181,7 +181,7 @@ const CreateProductPage = () => {
         buy_price: 0,
         barcode: undefined,
         generated_code: undefined,
-        category_id: "",
+        category_id: 0,
       });
       setOpenPrint(true);
     } else {
@@ -193,7 +193,7 @@ const CreateProductPage = () => {
       for (let i = 0; i < barcodeNumber; i++) {
         const svg = document.getElementById(`barcode-${i}`);
         if (svg) {
-          JsBarcode(svg, formData.generated_code || formData.barcode, {
+          JsBarcode.default(svg, (formData.generated_code || formData.barcode || '') as string, {
             format: "CODE128",
             width: 2,
             height: 60,
@@ -232,7 +232,7 @@ const CreateProductPage = () => {
               buy_price: 0,
               barcode: undefined,
               generated_code: undefined,
-              category_id: "",
+              category_id: 0,
             });
           }, 1000);
         }}
@@ -247,7 +247,7 @@ const CreateProductPage = () => {
               buy_price: 0,
               barcode: undefined,
               generated_code: undefined,
-              category_id: "",
+              category_id: 0,
             });
           }, 1000);
 
@@ -299,12 +299,12 @@ const CreateProductPage = () => {
                   onChange={(e) => {
                     const selectedId = e.target.value;
                     const selectedCategory = categories?.categories?.find(
-                      (cat) => cat.id === selectedId
+                      (cat) => cat.id === Number(selectedId)
                     );
                     setCategoryData(selectedCategory || null);
                     setFormData((prev) => ({
                       ...prev,
-                      category_id: selectedId,
+                      category_id: Number(selectedId),
                     }));
                   }}
                   className="w-full border p-2 rounded-md bg-white text-right"

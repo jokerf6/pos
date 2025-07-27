@@ -12,26 +12,26 @@ function ProductsPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(getProducts());
+    dispatch(getProducts({}) as any);
   }, [dispatch]);
 
   const formattedProducts =
     products &&
-    products?.map((item) => ({
+    products?.map((item: any) => ({
       ...item,
       createdAt: new Date(item.created_at).toISOString().split("T")[0], // Format date to YYYY-MM-DD
     }));
 
-  const handleDelete = (product: any) => {
+  const handleDelete = (product: { id: number; name: string }) => {
     dispatch(
       showConfirmModal({
         itemLabel: product.name,
         onConfirm: () => {
-          dispatch(deleteProduct(product.id))
+          dispatch(deleteProduct(product.id) as any)
             .unwrap()
             .then(() => {
               showSuccess("تم حذف المنتج بنجاح");
-              dispatch(getProducts());
+              dispatch(getProducts({}) as any);
             })
             .catch(() => showSuccess("فشل حذف المنتج"));
         },

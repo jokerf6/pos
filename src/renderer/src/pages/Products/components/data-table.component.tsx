@@ -39,7 +39,7 @@ const DataTable = <T extends Record<string, any>>({
   const navigate = useNavigate();
 
   const [visibleColumns, setVisibleColumns] = useState(() =>
-    columns.map((col) => ({ ...col, visible: col.visible !== false }))
+    columns.map((col: any) => ({ ...col, visible: col.visible !== false }))
   );
 
   const [search, setSearch] = useState("");
@@ -97,7 +97,7 @@ const DataTable = <T extends Record<string, any>>({
         searchProducts({ name: value, page }) as any
       );
       if (!result.error) {
-        const formatedProducts = result?.payload?.products?.map((item) => ({
+        const formatedProducts = result?.payload?.products?.map((item: T) => ({
           ...item,
           createdAt: new Date(item.created_at).toISOString().split("T")[0], // Format date to YYYY-MM-DD
         }));
@@ -117,7 +117,7 @@ const DataTable = <T extends Record<string, any>>({
     try {
       const result = await dispatch(getProducts({ page }) as any);
       if (!result.error) {
-        const formatedProducts = result?.payload?.products?.map((item) => ({
+        const formatedProducts = result?.payload?.products?.map((item: T) => ({
           ...item,
           createdAt: new Date(item.created_at).toISOString().split("T")[0], // Format date to YYYY-MM-DD
         }));
@@ -135,7 +135,7 @@ const DataTable = <T extends Record<string, any>>({
     if (!search) return currentData;
     return currentData?.filter((row) =>
       visibleColumns.some(
-        (col) =>
+        (col: { visible: boolean; accessorKey: string }) =>
           col.visible &&
           String(row[col.accessorKey] ?? "")
             .toLowerCase()
@@ -171,7 +171,7 @@ const DataTable = <T extends Record<string, any>>({
           <TableHeader>
             <TableRow>
               {visibleColumns.map(
-                (column, index) =>
+                (column: { visible: boolean; header: string }, index: number) =>
                   column.visible && (
                     <TableHead
                       key={index}
@@ -192,7 +192,7 @@ const DataTable = <T extends Record<string, any>>({
               filteredData.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
                   {visibleColumns.map(
-                    (column, colIndex) =>
+                    (column: { visible: boolean; accessorKey: string }, colIndex: number) =>
                       column.visible && (
                         <TableCell
                           key={colIndex}

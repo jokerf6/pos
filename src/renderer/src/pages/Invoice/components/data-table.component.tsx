@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../../../store";
-import { beforeInvoice } from "../../../store/slices/invoice";
+import { beforeInvoice, afterInvoice } from "../../../store/slices/invoice";
 import { Button } from "../../../components/ui/button";
 import FilterSection from "./filterSection";
 import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
 
 export default function AllInvoicesFixed() {
-  const searchInputRef = useRef(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function AllInvoicesFixed() {
 
   const [products, setProducts] = useState([]);
   const [beforeInvoiceData, setBeforeInvoiceData] = useState(undefined);
-  const [afterInvoiceData, setAfterInvoiceData] = useState(undefined); // keep state, but afterInvoice is not imported
+  const [afterInvoiceData, setAfterInvoiceData] = useState<any>(undefined); // keep state, but afterInvoice is not imported
   const [canGoBefore, setCanGoBefore] = useState(true);
   const [canGoAfter, setCanGoAfter] = useState(false);
   const [from, setFrom] = useState("");
@@ -52,7 +52,7 @@ export default function AllInvoicesFixed() {
     applyFilters();
   }, [from, to, invoiceType]);
 
-  const updateInvoiceUI = (data) => {
+  const updateInvoiceUI = (data: any) => {
     if (!data) {
       setInvoiceDetails({
         customerName: "",
@@ -63,8 +63,8 @@ export default function AllInvoicesFixed() {
         invoiceDiscount: 0,
       });
       setProducts([]);
-      setBeforeInvoiceData(null);
-      setAfterInvoiceData(null);
+      setBeforeInvoiceData(undefined);
+      setAfterInvoiceData(null as any);
       setCanGoBefore(false);
       setCanGoAfter(false);
       return;
@@ -82,7 +82,7 @@ export default function AllInvoicesFixed() {
     });
 
     setProducts(
-      data.items.map((p) => ({
+      data.items.map((p: any) => ({
         id: p.itemId,
         name: p.name,
         totalQuantity: p.totalQuantity,
@@ -146,13 +146,12 @@ export default function AllInvoicesFixed() {
   const after = async () => {
     setIsLoading(true);
     try {
-      const result =
-        await dispatch();
-        // TODO: Implement afterInvoice logic or remove if not needed
-        // afterInvoice({
-        //   id: afterInvoiceData,
-        //   filter: { to, from, invoiceType },
-        // })
+      const result = await dispatch(
+        afterInvoice({
+          id: afterInvoiceData,
+          filter: { to, from, invoiceType },
+        })
+      );
 
       if (!result.payload.data) {
         setCanGoAfter(false);
@@ -167,7 +166,7 @@ export default function AllInvoicesFixed() {
     }
   };
 
-  const calculateRowTotal = (product) =>
+  const calculateRowTotal = (product: any) =>
     product.quantity * product.price - product.discount;
 
   const total = products.reduce((sum, p) => sum + calculateRowTotal(p), 0);

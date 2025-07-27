@@ -41,16 +41,18 @@ interface ProductsState {
 interface GetProductsPayload {
   limit?: number;
   offset?: number;
+  page?: number;
 }
 
-interface BarcodeSearchPayload {
+interface SearchProductsPayload {
   name: string;
+  page?: number;
 }
 
 // Async thunks
 export const getProducts = createAsyncThunk(
   "products/getAll",
-  async (data: GetProductsPayload, { rejectWithValue }) => {
+  async (data: GetProductsPayload = {}, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.products.getAll(data);
@@ -83,10 +85,10 @@ export const generateBarCode = createAsyncThunk(
 
 export const searchProducts = createAsyncThunk(
   "products/search",
-  async (name: string, { rejectWithValue }) => {
+  async (data: SearchProductsPayload, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.products.search(name);
+        const result = await window.electronAPI.products.search(data.name);
         return result;
       } else {
         return null;
@@ -149,7 +151,7 @@ export const ProductById = createAsyncThunk(
 
 export const ProductByBarcode = createAsyncThunk(
   "products/getByBarcode",
-  async (data: BarcodeSearchPayload, { rejectWithValue }) => {
+  async (data: SearchProductsPayload, { rejectWithValue }) => {
     console.log("Barcode data:", data);
     try {
       if (window.electronAPI) {
