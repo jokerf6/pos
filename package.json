@@ -28,7 +28,7 @@
     "dev:renderer": "cd src/renderer && npm start",
     "dev:main": "electron .",
     "build": "npm run build:renderer && npm run build:main",
-    "build:renderer": "cd src/renderer && npm run build",
+    "build:renderer": "cd src/renderer && npm run start",
     "clean": "rimraf dist",
     "build:main": "electron-builder",
     "prebuild:win": "taskkill /f /im \"Casher Desktop.exe\" 2>nul & rmdir /s /q dist 2>nul & exit 0",

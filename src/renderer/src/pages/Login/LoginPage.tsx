@@ -2,6 +2,7 @@ import React, { useState, ChangeEvent, FormEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, clearError } from "../../store/slices/authSlice";
 import { RootState, AppDispatch } from "../../store";
+import { useTranslation } from "react-i18next";
 
 interface FormData {
   username: string;
@@ -10,6 +11,7 @@ interface FormData {
 
 const LoginPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation();
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState<FormData>({
@@ -50,7 +52,7 @@ const LoginPage: React.FC = () => {
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            {t("login")}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             Enter your credentials to access the system
