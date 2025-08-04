@@ -137,9 +137,7 @@ const LoginPage: React.FC = () => {
         </form>
 
         <div className="text-center">
-          <p className="text-xs text-gray-500">
-            Casher Desktop - Point of Sale System
-          </p>
+          <p className="text-xs text-gray-500">{t("Developed by")}</p>
         </div>
       </div>
     </div>
