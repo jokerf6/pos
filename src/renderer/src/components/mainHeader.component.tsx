@@ -8,14 +8,14 @@ import Modal from "./common/dynamic-modal.component";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { HeaderActions } from "./common/headerAction.component";
-import { 
-  Calendar, 
-  Clock, 
-  DollarSign, 
-  TrendingUp, 
+import {
+  Calendar,
+  Clock,
+  DollarSign,
+  TrendingUp,
   AlertCircle,
   CheckCircle,
-  Menu
+  Menu,
 } from "lucide-react";
 
 function formatDate(dateString: string): string {
@@ -26,7 +26,7 @@ function formatDate(dateString: string): string {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false,
+    hour12: true,
   });
 }
 
@@ -35,7 +35,7 @@ function getCurrentTime(): string {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    hour12: false,
+    hour12: true,
   });
 }
 
@@ -101,7 +101,7 @@ export default function MainHeader() {
       <SidebarTrigger className="w-6 h-6 text-gray-600 hover:text-gray-900 transition-colors">
         <Menu size={24} />
       </SidebarTrigger>
-      
+
       <Modal
         confirmLabel={daily.length === 0 ? "فتح" : "غلق"}
         cancelLabel="إلغاء"
@@ -112,7 +112,9 @@ export default function MainHeader() {
       >
         {daily.length === 0 && openSettings === true && (
           <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">المبلغ الافتتاحي</label>
+            <label className="text-sm font-medium text-gray-700">
+              المبلغ الافتتاحي
+            </label>
             <Input
               type="number"
               min={0}
@@ -123,10 +125,12 @@ export default function MainHeader() {
             />
           </div>
         )}
-        
+
         {daily.length > 0 && openSettings && (
           <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">المبلغ المسحوب</label>
+            <label className="text-sm font-medium text-gray-700">
+              المبلغ المسحوب
+            </label>
             <Input
               type="number"
               min={0}
@@ -137,7 +141,7 @@ export default function MainHeader() {
             />
           </div>
         )}
-        
+
         {daily.length > 0 && (
           <div className="bg-gray-50 rounded-lg p-4 space-y-3">
             <h4 className="font-semibold text-gray-900 mb-3">ملخص اليومية</h4>
@@ -145,22 +149,30 @@ export default function MainHeader() {
               <div className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-green-600" />
                 <span className="text-sm text-gray-600">المبلغ الكلي:</span>
-                <span className="font-semibold">{Number(daily[0]?.cashInDrawer).toFixed(2)}</span>
+                <span className="font-semibold">
+                  {Number(daily[0]?.cashInDrawer).toFixed(2)}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-blue-600" />
                 <span className="text-sm text-gray-600">إجمالي المبيعات:</span>
-                <span className="font-semibold">{Number(daily[0]?.total_sales).toFixed(2)}</span>
+                <span className="font-semibold">
+                  {Number(daily[0]?.total_sales).toFixed(2)}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-red-600" />
                 <span className="text-sm text-gray-600">إجمالي المصروفات:</span>
-                <span className="font-semibold">{Number(daily[0]?.total_expenses).toFixed(2)}</span>
+                <span className="font-semibold">
+                  {Number(daily[0]?.total_expenses).toFixed(2)}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-orange-600" />
                 <span className="text-sm text-gray-600">إجمالي المرتجعات:</span>
-                <span className="font-semibold">{Number(daily[0]?.total_returns).toFixed(2)}</span>
+                <span className="font-semibold">
+                  {Number(daily[0]?.total_returns).toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
@@ -186,9 +198,12 @@ export default function MainHeader() {
             <div className="flex items-center gap-3 bg-green-50 px-4 py-2 rounded-lg border border-green-200">
               <CheckCircle className="w-5 h-5 text-green-600" />
               <div className="text-sm">
-                <span className="text-green-800 font-medium">اليومية مفتوحة</span>
+                <span className="text-green-800 font-medium">
+                  اليومية مفتوحة
+                </span>
                 <div className="text-green-600 text-xs">
-                  بدأت في: {formatDate(
+                  بدأت في:{" "}
+                  {formatDate(
                     typeof daily[0].opened_at === "string"
                       ? daily[0].opened_at
                       : new Date(daily[0].opened_at).toISOString()
@@ -199,7 +214,9 @@ export default function MainHeader() {
           ) : (
             <div className="flex items-center gap-3 bg-red-50 px-4 py-2 rounded-lg border border-red-200">
               <AlertCircle className="w-5 h-5 text-red-600" />
-              <span className="text-red-800 font-medium text-sm">اليومية مغلقة</span>
+              <span className="text-red-800 font-medium text-sm">
+                اليومية مغلقة
+              </span>
             </div>
           )}
 
@@ -213,7 +230,7 @@ export default function MainHeader() {
                 بدء اليومية
               </Button>
             )}
-            
+
             {isDailyOpen && (
               <Button
                 onClick={() => setOpen(true)}
@@ -235,4 +252,3 @@ export default function MainHeader() {
     </div>
   );
 }
-
