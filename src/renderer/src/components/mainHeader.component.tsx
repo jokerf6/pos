@@ -8,6 +8,15 @@ import Modal from "./common/dynamic-modal.component";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { HeaderActions } from "./common/headerAction.component";
+import { 
+  Calendar, 
+  Clock, 
+  DollarSign, 
+  TrendingUp, 
+  AlertCircle,
+  CheckCircle,
+  Menu
+} from "lucide-react";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -21,13 +30,41 @@ function formatDate(dateString: string): string {
   });
 }
 
+function getCurrentTime(): string {
+  return new Date().toLocaleTimeString("ar-EG", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+}
+
+function getCurrentDate(): string {
+  return new Date().toLocaleDateString("ar-EG", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export default function MainHeader() {
   const [openSettings, setOpenSettings] = useState(false);
   const [openPrice, setOpenPrice] = useState(0);
   const [closePrice, setClosePrice] = useState(0);
   const [open, setOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(getCurrentTime());
   const dispatch = useDispatch<AppDispatch>();
   const { daily } = useSelector((state: RootState) => state.daily);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(getCurrentTime());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -40,7 +77,7 @@ export default function MainHeader() {
     }
     fetchData();
   }, [dispatch]);
-  //
+
   const handleOpen = async () => {
     dispatch(openDaily(openPrice));
     dispatch(getDaily());
@@ -56,9 +93,15 @@ export default function MainHeader() {
     setClosePrice(0);
     setOpen(false);
   };
+
+  const isDailyOpen = daily.length > 0;
+
   return (
-    <div className=" flex justify-between w-full sticky right-0 rounded-t-2xl top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-16 shrink-0 items-center gap-2 border-b p-4 z-50">
-      <SidebarTrigger className=" w-5 h-5 absolute top-5" />
+    <div className="flex justify-between w-full sticky right-0 rounded-t-2xl top-0 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 h-20 shrink-0 items-center gap-4 border-b border-gray-200 px-6 py-4 z-50 shadow-sm">
+      <SidebarTrigger className="w-6 h-6 text-gray-600 hover:text-gray-900 transition-colors">
+        <Menu size={24} />
+      </SidebarTrigger>
+      
       <Modal
         confirmLabel={daily.length === 0 ? "فتح" : "غلق"}
         cancelLabel="إلغاء"
@@ -68,86 +111,128 @@ export default function MainHeader() {
         onClose={() => setOpen(false)}
       >
         {daily.length === 0 && openSettings === true && (
-          <Input
-            type="number"
-            min={0}
-            placeholder="المبلغ الافتتاحي"
-            value={openPrice}
-            onChange={(e) => setOpenPrice(+e.target.value)}
-          />
-        )}
-        {/* Add any content you want to render when daily.length > 0 and openSettings is true */}
-        {daily.length > 0 && openSettings && (
-          <div className="flex flex-col gap-1">
-            <span className=" w-fit">المبلغ المسحوب</span>
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-gray-700">المبلغ الافتتاحي</label>
             <Input
-              className=" w-full"
               type="number"
               min={0}
-              placeholder="المبلغ المسحوب"
-              value={closePrice}
-              onChange={(e) => setClosePrice(+e.target.value)}
+              placeholder="أدخل المبلغ الافتتاحي"
+              value={openPrice}
+              onChange={(e) => setOpenPrice(+e.target.value)}
+              className="w-full"
             />
           </div>
         )}
-        {/*  */}
+        
+        {daily.length > 0 && openSettings && (
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-gray-700">المبلغ المسحوب</label>
+            <Input
+              type="number"
+              min={0}
+              placeholder="أدخل المبلغ المسحوب"
+              value={closePrice}
+              onChange={(e) => setClosePrice(+e.target.value)}
+              className="w-full"
+            />
+          </div>
+        )}
+        
         {daily.length > 0 && (
-          <div>
-            <div className="flex gap-2">
-              <span>المبلغ الكلي:</span>
-              <span>{Number(daily[0]?.cashInDrawer).toFixed(2)}</span>
-            </div>
-            <div className="flex gap-2">
-              <span>اجمالي المبيعات:</span>
-              <span>{Number(daily[0]?.total_sales).toFixed(2)}</span>
-            </div>
-
-            <div className="flex gap-2">
-              <span>اجمالي المصروفات:</span>
-              <span>{Number(daily[0]?.total_expenses).toFixed(2)}</span>
-            </div>
-            <div className="flex gap-2">
-              <span>اجمالي المرتجعات:</span>
-              <span>{Number(daily[0]?.total_returns).toFixed(2)}</span>
+          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <h4 className="font-semibold text-gray-900 mb-3">ملخص اليومية</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-green-600" />
+                <span className="text-sm text-gray-600">المبلغ الكلي:</span>
+                <span className="font-semibold">{Number(daily[0]?.cashInDrawer).toFixed(2)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-blue-600" />
+                <span className="text-sm text-gray-600">إجمالي المبيعات:</span>
+                <span className="font-semibold">{Number(daily[0]?.total_sales).toFixed(2)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600" />
+                <span className="text-sm text-gray-600">إجمالي المصروفات:</span>
+                <span className="font-semibold">{Number(daily[0]?.total_expenses).toFixed(2)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-orange-600" />
+                <span className="text-sm text-gray-600">إجمالي المرتجعات:</span>
+                <span className="font-semibold">{Number(daily[0]?.total_returns).toFixed(2)}</span>
+              </div>
             </div>
           </div>
         )}
       </Modal>
-      <div className="flex  items-center  justify-between w-full ">
-        <div></div>
-        <div className="  flex gap-2 items-center">
-          {daily.length === 0 && (
-            <Button
-              onClick={() => setOpen(true)}
-              type="button"
-              variant="outline"
-            >
-              بدء اليومية
-            </Button>
-          )}
-          {daily.length > 0 && (
-            <span>
-              تاريخ بداية اليومية :{" "}
-              {formatDate(
-                typeof daily[0].opened_at === "string"
-                  ? daily[0].opened_at
-                  : new Date(daily[0].opened_at).toISOString()
-              )}
-            </span>
-          )}
-          <Button
-            onClick={() => setOpen(true)}
-            type="button"
-            className=" text-red-500"
-            variant="outline"
-          >
-            غلق اليومية
-          </Button>
+
+      <div className="flex items-center justify-between w-full">
+        {/* Date and Time Section */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 text-gray-600">
+            <Calendar className="w-5 h-5" />
+            <span className="text-sm font-medium">{getCurrentDate()}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-600">
+            <Clock className="w-5 h-5" />
+            <span className="text-sm font-medium font-mono">{currentTime}</span>
+          </div>
         </div>
-        <div className="flex   w-fit items-center space-x-4">
+
+        {/* Daily Status Section */}
+        <div className="flex items-center gap-4">
+          {isDailyOpen ? (
+            <div className="flex items-center gap-3 bg-green-50 px-4 py-2 rounded-lg border border-green-200">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <div className="text-sm">
+                <span className="text-green-800 font-medium">اليومية مفتوحة</span>
+                <div className="text-green-600 text-xs">
+                  بدأت في: {formatDate(
+                    typeof daily[0].opened_at === "string"
+                      ? daily[0].opened_at
+                      : new Date(daily[0].opened_at).toISOString()
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 bg-red-50 px-4 py-2 rounded-lg border border-red-200">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <span className="text-red-800 font-medium text-sm">اليومية مغلقة</span>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            {!isDailyOpen && (
+              <Button
+                onClick={() => setOpen(true)}
+                type="button"
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                بدء اليومية
+              </Button>
+            )}
+            
+            {isDailyOpen && (
+              <Button
+                onClick={() => setOpen(true)}
+                type="button"
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                غلق اليومية
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* User Actions Section */}
+        <div className="flex items-center">
           <HeaderActions />
         </div>
       </div>
     </div>
   );
 }
+
