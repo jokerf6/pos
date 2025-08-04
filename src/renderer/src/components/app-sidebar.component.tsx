@@ -1,4 +1,20 @@
-import { ChevronDown, Home, User } from "lucide-react";
+import { 
+  Home, 
+  Users, 
+  FolderOpen, 
+  ReceiptText, 
+  CreditCard, 
+  Package, 
+  Settings, 
+  ChevronDown, 
+  LayoutDashboard, 
+  PlusCircle, 
+  ListOrdered, 
+  DollarSign, 
+  Wallet, 
+  Boxes, 
+  MoveRight
+} from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 import {
@@ -17,6 +33,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@radix-ui/react-collapsible";
+
 // Menu items.
 const items = [
   {
@@ -30,14 +47,14 @@ const items = [
     title: "المستخدمين",
     url: "/users",
     group: [],
-    icon: User,
+    icon: Users,
     user: false,
   },
   {
     title: "الاقسام",
     url: "/categories",
     group: [],
-    icon: User,
+    icon: FolderOpen,
     user: false,
   },
   {
@@ -47,17 +64,17 @@ const items = [
       {
         title: "إنشاء فاتورة",
         url: "/invoice/create",
-        icon: User,
+        icon: PlusCircle,
         user: false,
       },
       {
         title: "كل الفواتير",
         url: "/invoice",
-        icon: User,
+        icon: ListOrdered,
         user: false,
       },
     ],
-    icon: User,
+    icon: ReceiptText,
     user: false,
   },
   {
@@ -66,18 +83,18 @@ const items = [
       {
         title: "مصروفات اليوم",
         url: "/credit/daily",
-        icon: User,
+        icon: DollarSign,
         user: false,
       },
       {
         title: "كل المصروفات",
         url: "/credit",
-        icon: User,
+        icon: Wallet,
         user: false,
       },
     ],
-    url: "/products",
-    icon: User,
+    url: "/products", // This URL seems incorrect for the group, it should be a placeholder or removed if not directly navigable
+    icon: CreditCard,
     user: false,
   },
   {
@@ -86,125 +103,133 @@ const items = [
       {
         title: "الاصناف",
         url: "/products",
-        icon: User,
+        icon: Boxes,
         user: false,
       },
       {
         title: "حركه الصنف",
         url: "/transaction/products",
-        icon: User,
+        icon: MoveRight,
         user: false,
       },
     ],
     url: "/products",
-    icon: User,
+    icon: Package,
     user: false,
   },
   {
     title: "الاعدادات",
     url: "/settings",
     group: [],
-    icon: User,
+    icon: Settings,
     user: false,
   },
 ];
+
 export function AppSidebar() {
   const { user } = useSelector((state: any) => state.auth);
-
   const location = useLocation();
+
   const usedItems = items.map((item) => ({
     ...item,
-    hide: user.role !== "admin" && !item.user, // Hide items that are not for the current user
-    active: location.pathname === item.url, // Check if the current path matches the item's URL
-    // Filter out items that are not used in the current path
+    hide: user.role !== "admin" && !item.user,
+    active: location.pathname === item.url || 
+            (item.group && item.group.some(subItem => location.pathname === subItem.url)),
   }));
 
   return (
-    <Sidebar className="w-[20%] ">
-      <SidebarContent className="py-[20px]">
+    <Sidebar className="w-[20%] bg-gray-900 text-white border-none">
+      <SidebarContent className="py-6 px-4">
         <SidebarGroup>
-          <SidebarGroupLabel className="pt-[50px] font-bold text-3xl text-center flex items-center justify-center  ">
+          <SidebarGroupLabel className="pt-4 pb-8 font-bold text-3xl text-center flex items-center justify-center">
             <img
               src="/images/logo.png"
               alt="Logo"
-              className="w-[100px] h-[100px]"
+              className="w-24 h-24 object-contain"
             />
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu
-              dir={"rtl"}
-              className="flex flex-col gap-6 text-xl mt-20"
+              dir="rtl"
+              className="flex flex-col gap-2 text-lg mt-8"
             >
               {usedItems.map((item) =>
                 item?.group?.length === 0 ? (
                   <SidebarMenuItem
                     key={item.title}
-                    className="w-full text-xl font-semibold ease-in-out duration-200"
+                    className={`w-full rounded-lg transition-all duration-200 ease-in-out
+                      hover:bg-gray-700
+                      ${item.active ? "bg-blue-600 hover:bg-blue-700" : ""}`}
                   >
                     <SidebarMenuButton
                       asChild
-                      className={` ${item.hide ? "hidden" : ""}`}
+                      className={`flex items-center gap-3 py-3 px-4 w-full text-right
+                        ${item.hide ? "hidden" : ""}
+                        ${item.active ? "text-white" : "text-gray-300"}
+                      `}
                     >
-                      <Link className="flex items-center gap-2" to={item.url}>
-                        <span className="text-indigo-600">
-                          <item.icon />
+                      <Link to={item.url}>
+                        <span className="text-current">
+                          <item.icon size={20} />
                         </span>
-
-                        <span
-                          className={`text-xl ${item.active ? "text-indigo-600" : ""}`}
-                        >
+                        <span className="font-medium">
                           {item.title}
                         </span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ) : (
-                  <Collapsible className="group/collapsible mr-[-7px] mt-[-7px]">
-                    <SidebarGroup>
-                      <SidebarGroupLabel asChild>
-                        <CollapsibleTrigger>
-                          <div className="flex justify-between  w-full">
-                            <div className=" flex w-fit gap-2 ">
-                              <span className="text-indigo-600">
-                                <item.icon />
+                  <Collapsible 
+                    key={item.title}
+                    className={`group/collapsible rounded-lg 
+                      ${item.active ? "bg-blue-600" : ""}`}
+                  >
+                    <SidebarGroupLabel asChild>
+                      <CollapsibleTrigger 
+                        className={`flex justify-between items-center gap-3 py-3 px-4 w-full text-right rounded-lg
+                          ${item.active ? "text-white" : "text-gray-300 hover:bg-gray-700"}
+                        `}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-current">
+                            <item.icon size={20} />
+                          </span>
+                          <span className="font-medium">
+                            {item.title}
+                          </span>
+                        </div>
+                        <ChevronDown 
+                          size={18} 
+                          className="transition-transform group-data-[state=open]/collapsible:rotate-180"
+                        />
+                      </CollapsibleTrigger>
+                    </SidebarGroupLabel>
+                    <CollapsibleContent className="mt-2 pb-2 pr-4">
+                      {item.group.map((subItem) => (
+                        <SidebarMenuItem
+                          key={subItem.title}
+                          className={`w-full rounded-lg transition-all duration-200 ease-in-out
+                            hover:bg-gray-700
+                            ${location.pathname === subItem.url ? "bg-blue-700" : ""}`}
+                        >
+                          <SidebarMenuButton asChild>
+                            <Link
+                              className={`flex items-center gap-3 py-2 px-4 w-full text-right
+                                ${location.pathname === subItem.url ? "text-white" : "text-gray-400"}
+                              `}
+                              to={subItem.url}
+                            >
+                              <span className="text-current">
+                                <subItem.icon size={18} />
                               </span>
-
-                              <span
-                                className={`text-xl ${item.active ? "text-indigo-600" : "text-black font-bold"}`}
-                              >
-                                {item.title}
+                              <span className="text-sm font-normal">
+                                {subItem.title}
                               </span>
-                            </div>
-                            <ChevronDown className="mr-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                          </div>
-                        </CollapsibleTrigger>
-                      </SidebarGroupLabel>
-                      <CollapsibleContent className=" mr-[35px] mt-[10px]">
-                        {item.group.map((subItem) => (
-                          <SidebarMenuItem
-                            key={subItem.title}
-                            className="w-full text-xl font-semibold ease-in-out duration-200"
-                          >
-                            <SidebarMenuButton asChild>
-                              <Link
-                                className="flex items-center gap-2"
-                                to={subItem.url}
-                              >
-                                <span
-                                  className={`text-md ${
-                                    location.pathname === subItem.url
-                                      ? "text-indigo-600"
-                                      : ""
-                                  }`}
-                                >
-                                  {subItem.title}
-                                </span>
-                              </Link>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      </CollapsibleContent>
-                    </SidebarGroup>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </CollapsibleContent>
                   </Collapsible>
                 )
               )}
@@ -215,3 +240,6 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+
+
