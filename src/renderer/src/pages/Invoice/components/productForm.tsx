@@ -5,6 +5,16 @@ import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import CategorySelector from "./CategorySelector";
 
+interface ProductFormProps {
+  formData: any;
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  categories: any;
+  onSubmit: (data: any) => void;
+  onBarcodeSearch: (barcode: string) => void;
+  onGenerateBarcode: () => void;
+  isLoading: boolean;
+}
+
 const ProductForm = ({
   formData,
   setFormData,
@@ -13,16 +23,16 @@ const ProductForm = ({
   onBarcodeSearch,
   onGenerateBarcode,
   isLoading,
-}) => {
+}: ProductFormProps) => {
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     barcodeInputRef.current?.focus();
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
       [name]:
         name.includes("price") || name === "quantity"
@@ -31,7 +41,7 @@ const ProductForm = ({
     }));
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // التحقق من صحة البيانات قبل الإرسال
     if (!formData.name || !formData.price) {
@@ -89,7 +99,7 @@ const ProductForm = ({
             categories={categories}
             selectedId={formData.category_id}
             onSelect={(id) =>
-              setFormData((prev) => ({ ...prev, category_id: id }))
+              setFormData((prev: any) => ({ ...prev, category_id: id }))
             }
           />
         </div>

@@ -1,0 +1,175 @@
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+}
+
+interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+interface LoginResponse {
+  success: boolean;
+  user: User;
+}
+
+interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+}
+
+// Async thunk for login
+export const loginUser = createAsyncThunk<
+  LoginResponse,
+  LoginCredentials,
+  { rejectValue: string }
+>("auth/login", async (credentials, { rejectWithValue }) => {
+  try {
+    if (window.electronAPI) {
+      const result = await window.electronAPI.auth.login(credentials);
+      return result;
+    } else {
+      // Fallback for development without Electron
+      if (
+        credentials.username === "admin" &&
+        credentials.password === "admin123"
+      ) {
+        return {
+          success: true,
+          user: {
+            id: 1,
+            username: "admin",
+            email: "admin@casher.local",
+            role: "admin",
+          },
+        };
+      } else {
+        throw new Error("اسم المستخدم أو كلمة المرور غير صحيحة");
+      }
+    }
+  } catch (error) {
+    return rejectWithValue("اسم المستخدم أو كلمة المرور غير صحيحة");
+  }
+});
+
+// Async thunk for logout
+export const logoutUser = createAsyncThunk<
+  { success: boolean },
+  void,
+  { rejectValue: string }
+>("auth/logout", async (_, { rejectWithValue }) => {
+  try {
+    if (window.electronAPI) {
+      const result = await window.electronAPI.auth.logout();
+      return result;
+    } else {
+      // Fallback for development
+      return { success: true };
+    }
+  } catch (error: any) {
+    return rejectWithValue(error.message);
+  }
+});
+
+// Async thunk for checking authentication status
+export const checkAuth = createAsyncThunk<
+  LoginResponse,
+  void,
+  { rejectValue: string }
+>("auth/checkAuth", async (_, { rejectWithValue }) => {
+  try {
+    if (window.electronAPI) {
+      const result = await window.electronAPI.auth.checkAuth();
+      return result;
+    } else {
+      // Fallback for development - assume not authenticated
+      throw new Error("Not authenticated");
+    }
+  } catch (error: any) {
+    return rejectWithValue(error.message || "Authentication check failed");
+  }
+});
+
+const initialState: AuthState = {
+  isAuthenticated: false,
+  user: null,
+  loading: false,
+  error: null,
+};
+
+const authSlice = createSlice({
+  name: "auth",
+  initialState,
+  reducers: {
+    clearError: (state) => {
+      state.error = null;
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Login cases
+      .addCase(loginUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.error = null;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = action.payload || "Login failed";
+      })
+      // Logout cases
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = null;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Logout failed";
+      })
+      // Check auth cases
+      .addCase(checkAuth.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(checkAuth.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload.success) {
+          state.isAuthenticated = true;
+          state.user = action.payload.user;
+        } else {
+          state.isAuthenticated = false;
+          state.user = null;
+        }
+        state.error = null;
+      })
+      .addCase(checkAuth.rejected, (state) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = null; // Don't show error for failed auth check
+      });
+  },
+});
+
+export const { clearError, setLoading } = authSlice.actions;
+export default authSlice.reducer;

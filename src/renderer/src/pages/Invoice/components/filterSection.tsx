@@ -1,6 +1,17 @@
 import { Calendar, Filter, X, Search } from "lucide-react";
+import React from "react";
 
-const FilterSection = ({
+interface FilterSectionProps {
+  from: string;
+  setFrom: React.Dispatch<React.SetStateAction<string>>;
+  to: string;
+  setTo: React.Dispatch<React.SetStateAction<string>>;
+  invoiceType: string;
+  setInvoiceType: React.Dispatch<React.SetStateAction<string>>;
+  onClearFilters?: () => void;
+}
+
+const FilterSection: React.FC<FilterSectionProps> = ({
   from,
   setFrom,
   to,
@@ -41,7 +52,7 @@ const FilterSection = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Date From Filter */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+          <label className=" text-sm font-medium text-gray-700 flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             من تاريخ
           </label>
@@ -58,7 +69,7 @@ const FilterSection = ({
 
         {/* Date To Filter */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+          <label className=" text-sm font-medium text-gray-700 flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             إلى تاريخ
           </label>
@@ -75,7 +86,7 @@ const FilterSection = ({
 
         {/* Invoice Type Filter */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+          <label className=" text-sm font-medium text-gray-700 flex items-center gap-2">
             <Search className="w-4 h-4" />
             نوع الفاتورة
           </label>

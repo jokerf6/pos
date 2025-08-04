@@ -40,7 +40,7 @@ const DataTable = <T extends Record<string, any>>({
   const navigate = useNavigate();
 
   const [visibleColumns, setVisibleColumns] = useState(() =>
-    columns.map((col) => ({ ...col, visible: col.visible !== false }))
+    columns.map((col: any) => ({ ...col, visible: col.visible !== false }))
   );
 
   const [search, setSearch] = useState("");
@@ -68,10 +68,12 @@ const DataTable = <T extends Record<string, any>>({
     try {
       const result = await dispatch(searchCategories(value) as any);
       if (!result.error) {
-        const formatedCategories = result?.payload?.categories?.map((item) => ({
-          ...item,
-          created_at: item.created_at?.toString(), // أو `.toISOString()`
-        }));
+        const formatedCategories = result?.payload?.categories?.map(
+          (item: any) => ({
+            ...item,
+            created_at: item.created_at?.toString(), // أو `.toISOString()`
+          })
+        );
         setCurrentData(formatedCategories || []);
       } else {
         showError(result?.payload || "حدث خطأ في البحث");
@@ -85,11 +87,13 @@ const DataTable = <T extends Record<string, any>>({
     setPage((prev) => page);
 
     try {
-      const result = await dispatch(getCategories({ page }) as any);
+      const result = await dispatch(getCategories() as any);
       if (!result.error) {
-        const formatedCategories = result?.payload?.categories?.map((item) => ({
-          ...item,
-        }));
+        const formatedCategories = result?.payload?.categories?.map(
+          (item: any) => ({
+            ...item,
+          })
+        );
         setCurrentData(formatedCategories || []);
       } else {
         showError(result?.payload || "حدث خطأ في البحث");
@@ -103,7 +107,7 @@ const DataTable = <T extends Record<string, any>>({
     if (!search) return currentData;
     return currentData?.filter((row) =>
       visibleColumns.some(
-        (col) =>
+        (col: any) =>
           col.visible &&
           String(row[col.accessorKey] ?? "")
             .toLowerCase()
@@ -136,7 +140,7 @@ const DataTable = <T extends Record<string, any>>({
           <TableHeader>
             <TableRow>
               {visibleColumns.map(
-                (column, index) =>
+                (column: any, index: number) =>
                   column.visible && (
                     <TableHead
                       key={index}
@@ -156,7 +160,7 @@ const DataTable = <T extends Record<string, any>>({
             {filteredData.length > 0 ? (
               filteredData.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
-                  {visibleColumns.map((column, colIndex) =>
+                  {visibleColumns.map((column: any, colIndex: number) =>
                     column.visible && column.accessorKey !== "image" ? (
                       <TableCell
                         key={colIndex}

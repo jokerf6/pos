@@ -47,8 +47,9 @@ const Modal = ({
         {children ? (
           children
         ) : (
-          <p className="text-muted-foreground"
-              dangerouslySetInnerHTML={{ __html: message }}
+          <p
+            className="text-muted-foreground"
+            dangerouslySetInnerHTML={{ __html: message as string }}
           />
         )}
 

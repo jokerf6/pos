@@ -15,6 +15,8 @@ import { showError, showSuccess } from "../../../components/ui/sonner";
 import { useDispatch } from "react-redux";
 import { getCredit, createCredit } from "../../../store/slices/creditSlice";
 import Modal from "../../../components/common/dynamic-modal.component";
+import { getUsers } from "store/slices/usersSlice";
+import { AppDispatch } from "store";
 interface DataTableProps<T> {
   columns: any;
   data: T[];
@@ -32,11 +34,11 @@ const DataDailyTable = <T extends Record<string, any>>({
   onEdit,
   onDelete,
 }: DataTableProps<T>) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
   const [visibleColumns, setVisibleColumns] = useState(() =>
-    columns.map((col) => ({ ...col, visible: col.visible !== false }))
+    columns.map((col: any) => ({ ...col, visible: col.visible !== false }))
   );
 
   const [search, setSearch] = useState("");
@@ -44,9 +46,9 @@ const DataDailyTable = <T extends Record<string, any>>({
   const [total, setTotal] = useState(0);
   const [currentData, setCurrentData] = useState<T[]>(data || []);
   const [openCreate, setOpenCreate] = useState(false);
-  const [reason, setReason] = useState(null);
+  const [reason, setReason] = useState<string | null>(null);
   const [price, setPrice] = useState(0);
-  const [reciever, setReciever] = useState(null);
+  const [reciever, setReciever] = useState<string | null>(null);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -94,16 +96,16 @@ const DataDailyTable = <T extends Record<string, any>>({
     setPage((prev) => page);
 
     try {
-      const result = await dispatch(getCredit({ page }) as any);
-      if (!result.error) {
-        const formatedCredit = result?.payload?.credit?.map((item) => ({
+      try {
+        const result = dispatch(getUsers({})) as any;
+        const formatedCredit = result?.data?.map((item: any) => ({
           ...item,
           createdAt: new Date(item.created_at).toISOString().split("T")[0], // Format date to YYYY-MM-DD
         }));
-        setTotal(result?.payload?.total || 0);
+        setTotal(result?.total || 0);
         setCurrentData(formatedCredit || []);
-      } else {
-        showError(result?.payload || "حدث خطأ في البحث");
+      } catch (error: any) {
+        showError(error || "حدث خطأ في البحث");
       }
     } catch {
       showError("فشل الاتصال بالخادم");
@@ -114,7 +116,7 @@ const DataDailyTable = <T extends Record<string, any>>({
     if (!search) return currentData;
     return currentData?.filter((row) =>
       visibleColumns.some(
-        (col) =>
+        (col: { visible: boolean; accessorKey: string }) =>
           col.visible &&
           String(row[col.accessorKey] ?? "")
             .toLowerCase()
@@ -157,7 +159,7 @@ const DataDailyTable = <T extends Record<string, any>>({
             key={"reason"}
             name={"reason"}
             type="string"
-            value={reason}
+            value={reason || ""}
             placeholder="السبب"
             onChange={(e) => setReason(e.target.value)}
             required
@@ -166,7 +168,7 @@ const DataDailyTable = <T extends Record<string, any>>({
             key={"reciever"}
             name={"reciever"}
             type="string"
-            value={reciever}
+            value={reciever || ""}
             placeholder="المستلم"
             onChange={(e) => setReciever(e.target.value)}
           />
@@ -198,7 +200,7 @@ const DataDailyTable = <T extends Record<string, any>>({
           <TableHeader>
             <TableRow>
               {visibleColumns.map(
-                (column, index) =>
+                (column: { visible: boolean; header: string }, index: number) =>
                   column.visible && (
                     <TableHead
                       key={index}
@@ -219,7 +221,10 @@ const DataDailyTable = <T extends Record<string, any>>({
               filteredData.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
                   {visibleColumns.map(
-                    (column, colIndex) =>
+                    (
+                      column: { visible: boolean; accessorKey: string },
+                      colIndex: number
+                    ) =>
                       column.visible && (
                         <TableCell
                           key={colIndex}

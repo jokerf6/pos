@@ -30,13 +30,13 @@ const EditProductPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const categories = useSelector((state: any) => state.categories);
-  const [categoryData, setCategoryData] = useState(null);
+  const [categoryData, setCategoryData] = useState<{ id: string; name: string } | null>(null);
   const [barcodeNumber, setBarcodeNumber] = useState(0);
   const [openPrint, setOpenPrint] = useState(false);
   const printRef = useRef(null);
 
   useEffect(() => {
-    dispatch(getCategories());
+    dispatch(getCategories() as any);
   }, [dispatch]);
 
   const [formData, setFormData] = useState({
@@ -45,11 +45,11 @@ const EditProductPage = () => {
     quantity: 1,
     price: 0,
     buy_price: 0,
-    barcode: undefined,
-    generated_code: undefined,
-    category_id: "",
+    barcode: undefined as string | undefined,
+    generated_code: undefined as string | undefined,
+    category_id: 0,
   });
-  const handleSearch = async (name) => {
+  const handleSearch = async (name: string) => {
     try {
       if (name.length === 0) {
         setFormData({
@@ -58,9 +58,9 @@ const EditProductPage = () => {
           quantity: 1,
           price: 0,
           buy_price: 0,
-          barcode: undefined,
-          generated_code: undefined,
-          category_id: "",
+          barcode: undefined as string | undefined,
+          generated_code: undefined as string | undefined,
+          category_id: 0,
         });
         setCategoryData(null);
         return;
@@ -77,10 +77,10 @@ const EditProductPage = () => {
             description: "",
             quantity: 1,
             price: 0,
-            generated_code: undefined,
+            generated_code: undefined as string | undefined,
             buy_price: 0,
-            barcode: undefined,
-            category_id: "",
+            barcode: undefined as string | undefined,
+            category_id: 0,
           });
         }
         if (data.category_id) {
@@ -161,14 +161,14 @@ const EditProductPage = () => {
 
   useEffect(() => {
     console.log("barcode->", barcode);
-    handleSearch(barcode.id);
+    if (barcode.id) handleSearch(barcode.id as string);
     setFormData((prev) => ({
       ...prev,
       barcode: barcode.id || prev.barcode,
     }));
   }, []);
   const GenerateBarCode = async () => {
-    const result = await dispatch(generateBarCode() as any);
+    const result = await dispatch(generateBarCode({}) as any);
     console.log("generateBarCode result", result);
     const data = result?.payload || null;
     console.log("generateBarCode data", data);
@@ -189,9 +189,9 @@ const EditProductPage = () => {
         quantity: 1,
         price: 0,
         buy_price: 0,
-        barcode: undefined,
-        generated_code: undefined,
-        category_id: "",
+        barcode: undefined as string | undefined,
+        generated_code: undefined as string | undefined,
+        category_id: 0,
       });
       setOpenPrint(true);
     } else {
@@ -203,7 +203,7 @@ const EditProductPage = () => {
       for (let i = 0; i < barcodeNumber; i++) {
         const svg = document.getElementById(`barcode-${i}`);
         if (svg) {
-          JsBarcode(svg, formData.generated_code || formData.barcode, {
+          JsBarcode.default(svg, (formData.generated_code || formData.barcode) as string, {
             format: "CODE128",
             width: 2,
             height: 60,
@@ -291,14 +291,14 @@ const EditProductPage = () => {
                   align="start"
                   className=" bg-white text-right mr-auto w-[296px]"
                 >
-                  {categories?.categories?.map((category) => (
+                  {categories?.categories?.map((category: { id: string; name: string }) => (
                     <DropdownMenuItem
-                      key={category}
+                      key={category.id}
                       onClick={() => {
                         setCategoryData(category);
                         setFormData((prev) => ({
                           ...prev,
-                          category_id: category.id,
+                          category_id: Number(category.id),
                         }));
                       }}
                       className="cursor-pointer capitalize w-[285px]"

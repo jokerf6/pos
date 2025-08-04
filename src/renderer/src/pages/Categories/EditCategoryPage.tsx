@@ -24,7 +24,7 @@ function EditCategoryPage() {
   // Fetch user by ID
   useEffect(() => {
     if (id) {
-      dispatch(CategoryById({ id: Number(id) }));
+      dispatch(CategoryById(Number(id)) as any);
     }
   }, [dispatch, id]);
 

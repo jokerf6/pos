@@ -1,14 +1,15 @@
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
+import { useAppDispatch } from "../../../store";
 import { Input } from "../../../components/ui/input";
 import {
   getByDomain,
-  updateSettings,
+  updateSetting,
 } from "../../../store/slices/settingsSlice";
 import { useEffect, useState } from "react";
 import { showError, showSuccess } from "../../../components/ui/sonner";
 
 export default function ProductHeader() {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const { settings } = useSelector((state: any) => state.settings);
 
   const [localSettings, setLocalSettings] = useState([]);
@@ -24,19 +25,24 @@ export default function ProductHeader() {
   }, [settings]);
   const handelSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await dispatch(updateSettings(localSettings));
-    if (!result.error) {
+    const result = await dispatch(updateSetting(localSettings));
+    // Handle result type safely
+    if ((result as any)?.meta?.requestStatus === "fulfilled") {
       showSuccess("تم تحديث الاعدادات بنجاح");
     } else {
-      showError(result.payload || "حدث خطأ أثناء تحديث الاعدادات");
+      showError((result as any)?.payload || "حدث خطأ أثناء تحديث الاعدادات");
     }
   };
 
   const handleChange = (index: number, newValue: any) => {
     const updated = [...localSettings];
     // Create a shallow copy of the object to avoid mutating a frozen one
-    const updatedItem = { ...updated[index], value: newValue };
-    updated[index] = updatedItem;
+    const base =
+      typeof updated[index] === "object" && updated[index] !== null
+        ? updated[index]
+        : {};
+    const updatedItem = { ...base, value: newValue };
+    (updated as any[])[index] = updatedItem;
     setLocalSettings(updated);
   };
   const renderInput = (item: any, index: number) => {

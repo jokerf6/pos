@@ -1,17 +1,16 @@
-import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
 import { updateUser, UserById } from "../../store/slices/usersSlice";
 // import toast from "react-hot-toast";
-import { Input } from "../../components/ui/input";
-import { Button } from "../../components/ui/button";
-import toast from "react-hot-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import { showError, showSuccess } from "../../components/ui/sonner";
 
 function EditUserPage() {
@@ -29,8 +28,8 @@ function EditUserPage() {
 
   // Fetch user by ID
   useEffect(() => {
-    if (id) {
-      dispatch(UserById({ id: Number(id) }));
+    if (id !== undefined) {
+      dispatch(UserById(Number(id)) as any);
     }
   }, [dispatch, id]);
 

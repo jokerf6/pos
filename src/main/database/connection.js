@@ -13,9 +13,9 @@ let connectionPool = null;
 // Database configuration
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 3306,
+  port: process.env.DB_PORT || 3307,
   user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
+  password: process.env.DB_PASSWORD || "fahd200",
   database: process.env.DB_NAME || "casher",
   charset: "utf8mb4",
   timezone: "+00:00",

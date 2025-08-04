@@ -15,13 +15,13 @@ function CategoriesPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(getCategories());
+    dispatch(getCategories() as any);
     console.log("categories", categories);
   }, [dispatch]);
 
   const formattedCategories =
     (categories &&
-      categories.categories?.map((item) => ({
+      categories.categories?.map((item: any) => ({
         ...item,
         created_at: item.created_at?.toString(), // أو `.toISOString()`
       }))) ||
@@ -31,11 +31,11 @@ function CategoriesPage() {
       showConfirmModal({
         itemLabel: item.name,
         onConfirm: () => {
-          dispatch(deleteCategory(item.id))
+          dispatch(deleteCategory(item.id) as any)
             .unwrap()
             .then(() => {
               showSuccess("تم حذف القسم بنجاح");
-              dispatch(getCategories());
+              dispatch(getCategories() as any);
             })
             .catch(() => showSuccess("فشل حذف المستخدم"));
         },

@@ -6,10 +6,11 @@ import {
 } from "@radix-ui/react-dropdown-menu";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "../../store/slices/authSlice";
+import { AppDispatch } from "../../store"; // Import the AppDispatch type
 export function HeaderActions() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     dispatch(logoutUser());
   };
 

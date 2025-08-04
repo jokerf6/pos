@@ -35,7 +35,7 @@ const DataTable = <T extends Record<string, any>>({
   const navigate = useNavigate();
 
   const [visibleColumns, setVisibleColumns] = useState(() =>
-    columns.map((col) => ({ ...col, visible: col.visible !== false }))
+    columns.map((col: any) => ({ ...col, visible: col.visible !== false }))
   );
 
   const [search, setSearch] = useState("");
@@ -111,9 +111,9 @@ const DataTable = <T extends Record<string, any>>({
     setPage((prev) => page);
 
     try {
-      const result = await dispatch(getCredit({ page }) as any);
+      const result = await dispatch(getCredit() as any);
       if (!result.error) {
-        const formatedCredit = result?.payload?.credit?.map((item) => ({
+        const formatedCredit = result?.payload?.credit?.map((item: any) => ({
           ...item,
           createdAt: new Date(item.created_at).toISOString().split("T")[0], // Format date to YYYY-MM-DD
         }));
@@ -131,7 +131,7 @@ const DataTable = <T extends Record<string, any>>({
     if (!search) return currentData;
     return currentData?.filter((row) =>
       visibleColumns.some(
-        (col) =>
+        (col: any) =>
           col.visible &&
           String(row[col.accessorKey] ?? "")
             .toLowerCase()
@@ -160,7 +160,7 @@ const DataTable = <T extends Record<string, any>>({
           <TableHeader>
             <TableRow>
               {visibleColumns.map(
-                (column, index) =>
+                (column: any, index: number) =>
                   column.visible && (
                     <TableHead
                       key={index}
@@ -181,7 +181,7 @@ const DataTable = <T extends Record<string, any>>({
               filteredData.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
                   {visibleColumns.map(
-                    (column, colIndex) =>
+                    (column: any, colIndex: number) =>
                       column.visible && (
                         <TableCell
                           key={colIndex}
