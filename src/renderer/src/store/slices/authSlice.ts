@@ -5,6 +5,8 @@ interface User {
   username: string;
   email: string;
   role: string;
+    permissions: string[]; // ✅ أضف الصلاحيات هنا
+
 }
 
 interface LoginCredentials {
@@ -26,10 +28,10 @@ interface AuthState {
 
 // Async thunk for login
 export const loginUser = createAsyncThunk<
-  LoginResponse,
+  any,
   LoginCredentials,
   { rejectValue: string }
->("auth/login", async (credentials, { rejectWithValue }) => {
+>("auth/login", async (credentials, { rejectWithValue } ) => {
   try {
     if (window.electronAPI) {
       const result = await window.electronAPI.auth.login(credentials);
@@ -47,6 +49,7 @@ export const loginUser = createAsyncThunk<
             username: "admin",
             email: "admin@casher.local",
             role: "admin",
+            permissions: [] 
           },
         };
       } else {
@@ -57,6 +60,7 @@ export const loginUser = createAsyncThunk<
     return rejectWithValue("اسم المستخدم أو كلمة المرور غير صحيحة");
   }
 });
+
 
 // Async thunk for logout
 export const logoutUser = createAsyncThunk<
@@ -79,7 +83,7 @@ export const logoutUser = createAsyncThunk<
 
 // Async thunk for checking authentication status
 export const checkAuth = createAsyncThunk<
-  LoginResponse,
+  any,
   void,
   { rejectValue: string }
 >("auth/checkAuth", async (_, { rejectWithValue }) => {
@@ -89,7 +93,16 @@ export const checkAuth = createAsyncThunk<
       return result;
     } else {
       // Fallback for development - assume not authenticated
-      throw new Error("Not authenticated");
+      return {
+        success: false,
+        user: {
+          id: 0,
+          username: "",
+          email: "",
+          role: "",
+          permissions: [] as string[],
+        },
+      };
     }
   } catch (error: any) {
     return rejectWithValue(error.message || "Authentication check failed");
@@ -122,16 +135,17 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
+
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
+
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.isAuthenticated = false;
         state.user = null;
-        state.error = action.payload || "Login failed";
       })
       // Logout cases
       .addCase(logoutUser.pending, (state) => {

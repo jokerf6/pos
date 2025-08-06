@@ -41,7 +41,7 @@ function UsersPage() {
     );
   };
   const handelEdit = (user: any) => {
-    navigate(`/users/${user.id}`);
+    navigate(`/users/edit/${user.id}`);
   };
   return (
     <div className="flex flex-1 h-[85vh] ">

@@ -10,7 +10,12 @@ import {
   TrendingUp,
   Clock,
   DollarSign,
+  TrendingDown,
 } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "store";
+import { useEffect } from "react";
+import { getDaily } from "store/slices/dailySlice";
 
 interface QuickActionCardProps {
   title: string;
@@ -29,6 +34,7 @@ const QuickActionCard: React.FC<QuickActionCardProps> = ({
   shortcut,
   color,
 }) => {
+
   return (
     <div
       className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 cursor-pointer 
@@ -90,7 +96,8 @@ const StatCard: React.FC<StatCardProps> = ({
           <p
             className={`text-sm text-${color}-600 flex items-center gap-1 mt-1`}
           >
-            <TrendingUp size={14} />
+           {change[0] === "-"? <TrendingDown size={14} /> :<TrendingUp size={14} />  }
+           {change[0] === "-" ? "" : "+"}
             {change}
           </p>
         </div>
@@ -107,6 +114,44 @@ const StatCard: React.FC<StatCardProps> = ({
 export default function HomePage() {
   const navigate = useNavigate();
 
+    const dispatch = useDispatch<AppDispatch>();
+  const daily = useSelector((state:any) => state.daily.data);
+ console.log("Daily data:", daily);
+  const stats = daily
+    ? [
+        {
+          title: "مبيعات اليوم",
+          value: `${Number(daily.data.total_sales).toLocaleString()} ج.م`,
+          change: `${+daily.data.total_sales_change}% من السابق`,
+          icon: <DollarSign size={24} />,
+          color: "green",
+        },
+        {
+          title: "عدد الفواتير",
+          value: daily.data.count_sales.toString(),
+          change: `${+daily.data.count_sales_change}% من السابق`,
+          icon: <Receipt size={24} />,
+          color: "blue",
+        },
+        {
+          title: "المنتجات المباعة",
+          value: daily.data.total_products_sold.toString(),
+          change: `${+daily.data.total_products_sold_change}% من السابق`,
+          icon: <Package size={24} />,
+          color: "purple",
+        },
+        {
+          title: "متوسط الفاتورة",
+          value: `${Number(daily.data.average_invoice).toLocaleString()} ج.م`,
+          change: `${+daily.data.average_invoice_change}% من السابق`,
+          icon: <TrendingUp size={24} />,
+          color: "orange",
+        },
+      ]
+    : [];
+  useEffect(() => {
+    dispatch(getDaily());
+  }, [dispatch]);
   const quickActions = [
     {
       title: "إنشاء فاتورة جديدة",
@@ -158,36 +203,36 @@ export default function HomePage() {
     },
   ];
 
-  const stats = [
-    {
-      title: "مبيعات اليوم",
-      value: "12,450 ج.م",
-      change: "+12.5% من أمس",
-      icon: <DollarSign size={24} />,
-      color: "green",
-    },
-    {
-      title: "عدد الفواتير",
-      value: "48",
-      change: "+8.2% من أمس",
-      icon: <Receipt size={24} />,
-      color: "blue",
-    },
-    {
-      title: "المنتجات المباعة",
-      value: "156",
-      change: "+15.3% من أمس",
-      icon: <Package size={24} />,
-      color: "purple",
-    },
-    {
-      title: "متوسط الفاتورة",
-      value: "259 ج.م",
-      change: "+4.1% من أمس",
-      icon: <TrendingUp size={24} />,
-      color: "orange",
-    },
-  ];
+  // const stats = [
+  //   {
+  //     title: "مبيعات اليوم",
+  //     value: "12,450 ج.م",
+  //     change: "+12.5% من أمس",
+  //     icon: <DollarSign size={24} />,
+  //     color: "green",
+  //   },
+  //   {
+  //     title: "عدد الفواتير",
+  //     value: "48",
+  //     change: "+8.2% من أمس",
+  //     icon: <Receipt size={24} />,
+  //     color: "blue",
+  //   },
+  //   {
+  //     title: "المنتجات المباعة",
+  //     value: "156",
+  //     change: "+15.3% من أمس",
+  //     icon: <Package size={24} />,
+  //     color: "purple",
+  //   },
+  //   {
+  //     title: "متوسط الفاتورة",
+  //     value: "259 ج.م",
+  //     change: "+4.1% من أمس",
+  //     icon: <TrendingUp size={24} />,
+  //     color: "orange",
+  //   },
+  // ];
 
   const getCurrentTime = () => {
     return new Date().toLocaleTimeString("ar-EG", {
@@ -248,7 +293,7 @@ export default function HomePage() {
       </div>
 
       {/* Recent Activity */}
-      <div>
+      {/* <div>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           النشاط الأخير
         </h2>
@@ -294,7 +339,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

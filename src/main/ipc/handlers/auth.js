@@ -53,12 +53,24 @@ async function login(event, credentials) {
       throw new Error("Invalid username or password");
     }
 
+const [permissionsRows] = await db.execute(
+  `SELECT p.name 
+   FROM user_permissions up 
+   JOIN permissions p ON up.permission_id = p.id 
+   WHERE up.user_id = ?`,
+  [user.id]
+);
+
+// استخرج قائمة الصلاحيات كـ string[]
+const permissions = permissionsRows.map((row) => row.name);
+
     // Generate JWT token
     const token = jwt.sign(
       {
         userId: user.id,
         username: user.username,
         role: user.role,
+        permissions,
       },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
@@ -69,6 +81,8 @@ async function login(event, credentials) {
       userId: user.id,
       username: user.username,
       role: user.role,
+      permissions,
+
       token: token,
       loginTime: new Date(),
     };
@@ -86,6 +100,7 @@ async function login(event, credentials) {
         id: user.id,
         username: user.username,
         role: user.role,
+        permissions, // ✅ إرجاع الصلاحيات هنا
       },
       token: token,
     };

@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getPermissionsByCategory } from '../../store/slices/permissionsSlice';
@@ -25,11 +26,9 @@ const categoryIcons: Record<string, React.ReactNode> = {
 
 const categoryNames: Record<string, string> = {
   sales: 'المبيعات',
-  inventory: 'المخزون',
-  reports: 'التقارير',
+  products: 'المنتجات',
   users: 'إدارة المستخدمين',
   system: 'النظام',
-  cashier: 'الكاشير',
 };
 
 const PermissionsSelector: React.FC<PermissionsSelectorProps> = ({
@@ -128,6 +127,7 @@ const PermissionsSelector: React.FC<PermissionsSelectorProps> = ({
                 open={isExpanded}
                 onOpenChange={() => toggleCategoryExpansion(category)}
               >
+                {/* <pre>{JSON.stringify(permissions,null,2)}</pre> */}
                 <CollapsibleTrigger asChild>
                   <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors p-4">
                     <div className="flex items-center justify-between">
@@ -139,7 +139,7 @@ const PermissionsSelector: React.FC<PermissionsSelectorProps> = ({
                           </CardTitle>
                         </div>
                         <Badge variant={selectionState === 'all' ? 'default' : selectionState === 'partial' ? 'secondary' : 'outline'}>
-                          {permissions.filter(p => selectedPermissions.includes(p.id)).length} / {permissions.length}
+                          {permissions.filter(p => selectedPermissions?.includes(p.id)).length} / {permissions.length}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2">
@@ -169,16 +169,19 @@ const PermissionsSelector: React.FC<PermissionsSelectorProps> = ({
                     <div className="space-y-3">
                       {permissions.map((permission) => (
                         <div
+                                                    onClick={() => handlePermissionToggle(permission.id)}
+
                           key={permission.id}
                           className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
                         >
-                          <Checkbox
-                            id={`permission-${permission.id}`}
-                            checked={selectedPermissions.includes(permission.id)}
-                            onCheckedChange={() => handlePermissionToggle(permission.id)}
-                            disabled={disabled}
-                            className="mt-1"
+                     
+                          <input
+                           type='checkbox'
+                           id={`permission-${permission.id}`}
+                            checked={selectedPermissions?.includes(permission.id)}
+                            onChange={() => handlePermissionToggle(permission.id)}
                           />
+                          {/* <Checkbox /> */}
                           <div className="flex-1 min-w-0">
                             <label
                               htmlFor={`permission-${permission.id}`}

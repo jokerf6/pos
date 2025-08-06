@@ -12,10 +12,7 @@ const columns: ColumnDef<Payment>[] = [
     accessorKey: "username",
     header: "الاسم",
   },
-  {
-    accessorKey: "role",
-    header: "الصلاحيات",
-  },
+ 
   {
     accessorKey: "createdAt",
     header: "تاريخ الإنشاء",

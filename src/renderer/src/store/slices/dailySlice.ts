@@ -13,6 +13,7 @@ interface DailyRecord {
 
 interface DailyState {
   daily: DailyRecord[];
+  data: any;
   loading: boolean;
   error: string | null;
 }
@@ -70,6 +71,7 @@ export const closeDaily = createAsyncThunk<
 
 const initialState: DailyState = {
   daily: [],
+  data: null,
   loading: false,
   error: null,
 };
@@ -91,6 +93,7 @@ const dailySlice = createSlice({
       })
       .addCase(getDaily.fulfilled, (state, action) => {
         state.loading = false;
+        state.data = action.payload;
         state.daily = action.payload;
         state.error = null;
       })

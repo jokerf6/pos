@@ -38,7 +38,7 @@ export function HeaderActions() {
 
           <DropdownMenuContent
             align="start"
-            className="w-[--radix-dropdown-menu-trigger-width]  rounded-md shadow  bg-white border gap-2  text-right"
+            className="  w-[--radix-dropdown-menu-trigger-width]  rounded-md shadow  bg-white border gap-2  text-right"
           >
             <DropdownMenuItem
               key={"logout"}

@@ -77,7 +77,7 @@ function setupIPC() {
 
   // Users handlers
   ipcMain.handle("users:getAll", secureHandler(usersH.getAll));
-  ipcMain.handle("users:getById", secureHandler(usersH.findById));
+  ipcMain.handle("users:getById", secureHandler(usersH.getById));
   ipcMain.handle("users:create", secureHandler(usersH.createUser));
   ipcMain.handle("users:update", secureHandler(usersH.update));
   ipcMain.handle("users:delete", secureHandler(usersH.deleteUser));

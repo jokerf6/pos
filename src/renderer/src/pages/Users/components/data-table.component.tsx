@@ -68,7 +68,10 @@ const DataTable = <T extends Record<string, any>>({
 
     try {
       // searchUsers expects a string (name), not an object
-      const result = await dispatch(searchUsers(value) as any);
+      const data = { name: value, page };
+      
+      const result = await dispatch(searchUsers(data as any) as any);
+      console.log("search result", result);
       if (!result.error) {
         const formatedUsers = result?.payload?.users?.map((item: any) => ({
           ...item,

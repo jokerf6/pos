@@ -53,10 +53,7 @@ async function createUser(event, credentials) {
         `, flatValues);
 
         // Update permissions timestamp
-        await db.execute(`
-          UPDATE users SET permissions_updated_at = CURRENT_TIMESTAMP 
-          WHERE id = ?
-        `, [userId]);
+  
       }
 
       // Commit transaction
@@ -88,11 +85,11 @@ async function getAll(
 
     // Get users with their permissions count
     const [users] = await db.execute(`
-      SELECT u.id, u.username, u.active, u.created_at, u.last_login, u.permissions_updated_at,
+      SELECT u.id, u.username, u.active, u.created_at, u.last_login,
              COUNT(up.permission_id) as permissions_count
       FROM users u
       LEFT JOIN user_permissions up ON u.id = up.user_id
-      GROUP BY u.id, u.username, u.active, u.created_at, u.last_login, u.permissions_updated_at
+      GROUP BY u.id, u.username, u.active, u.created_at, u.last_login
       ORDER BY u.created_at DESC
       LIMIT ? OFFSET ?
     `, [limit, offset]);
@@ -136,7 +133,7 @@ async function getByName(name) {
   }
 }
 
-async function findById(event, { id }) {
+async function getById(event,  id ) {
   try {
     const db = getDatabase();
     
@@ -176,9 +173,11 @@ async function findById(event, { id }) {
 
 async function search(
   event,
-  { name, page = 1, limit = 10 } = { name: "", page: 1, limit: 10 }
+ data
 ) {
+  const { name, page = 1, limit = 10 } = data;
   try {
+    console.log("searching for users with name:", data);
     const db = getDatabase();
     const offset = (page - 1) * limit;
 
@@ -262,12 +261,7 @@ async function update(event, user) {
         `, flatValues);
       }
 
-      // Update permissions timestamp
-      await db.execute(`
-        UPDATE users SET permissions_updated_at = CURRENT_TIMESTAMP 
-        WHERE id = ?
-      `, [id]);
-
+    
       // Commit transaction
       await db.execute('COMMIT');
 
@@ -328,4 +322,4 @@ async function deleteUser(event, id) {
     throw error;
   }
 }
-export { createUser, getAll, findById, getByName, search, update, deleteUser };
+export { createUser, getAll, getById, getByName, search, update, deleteUser };

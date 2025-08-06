@@ -109,10 +109,7 @@ async function grantPermission(event, { userId, permissionId, grantedBy }) {
     `, [userId, permissionId, grantedBy]);
 
     // Update user permissions timestamp
-    await db.execute(`
-      UPDATE users SET permissions_updated_at = CURRENT_TIMESTAMP 
-      WHERE id = ?
-    `, [userId]);
+  
 
     return {
       success: true,
@@ -144,10 +141,7 @@ async function revokePermission(event, { userId, permissionId }) {
     }
 
     // Update user permissions timestamp
-    await db.execute(`
-      UPDATE users SET permissions_updated_at = CURRENT_TIMESTAMP 
-      WHERE id = ?
-    `, [userId]);
+
 
     return {
       success: true,
@@ -187,12 +181,7 @@ async function updateUserPermissions(event, { userId, permissionIds, grantedBy }
         `, flatValues);
       }
 
-      // Update user permissions timestamp
-      await db.execute(`
-        UPDATE users SET permissions_updated_at = CURRENT_TIMESTAMP 
-        WHERE id = ?
-      `, [userId]);
-
+   
       // Commit transaction
       await db.execute('COMMIT');
 

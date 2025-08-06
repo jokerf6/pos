@@ -72,11 +72,11 @@ export const getUsers = createAsyncThunk(
 
 export const searchUsers = createAsyncThunk(
   "users/search",
-  async (name: string, { rejectWithValue }) => {
+  async (data, { rejectWithValue }) => {
     try {
       console.log("Searching users...");
       if (window.electronAPI) {
-        const result = await window.electronAPI.users.search(name);
+        const result = await window.electronAPI.users.search(data);
         return result;
       } else {
         return null;

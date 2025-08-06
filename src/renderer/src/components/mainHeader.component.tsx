@@ -20,6 +20,7 @@ import {
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
+  console.log("fixedDate", date, dateString)
   return date.toLocaleString("ar-EG", {
     year: "numeric",
     month: "2-digit",
@@ -55,7 +56,7 @@ export default function MainHeader() {
   const [open, setOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(getCurrentTime());
   const dispatch = useDispatch<AppDispatch>();
-  const { daily } = useSelector((state: RootState) => state.daily);
+  const { daily } = useSelector((state: RootState) => state.daily) as any;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -94,7 +95,7 @@ export default function MainHeader() {
     setOpen(false);
   };
 
-  const isDailyOpen = daily.length > 0;
+  const isDailyOpen = daily.data !== null ;
 
   return (
     <div className="flex justify-between w-full sticky right-0 rounded-t-2xl top-0 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 h-20 shrink-0 items-center gap-4 border-b border-gray-200 px-6 py-4 z-50 shadow-sm">
@@ -103,14 +104,14 @@ export default function MainHeader() {
       </SidebarTrigger>
 
       <Modal
-        confirmLabel={daily.length === 0 ? "فتح" : "غلق"}
+        confirmLabel={isDailyOpen ? "فتح" : "غلق"}
         cancelLabel="إلغاء"
-        onConfirm={daily.length === 0 ? handleOpen : handleClose}
-        title={daily.length === 0 ? "فتح اليومية" : "غلق اليومية"}
+        onConfirm={isDailyOpen ? handleOpen : handleClose}
+        title={isDailyOpen ? "فتح اليومية" : "غلق اليومية"}
         open={open}
         onClose={() => setOpen(false)}
       >
-        {daily.length === 0 && openSettings === true && (
+        {isDailyOpen && openSettings === true && (
           <div className="space-y-3">
             <label className="text-sm font-medium text-gray-700">
               المبلغ الافتتاحي
@@ -126,7 +127,7 @@ export default function MainHeader() {
           </div>
         )}
 
-        {daily.length > 0 && openSettings && (
+        {isDailyOpen && openSettings && (
           <div className="space-y-3">
             <label className="text-sm font-medium text-gray-700">
               المبلغ المسحوب
@@ -142,7 +143,7 @@ export default function MainHeader() {
           </div>
         )}
 
-        {daily.length > 0 && (
+        {isDailyOpen && (
           <div className="bg-gray-50 rounded-lg p-4 space-y-3">
             <h4 className="font-semibold text-gray-900 mb-3">ملخص اليومية</h4>
             <div className="grid grid-cols-2 gap-4">
@@ -203,11 +204,7 @@ export default function MainHeader() {
                 </span>
                 <div className="text-green-600 text-xs">
                   بدأت في:{" "}
-                  {formatDate(
-                    typeof daily[0].opened_at === "string"
-                      ? daily[0].opened_at
-                      : new Date(daily[0].opened_at).toISOString()
-                  )}
+                 {formatDate(daily?.data?.opened_at)}
                 </div>
               </div>
             </div>
