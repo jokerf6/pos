@@ -33,7 +33,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@radix-ui/react-collapsible";
-import { usePermission } from "hooks/use-permissions";
 
 // Menu items with required permissions
 const items = [
@@ -132,12 +131,11 @@ export function AppSidebar() {
   const location = useLocation();
 
   // Helper function to check if user has any of the required permissions
-  const hasPermission = (requiredPermissions: string[]): boolean => {
-    if (requiredPermissions.length === 0) return true; // No permissions required
-    if (user?.role === "admin") return true; // Admin has all permissions
-    return requiredPermissions.some(permission => usePermission(permission));
-  };
-
+ const hasPermission = (requiredPermissions: string[]): boolean => {
+  if (!requiredPermissions || requiredPermissions.length === 0) return true;
+  if (user?.role === "admin") return true;
+  return requiredPermissions.some(p => user?.permissions?.includes(p));
+};
   // Helper function to check if user has permission for any sub-item in a group
   const hasGroupPermission = (group: any[]): boolean => {
     return group.some(subItem => hasPermission(subItem.permissions || []));
