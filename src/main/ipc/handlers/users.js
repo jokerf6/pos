@@ -3,41 +3,75 @@ import log from "electron-log";
 import { getDatabase } from "../../database/connection.js";
 
 /**
- * Login handler
+ * Create user handler
  */
 async function createUser(event, credentials) {
-  const { username, password, role } = credentials;
+  const { username, password, permissions = [], createdBy } = credentials;
 
   // Validate input
-  if (!username || !password || !role) {
-    throw new Error("برجاء إدخال اسم المستخدم وكلمة المرور والدور");
-  }
-  if (role !== "cashier" && role !== "admin" && role !== "manager") {
-    throw new Error("صلاحيات غير صحيحة (يجب أن تكون: cashier, admin)");
+  if (!username || !password) {
+    throw new Error("برجاء إدخال اسم المستخدم وكلمة المرور");
   }
 
   try {
     const db = getDatabase();
 
+    // Check if username already exists
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE username LIKE ?",
-      [`%${username}%`]
+      "SELECT * FROM users WHERE username = ?",
+      [username]
     );
     if (rows.length > 0) {
       throw new Error("اسم المستخدم موجود بالفعل");
     }
-    // Hash password
-    const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
-    await db.execute(
-      "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
-      [username, passwordHash, role]
-    );
 
-    return {
-      success: true,
-      message: "User created successfully",
-    };
+    // Start transaction
+    await db.execute('START TRANSACTION');
+
+    try {
+      // Hash password
+      const saltRounds = 12;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
+      
+      // Create user (without role)
+      const [result] = await db.execute(
+        "INSERT INTO users (username, password_hash, active, created_at) VALUES (?, ?, 1, CURRENT_TIMESTAMP)",
+        [username, passwordHash]
+      );
+
+      const userId = result.insertId;
+
+      // Add permissions if provided
+      if (permissions && permissions.length > 0) {
+        const values = permissions.map(permissionId => [userId, permissionId, createdBy]);
+        const placeholders = values.map(() => '(?, ?, ?)').join(', ');
+        const flatValues = values.flat();
+
+        await db.execute(`
+          INSERT INTO user_permissions (user_id, permission_id, granted_by)
+          VALUES ${placeholders}
+        `, flatValues);
+
+        // Update permissions timestamp
+        await db.execute(`
+          UPDATE users SET permissions_updated_at = CURRENT_TIMESTAMP 
+          WHERE id = ?
+        `, [userId]);
+      }
+
+      // Commit transaction
+      await db.execute('COMMIT');
+
+      return {
+        success: true,
+        message: "تم إنشاء المستخدم بنجاح",
+        userId: userId,
+      };
+    } catch (error) {
+      // Rollback transaction
+      await db.execute('ROLLBACK');
+      throw error;
+    }
   } catch (error) {
     log.error("User creation error:", error.message);
     throw error;
@@ -50,23 +84,28 @@ async function getAll(
 ) {
   try {
     const db = getDatabase();
-    console.log(page, limit);
     const offset = (page - 1) * limit;
 
-    // Find user in database
-    const [users] = await db.execute("SELECT * FROM users LIMIT ? OFFSET ?", [
-      limit,
-      offset,
-    ]);
+    // Get users with their permissions count
+    const [users] = await db.execute(`
+      SELECT u.id, u.username, u.active, u.created_at, u.last_login, u.permissions_updated_at,
+             COUNT(up.permission_id) as permissions_count
+      FROM users u
+      LEFT JOIN user_permissions up ON u.id = up.user_id
+      GROUP BY u.id, u.username, u.active, u.created_at, u.last_login, u.permissions_updated_at
+      ORDER BY u.created_at DESC
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+
     const [rows] = await db.execute("SELECT COUNT(*) as total FROM users");
-    console.log("Total users:", users);
+    
     return {
       success: true,
       users,
       total: rows[0].total,
     };
   } catch (error) {
-    log.error("users error:", error.message);
+    log.error("Get users error:", error.message);
     throw error;
   }
 }
@@ -100,21 +139,37 @@ async function getByName(name) {
 async function findById(event, { id }) {
   try {
     const db = getDatabase();
-    console.log("Finding user by ID:", id);
-    // Find user in database
-    const [rows] = await db.execute("SELECT * FROM users WHERE id = ?", [id]);
-    if (rows.length === 0) {
+    
+    // Get user basic info
+    const [users] = await db.execute("SELECT * FROM users WHERE id = ?", [id]);
+    if (users.length === 0) {
       return {
         success: false,
-        message: "User not found",
+        message: "المستخدم غير موجود",
       };
     }
+
+    const user = users[0];
+
+    // Get user permissions
+    const [permissions] = await db.execute(`
+      SELECT p.id, p.name, p.display_name, p.description, p.category,
+             up.granted_at, up.granted_by
+      FROM permissions p
+      INNER JOIN user_permissions up ON p.id = up.permission_id
+      WHERE up.user_id = ?
+      ORDER BY p.category, p.display_name
+    `, [id]);
+
     return {
       success: true,
-      user: rows[0],
+      user: {
+        ...user,
+        permissions: permissions,
+      },
     };
   } catch (error) {
-    log.error("users error:", error.message);
+    log.error("Find user by ID error:", error.message);
     throw error;
   }
 }
@@ -149,41 +204,84 @@ async function search(
 }
 
 async function update(event, user) {
-  console.log("Updating user:", user);
-  const { id, username, password, role } = user;
+  const { id, username, password, permissions = [], updatedBy } = user;
 
   // Validate input
-  if (!username || !password || !role) {
-    throw new Error("برجاء إدخال اسم المستخدم وكلمة المرور والدور");
-  }
-  if (role !== "cashier" && role !== "admin" && role !== "manager") {
-    throw new Error("صلاحيات غير صحيحة (يجب أن تكون: cashier, admin)");
+  if (!username) {
+    throw new Error("برجاء إدخال اسم المستخدم");
   }
 
   try {
     const db = getDatabase();
 
+    // Check if username already exists for another user
     const [rows] = await db.execute(
-      "SELECT * FROM users WHERE username LIKE ?",
-      [`%${username}%`]
+      "SELECT * FROM users WHERE username = ? AND id != ?",
+      [username, id]
     );
-    if (rows.length > 0 && rows[0].id !== id) {
+    if (rows.length > 0) {
       throw new Error("اسم المستخدم موجود بالفعل");
     }
-    // Hash password
-    const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
-    await db.execute(
-      "UPDATE users SET username = ?, password_hash = ?, role = ? WHERE id = ?",
-      [username, passwordHash, role, id]
-    );
 
-    return {
-      success: true,
-      message: "User updated successfully",
-    };
+    // Start transaction
+    await db.execute('START TRANSACTION');
+
+    try {
+      // Update user basic info
+      if (password) {
+        // Hash new password
+        const saltRounds = 12;
+        const passwordHash = await bcrypt.hash(password, saltRounds);
+        await db.execute(
+          "UPDATE users SET username = ?, password_hash = ? WHERE id = ?",
+          [username, passwordHash, id]
+        );
+      } else {
+        await db.execute(
+          "UPDATE users SET username = ? WHERE id = ?",
+          [username, id]
+        );
+      }
+
+      // Update permissions
+      // Remove all existing permissions
+      await db.execute(
+        "DELETE FROM user_permissions WHERE user_id = ?",
+        [id]
+      );
+
+      // Add new permissions
+      if (permissions && permissions.length > 0) {
+        const values = permissions.map(permissionId => [id, permissionId, updatedBy]);
+        const placeholders = values.map(() => '(?, ?, ?)').join(', ');
+        const flatValues = values.flat();
+
+        await db.execute(`
+          INSERT INTO user_permissions (user_id, permission_id, granted_by)
+          VALUES ${placeholders}
+        `, flatValues);
+      }
+
+      // Update permissions timestamp
+      await db.execute(`
+        UPDATE users SET permissions_updated_at = CURRENT_TIMESTAMP 
+        WHERE id = ?
+      `, [id]);
+
+      // Commit transaction
+      await db.execute('COMMIT');
+
+      return {
+        success: true,
+        message: "تم تحديث المستخدم بنجاح",
+      };
+    } catch (error) {
+      // Rollback transaction
+      await db.execute('ROLLBACK');
+      throw error;
+    }
   } catch (error) {
-    log.error("User updated error:", error.message);
+    log.error("User update error:", error.message);
     throw error;
   }
 }
@@ -196,20 +294,37 @@ async function deleteUser(event, id) {
 
   try {
     const db = getDatabase();
-    const [rows] = await db.execute("SELECT * FROM users WHERE id LIKE ?", [
-      `%${id}%`,
-    ]);
+    
+    // Check if user exists
+    const [rows] = await db.execute("SELECT * FROM users WHERE id = ?", [id]);
     if (rows.length === 0) {
       throw new Error("مستخدم غير موجود");
     }
-    await db.execute("DELETE FROM users WHERE id LIKE ?", [`%${id}%`]);
 
-    return {
-      success: true,
-      message: "User deleted successfully",
-    };
+    // Start transaction
+    await db.execute('START TRANSACTION');
+
+    try {
+      // Delete user permissions first (due to foreign key constraint)
+      await db.execute("DELETE FROM user_permissions WHERE user_id = ?", [id]);
+      
+      // Delete user
+      await db.execute("DELETE FROM users WHERE id = ?", [id]);
+
+      // Commit transaction
+      await db.execute('COMMIT');
+
+      return {
+        success: true,
+        message: "تم حذف المستخدم بنجاح",
+      };
+    } catch (error) {
+      // Rollback transaction
+      await db.execute('ROLLBACK');
+      throw error;
+    }
   } catch (error) {
-    log.error("User deleted error:", error.message);
+    log.error("User deletion error:", error.message);
     throw error;
   }
 }

@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { useDispatch, useSelector, TypedUseSelectorHook } from "react-redux";
 import authReducer from "./slices/authSlice";
 import usersReducer from "./slices/usersSlice";
+import permissionsReducer from "./slices/permissionsSlice";
 import categoriesReducer from "./slices/categoriesSlice";
 import confirmModalReducer from "./slices/confirmModalSlice";
 import imageModalSlice from "./slices/imageModal";
@@ -15,6 +16,7 @@ const store = configureStore({
   reducer: {
     auth: authReducer,
     users: usersReducer,
+    permissions: permissionsReducer,
     categories: categoriesReducer,
     products: productsReducer, // Importing products slice
     daily: dailyReducer,

@@ -1,23 +1,41 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 // Types
+interface Permission {
+  id: number;
+  name: string;
+  display_name: string;
+  description: string;
+  category: string;
+  granted_at?: string;
+  granted_by?: number;
+}
+
 interface User {
   id: number;
   username: string;
-  password: string;
-  role: string;
+  password?: string;
+  active: boolean;
   created_at?: string;
-  updated_at?: string;
+  last_login?: string;
+  permissions_updated_at?: string;
+  permissions_count?: number;
+  permissions?: Permission[];
 }
 
 interface UserPayload {
   username: string;
   password: string;
-  role: string;
+  permissions?: number[];
+  createdBy?: number;
 }
 
-interface UpdateUserPayload extends UserPayload {
+interface UpdateUserPayload {
   id: number;
+  username: string;
+  password?: string;
+  permissions?: number[];
+  updatedBy?: number;
 }
 
 interface UsersState {
@@ -160,7 +178,7 @@ const usersSlice = createSlice({
       })
       .addCase(UserById.fulfilled, (state, action) => {
         state.loading = false;
-        state.selectedUser = action.payload;
+        state.selectedUser = action.payload?.user || null;
       })
       .addCase(UserById.rejected, (state, action) => {
         state.loading = false;
@@ -172,7 +190,7 @@ const usersSlice = createSlice({
       })
       .addCase(getUsers.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = action.payload?.data || [];
+        state.users = action.payload?.users || [];
         state.total = action.payload?.total || 0;
       })
       .addCase(getUsers.rejected, (state, action) => {

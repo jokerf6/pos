@@ -4,6 +4,7 @@ import log from "electron-log";
 // Import individual handlers
 import * as authHandlers from "./auth.js";
 import * as usersH from "./users.js";
+import * as permissionsH from "./permissions.js";
 import * as categoriesH from "./categories.js";
 import * as productsH from "./products.js"; // Import products handlers
 import * as dailyH from "./daily.js"; // Import daily handlers
@@ -74,7 +75,6 @@ function setupIPC() {
   ipcMain.handle("auth:logout", secureHandler(authHandlers.logout));
   ipcMain.handle("auth:check", secureHandler(authHandlers.checkAuth));
 
-  // TODO: Add other handlers when implemented
   // Users handlers
   ipcMain.handle("users:getAll", secureHandler(usersH.getAll));
   ipcMain.handle("users:getById", secureHandler(usersH.findById));
@@ -82,6 +82,15 @@ function setupIPC() {
   ipcMain.handle("users:update", secureHandler(usersH.update));
   ipcMain.handle("users:delete", secureHandler(usersH.deleteUser));
   ipcMain.handle("users:search", secureHandler(usersH.search));
+
+  // Permissions handlers
+  ipcMain.handle("permissions:getAll", secureHandler(permissionsH.getAllPermissions));
+  ipcMain.handle("permissions:getByCategory", secureHandler(permissionsH.getPermissionsByCategory));
+  ipcMain.handle("permissions:getUserPermissions", secureHandler(permissionsH.getUserPermissions));
+  ipcMain.handle("permissions:updateUserPermissions", secureHandler(permissionsH.updateUserPermissions));
+  ipcMain.handle("permissions:grant", secureHandler(permissionsH.grantPermission));
+  ipcMain.handle("permissions:revoke", secureHandler(permissionsH.revokePermission));
+  ipcMain.handle("permissions:hasPermission", secureHandler(permissionsH.hasPermission));
 
   // Settings handlers
   ipcMain.handle("settings:getAll", secureHandler(settingsHandlers.getAll));
