@@ -55,6 +55,17 @@ interface ElectronAPI {
     delete: (id: number) => Promise<any>;
   };
 
+  permissions: {
+    getAll: () => Promise<any>;
+    getByCategory: () => Promise<any>;
+    getUserPermissions: (data: { userId: number }) => Promise<any>;
+    updateUserPermissions: (data: { userId: number; permissionIds: number[]; grantedBy: number }) => Promise<any>;
+    grant: (data: { userId: number; permissionId: number; grantedBy: number }) => Promise<any>;
+    revoke: (data: { userId: number; permissionId: number }) => Promise<any>;
+    hasPermission: (data: { userId: number; permissionName: string }) => Promise<any>;
+  };
+
+
   categories: {
     create: (data: any) => Promise<any>;
     getAll: (data?: any) => Promise<any>;

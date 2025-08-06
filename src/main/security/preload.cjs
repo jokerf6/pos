@@ -17,6 +17,16 @@ const validChannels = {
   "users:delete": true,
   "users:search": true,
 
+  // Permissions channels
+  "permissions:getAll": true,
+  "permissions:getByCategory": true,
+  "permissions:getUserPermissions": true,
+  "permissions:updateUserPermissions": true,
+  "permissions:grant": true,
+  "permissions:revoke": true,
+  "permissions:hasPermission": true,
+
+
   // Category channels
   "categories:create": true,
   "categories:getAll": true,
@@ -114,6 +124,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
     search: (data) => safeInvoke("users:search", data),
     update: (data) => safeInvoke("users:update", data),
     delete: (id) => safeInvoke("users:delete", id),
+  },
+  permissions: {
+    getAll: () => safeInvoke("permissions:getAll"),
+    getByCategory: () => safeInvoke("permissions:getByCategory"),
+    getUserPermissions: (userId) => safeInvoke("permissions:getUserPermissions", userId),
+    updateUserPermissions: (data) => safeInvoke("permissions:updateUserPermissions", data),
+    grant: (data) => safeInvoke("permissions:grant", data),
+    revoke: (data) => safeInvoke("permissions:revoke", data),
+    hasPermission: (data) => safeInvoke("permissions:hasPermission", data),
   },
   settings: {
     getAll: () => safeInvoke("settings:getAll"),
