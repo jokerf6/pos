@@ -35,25 +35,28 @@ import {
 } from "@radix-ui/react-collapsible";
 import { usePermission } from "hooks/use-permissions";
 
-// Menu items.
+// Menu items with required permissions
 const items = [
   {
     title: "الرئيسية",
     url: "/",
     group: [],
     icon: Home,
+    permissions: [], // No permissions required for home page
   },
   {
     title: "المستخدمين",
     url: "/users",
     group: [],
     icon: Users,
+    permissions: ["users.view"], // Requires users.view permission
   },
   {
     title: "الاقسام",
     url: "/categories",
     group: [],
     icon: FolderOpen,
+    permissions: ["inventory.view"], // Requires inventory.view permission
   },
   {
     title: "إدارة الفواتير",
@@ -63,15 +66,17 @@ const items = [
         title: "إنشاء فاتورة",
         url: "/invoice/create",
         icon: PlusCircle,
+        permissions: ["sales.create"],
       },
       {
         title: "كل الفواتير",
         url: "/invoice",
         icon: ListOrdered,
+        permissions: ["sales.view"],
       },
     ],
     icon: ReceiptText,
-    user: false,
+    permissions: ["sales.view", "sales.create"], // Show if user has any sales permission
   },
   {
     title: "إداره المصروفات",
@@ -80,15 +85,18 @@ const items = [
         title: "مصروفات اليوم",
         url: "/credit/daily",
         icon: DollarSign,
+        permissions: ["reports.financial"],
       },
       {
         title: "كل المصروفات",
         url: "/credit",
         icon: Wallet,
+        permissions: ["reports.financial"],
       },
     ],
-    url: "/products", // This URL seems incorrect for the group, it should be a placeholder or removed if not directly navigable
+    url: "/credit",
     icon: CreditCard,
+    permissions: ["reports.financial"], // Show if user has financial reports permission
   },
   {
     title: "إداره الاصناف",
@@ -97,21 +105,25 @@ const items = [
         title: "الاصناف",
         url: "/products",
         icon: Boxes,
+        permissions: ["inventory.view"],
       },
       {
         title: "حركه الصنف",
         url: "/transaction/products",
         icon: MoveRight,
+        permissions: ["inventory.view"],
       },
     ],
     url: "/products",
     icon: Package,
+    permissions: ["inventory.view"], // Show if user has inventory view permission
   },
   {
     title: "الاعدادات",
     url: "/settings",
     group: [],
     icon: Settings,
+    permissions: ["system.settings"], // Requires system.settings permission
   },
 ];
 
@@ -119,13 +131,24 @@ export function AppSidebar() {
   const { user } = useSelector((state: any) => state.auth);
   const location = useLocation();
 
+  // Helper function to check if user has any of the required permissions
+  const hasPermission = (requiredPermissions: string[]): boolean => {
+    if (requiredPermissions.length === 0) return true; // No permissions required
+    if (user?.role === "admin") return true; // Admin has all permissions
+    return requiredPermissions.some(permission => usePermission(permission));
+  };
+
+  // Helper function to check if user has permission for any sub-item in a group
+  const hasGroupPermission = (group: any[]): boolean => {
+    return group.some(subItem => hasPermission(subItem.permissions || []));
+  };
+
   const usedItems = items.map((item) => ({
     ...item,
-    hide: user.role !== "admin" && !item.user,
+    hide: !hasPermission(item.permissions) && (item.group.length === 0 || !hasGroupPermission(item.group)),
     active: location.pathname === item.url || 
             (item.group && item.group.some(subItem => location.pathname === subItem.url)),
   }));
-  const canDelete = usePermission("delete_user");
 
   return (
     <Sidebar className="w-[20%] bg-gray-900 text-white border-none">
@@ -148,12 +171,12 @@ export function AppSidebar() {
                   <SidebarMenuItem
                     key={item.title}
                     className={`w-full rounded-lg transition-all duration-200 ease-in-out
-                      ${item.active ? "bg-blue-600 " : ""}`}
+                      ${item.active ? "bg-blue-600 " : ""}
+                      ${item.hide ? "hidden" : ""}`}
                   >
                     <SidebarMenuButton
                       asChild
                       className={`flex items-center gap-3 py-3 px-4 w-full text-right
-                        ${item.hide ? "hidden" : ""}
                         ${item.active ? "text-white" : "text-[#111111]"}
                       `}
                     >
@@ -171,7 +194,8 @@ export function AppSidebar() {
                   <Collapsible 
                     key={item.title}
                     className={`group/collapsible rounded-lg 
-                      ${item.active ? "bg-blue-600 hover:bg-blue-600" : ""}`}
+                      ${item.active ? "bg-blue-600 hover:bg-blue-600" : ""}
+                      ${item.hide ? "hidden" : ""}`}
                   >
                     <SidebarGroupLabel asChild>
                       <CollapsibleTrigger 
@@ -194,11 +218,12 @@ export function AppSidebar() {
                       </CollapsibleTrigger>
                     </SidebarGroupLabel>
                     <CollapsibleContent className="mt-2 pb-2 pr-4">
-                      {item.group.map((subItem) => (
+                      {item.group
+                        .filter(subItem => hasPermission(subItem.permissions || []))
+                        .map((subItem) => (
                         <SidebarMenuItem
                           key={subItem.title}
                           className={`w-full rounded-lg transition-all duration-200 ease-in-out
-                           
                             ${location.pathname === subItem.url ? "bg-blue-700" : ""}`}
                         >
                           <SidebarMenuButton asChild>
