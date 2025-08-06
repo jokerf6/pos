@@ -130,7 +130,7 @@ function CreateUserPage() {
                   <Checkbox
                     id={permission.id}
                     checked={formData.permissions.includes(permission.id)}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: boolean) =>
                       handlePermissionChange(permission.id, checked as boolean)
                     }
                   />
