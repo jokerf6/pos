@@ -5,6 +5,7 @@ interface User {
   username: string;
   email: string;
   role: string;
+  permissions: string[]; // Added permissions field
 }
 
 interface LoginCredentials {
@@ -47,11 +48,11 @@ interface ElectronAPI {
   };
 
   users: {
-    create: (user: any) => Promise<any>;
+    create: (user: { username: string; password?: string; role: string; permissions: string[] }) => Promise<any>;
     getAll: (data?: any) => Promise<any>;
     getById: (id: number) => Promise<any>;
     search: (data: any) => Promise<any>;
-    update: (data: any) => Promise<any>;
+    update: (data: { id: number; username: string; password?: string; role: string; permissions: string[] }) => Promise<any>;
     delete: (id: number) => Promise<any>;
   };
 
@@ -60,7 +61,7 @@ interface ElectronAPI {
     getAll: (data?: any) => Promise<any>;
     getById: (id: number) => Promise<any>;
     update: (data: any) => Promise<any>;
-    delete: (id: number) => Promise<any>;
+    delete: (id: any) => Promise<any>;
     search: (data: any) => Promise<any>;
   };
 
@@ -123,3 +124,5 @@ declare global {
 }
 
 export {};
+
+

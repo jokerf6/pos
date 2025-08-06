@@ -4,20 +4,26 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 interface User {
   id: number;
   username: string;
-  password: string;
+  password?: string; // Password can be optional for updates
   role: string;
+  permissions: string[]; // Added permissions field
   created_at?: string;
   updated_at?: string;
 }
 
 interface UserPayload {
   username: string;
-  password: string;
+  password?: string;
   role: string;
+  permissions: string[]; // Added permissions field
 }
 
-interface UpdateUserPayload extends UserPayload {
+interface UpdateUserPayload {
   id: number;
+  username: string;
+  password?: string;
+  role: string;
+  permissions: string[]; // Added permissions field
 }
 
 interface UsersState {
@@ -217,3 +223,5 @@ const usersSlice = createSlice({
 
 export const { clearUsersError } = usersSlice.actions;
 export default usersSlice.reducer;
+
+

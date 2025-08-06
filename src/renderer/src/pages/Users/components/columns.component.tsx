@@ -1,20 +1,29 @@
 import { ColumnDef } from "@tanstack/react-table";
 
-export type Payment = {
+export type User = {
   id: string;
-  amount: number;
-  status: "pending" | "processing" | "success" | "failed";
-  email: string;
+  username: string;
+  role: string;
+  permissions: string[];
+  createdAt: string;
 };
 
-const columns: ColumnDef<Payment>[] = [
+const columns: ColumnDef<User>[] = [
   {
     accessorKey: "username",
-    header: "الاسم",
+    header: "اسم المستخدم",
   },
   {
     accessorKey: "role",
+    header: "الدور",
+  },
+  {
+    accessorKey: "permissions",
     header: "الصلاحيات",
+    cell: ({ row }) => {
+      const permissions = row.getValue("permissions") as string[];
+      return permissions.length > 0 ? permissions.join(", ") : "لا توجد صلاحيات";
+    },
   },
   {
     accessorKey: "createdAt",
@@ -22,3 +31,5 @@ const columns: ColumnDef<Payment>[] = [
   },
 ];
 export default columns;
+
+
