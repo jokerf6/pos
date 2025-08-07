@@ -42,7 +42,7 @@ function ProductsPage() {
     navigate(`/products/${item.barcode}`);
   };
   return (
-    <div className="flex flex-1 h-[85vh] ">
+    <div className="flex flex-1 min-h-screen bg-gray-50">
       {formattedProducts && (
         <DataTable
           columns={columns}

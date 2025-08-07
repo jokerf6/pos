@@ -23,6 +23,7 @@ import {
   DropdownMenuItem,
 } from "../../components/ui/dropdown-menu";
 import Modal from "../../components/common/dynamic-modal.component";
+import { Package, Plus } from "lucide-react";
 
 const CreateProductPage = () => {
   const navigate = useNavigate();
@@ -218,174 +219,186 @@ const CreateProductPage = () => {
   ];
 
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-6 text-right" dir="rtl">
-      <Modal
-        open={openPrint}
-        onClose={() => {
-          setOpenPrint(false);
-          setTimeout(() => {
-            setFormData({
-              name: "",
-              description: "",
-              quantity: 1,
-              price: 0,
-              buy_price: 0,
-              barcode: undefined,
-              generated_code: undefined,
-              category_id: 0,
-            });
-          }, 1000);
-        }}
-        onConfirm={() => {
-          handelPrint();
-          setTimeout(() => {
-            setFormData({
-              name: "",
-              description: "",
-              quantity: 1,
-              price: 0,
-              buy_price: 0,
-              barcode: undefined,
-              generated_code: undefined,
-              category_id: 0,
-            });
-          }, 1000);
+    <div className="min-h-screen bg-gray-50 py-8" dir="rtl">
+      <div className="max-w-2xl mx-auto px-6">
+        <Modal
+          open={openPrint}
+          onClose={() => {
+            setOpenPrint(false);
+            setTimeout(() => {
+              setFormData({
+                name: "",
+                description: "",
+                quantity: 1,
+                price: 0,
+                buy_price: 0,
+                barcode: undefined,
+                generated_code: undefined,
+                category_id: 0,
+              });
+            }, 1000);
+          }}
+          onConfirm={() => {
+            handelPrint();
+            setTimeout(() => {
+              setFormData({
+                name: "",
+                description: "",
+                quantity: 1,
+                price: 0,
+                buy_price: 0,
+                barcode: undefined,
+                generated_code: undefined,
+                category_id: 0,
+              });
+            }, 1000);
 
-          setOpenPrint(false);
-        }}
-        title="طباعة باركود"
-        confirmLabel="طباعة"
-        cancelLabel="إلغاء"
-      >
-        <div className="flex items-center gap-2 flex-row-reverse">
-          <label htmlFor="barcodeCount" className="text-sm whitespace-nowrap">
-            عدد الباركود
-          </label>
-          <Input
-            id="barcodeCount"
-            name="barcode"
-            min={1}
-            max={100}
-            type="number"
-            value={barcodeNumber}
-            onChange={(e) => setBarcodeNumber(Number(e.target.value))}
-          />
-        </div>
-      </Modal>
-
-      <h2 className="text-2xl font-bold text-right border-b pb-2">
-        إضافة منتج
-      </h2>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {fields.map((field) => (
-          <div key={field.name} className="space-y-1">
-            <label htmlFor={field.name} className="text-sm block font-medium">
-              {field.placeholder}
+            setOpenPrint(false);
+          }}
+          title="طباعة باركود"
+          confirmLabel="طباعة"
+          cancelLabel="إلغاء"
+        >
+          <div className="flex items-center gap-2 flex-row-reverse">
+            <label htmlFor="barcodeCount" className="text-sm whitespace-nowrap">
+              عدد الباركود
             </label>
-
-            {field.type === "select" ? (
-              <div className="space-y-1">
-                <label
-                  htmlFor="category_id"
-                  className="text-sm block text-right"
-                >
-                  اختر الفئة
-                </label>
-                <select
-                  name="category_id"
-                  id="category_id"
-                  value={formData.category_id}
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    const selectedCategory = categories?.categories?.find(
-                      (cat) => cat.id === Number(selectedId)
-                    );
-                    setCategoryData(selectedCategory || null);
-                    setFormData((prev) => ({
-                      ...prev,
-                      category_id: Number(selectedId),
-                    }));
-                  }}
-                  className="w-full border p-2 rounded-md bg-white text-right"
-                >
-                  <option value="">اختر الفئة</option>
-                  {categories?.categories?.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div className="flex flex-row-reverse gap-2">
-                {field.name === "barcode" && (
-                  <Button
-                    type="button"
-                    onClick={GenerateBarCode}
-                    className="whitespace-nowrap"
-                  >
-                    توليد
-                  </Button>
-                )}
-                <Input
-                  ref={field.name === "barcode" ? searchInputRef : null}
-                  id={field.name}
-                  name={field.name}
-                  type={field.type || "text"}
-                  min={field.type === "number" ? 0 : undefined}
-                  value={
-                    field.name === "barcode"
-                      ? formData.barcode || formData.generated_code
-                      : (formData as any)[field.name]
-                  }
-                  onChange={handleChange}
-                />
-              </div>
-            )}
+            <Input
+              id="barcodeCount"
+              name="barcode"
+              min={1}
+              max={100}
+              type="number"
+              value={barcodeNumber}
+              onChange={(e) => setBarcodeNumber(Number(e.target.value))}
+            />
           </div>
-        ))}
+        </Modal>
 
-        <div className="flex justify-between gap-4 mt-6">
-          <Button type="submit" className="flex-1">
-            إضافة المنتج
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1"
-            onClick={() => navigate(-1)}
-          >
-            إلغاء
-          </Button>
-        </div>
-      </form>
-
-      <div className="hidden">
-        <div ref={printRef}>
-          {Array.from({ length: barcodeNumber }).map((_, idx) => (
-            <div
-              key={idx}
-              className="mb-4 flex flex-col items-center text-center"
-            >
-              <h1 className="font-bold">
-                {process.env.REACT_APP_COMPANY_NAME}
-              </h1>
-              <h2>{formData.name || "اسم المنتج"}</h2>
-              <div className="flex items-center justify-center gap-2">
-                <span
-                  style={{
-                    writingMode: "vertical-rl",
-                    textOrientation: "mixed",
-                    fontSize: "1rem",
-                  }}
-                >
-                  {formData.price.toFixed(2)}
-                </span>
-                <svg id={`barcode-${idx}`} />
-              </div>
+        {/* Header Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Package className="h-6 w-6 text-green-600" />
             </div>
-          ))}
+            <h2 className="text-2xl font-bold text-gray-900">إضافة منتج جديد</h2>
+          </div>
+          <p className="text-gray-600">قم بملء البيانات التالية لإضافة منتج جديد إلى المخزون</p>
+        </div>
+
+        {/* Form Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {fields.map((field) => (
+              <div key={field.name} className="space-y-2">
+                <label htmlFor={field.name} className="text-sm font-medium text-gray-700 block">
+                  {field.placeholder}
+                </label>
+
+                {field.type === "select" ? (
+                  <div className="space-y-1">
+                    <select
+                      name="category_id"
+                      id="category_id"
+                      value={formData.category_id}
+                      onChange={(e) => {
+                        const selectedId = e.target.value;
+                        const selectedCategory = categories?.categories?.find(
+                          (cat) => cat.id === Number(selectedId)
+                        );
+                        setCategoryData(selectedCategory || null);
+                        setFormData((prev) => ({
+                          ...prev,
+                          category_id: Number(selectedId),
+                        }));
+                      }}
+                      className="w-full border border-gray-300 p-3 rounded-lg bg-white text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    >
+                      <option value="">اختر الفئة</option>
+                      {categories?.categories?.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="flex flex-row-reverse gap-3">
+                    {field.name === "barcode" && (
+                      <Button
+                        type="button"
+                        onClick={GenerateBarCode}
+                        className="whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-all duration-200"
+                      >
+                        <Plus className="h-4 w-4 ml-1" />
+                        توليد
+                      </Button>
+                    )}
+                    <Input
+                      ref={field.name === "barcode" ? searchInputRef : null}
+                      id={field.name}
+                      name={field.name}
+                      type={field.type || "text"}
+                      min={field.type === "number" ? 0 : undefined}
+                      value={
+                        field.name === "barcode"
+                          ? formData.barcode || formData.generated_code
+                          : (formData as any)[field.name]
+                      }
+                      onChange={handleChange}
+                      className="flex-1 border border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+
+            <div className="flex gap-4 pt-6 border-t border-gray-200">
+              <Button 
+                type="submit" 
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                <Package className="h-4 w-4 ml-2" />
+                إضافة المنتج
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 border-gray-300 hover:bg-gray-50 py-3 rounded-lg font-medium transition-all duration-200"
+                onClick={() => navigate(-1)}
+              >
+                إلغاء
+              </Button>
+            </div>
+          </form>
+        </div>
+
+        <div className="hidden">
+          <div ref={printRef}>
+            {Array.from({ length: barcodeNumber }).map((_, idx) => (
+              <div
+                key={idx}
+                className="mb-4 flex flex-col items-center text-center"
+              >
+                <h1 className="font-bold">
+                  {process.env.REACT_APP_COMPANY_NAME}
+                </h1>
+                <h2>{formData.name || "اسم المنتج"}</h2>
+                <div className="flex items-center justify-center gap-2">
+                  <span
+                    style={{
+                      writingMode: "vertical-rl",
+                      textOrientation: "mixed",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    {formData.price.toFixed(2)}
+                  </span>
+                  <svg id={`barcode-${idx}`} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
