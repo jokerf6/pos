@@ -50,7 +50,7 @@ const CreditPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-1 h-[85vh] ">
+    <div className="flex flex-1 h-full">
       {formattedProducts && (
         <DataTable
           columns={columns}

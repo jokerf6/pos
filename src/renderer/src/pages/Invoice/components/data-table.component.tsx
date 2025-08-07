@@ -3,7 +3,7 @@ import { useAppDispatch } from "../../../store";
 import { beforeInvoice } from "../../../store/slices/invoice";
 import { Button } from "../../../components/ui/button";
 import FilterSection from "./filterSection";
-import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
+import { ChevronLeft, ChevronRight, Printer, FileText, Loader2 } from "lucide-react";
 
 export default function AllInvoicesFixed() {
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -185,7 +185,18 @@ export default function AllInvoicesFixed() {
   };
 
   return (
-    <div className="w-full mx-auto p-6 space-y-6 flex justify-between flex-col h-full overflow-hidden bg-gray-50">
+    <div className="w-full mx-auto p-6 space-y-6 flex flex-col h-full overflow-hidden bg-gray-50" dir="rtl">
+      {/* Header Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <FileText className="h-6 w-6 text-blue-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">سجل الفواتير</h2>
+        </div>
+        <p className="text-gray-600">تصفح الفواتير السابقة وراجع تفاصيلها.</p>
+      </div>
+
       {/* Professional Filter Section */}
       <FilterSection
         from={from}
@@ -198,17 +209,15 @@ export default function AllInvoicesFixed() {
       />
 
       {/* Navigation Controls */}
-      <div className="flex justify-between items-center bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="flex justify-between items-center bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <Button
           onClick={previous}
           disabled={!canGoBefore || isLoading}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
         >
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
           <ChevronRight className="w-4 h-4" />
           السابق
-          {isLoading && (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          )}
         </Button>
 
         <div className="text-center">
@@ -229,93 +238,64 @@ export default function AllInvoicesFixed() {
         >
           التالي
           <ChevronLeft className="w-4 h-4" />
-          {isLoading && (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          )}
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
         </Button>
       </div>
 
       {/* Products Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800">
-            منتجات الفاتورة
-          </h3>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <h3 className="text-lg font-semibold text-gray-800">منتجات الفاتورة</h3>
         </div>
-        <div className="overflow-y-auto h-[30vh]">
+        <div className="overflow-y-auto max-h-[300px]">
           <table className="w-full">
-            <thead className="bg-gray-50 sticky top-0">
+            <thead className="bg-gray-100 sticky top-0">
               <tr>
-                <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b">
-                  اسم المنتج
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b">
-                  الكمية
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b">
-                  السعر
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b">
-                  الخصم
-                </th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b">
-                  الإجمالي
-                </th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 border-b border-gray-200">اسم المنتج</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200">الكمية</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200">السعر</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200">الخصم</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200">الإجمالي</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-100">
               {products.map((p: any, index: number) => (
                 <tr
                   key={p.id}
-                  className={`text-center hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-25"}`}
+                  className={`text-center transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50`}
                 >
-                  <td className="px-4 py-3 text-sm text-gray-900">{p.name}</td>
+                  <td className="px-4 py-3 text-right text-sm text-gray-900 font-medium">{p.name}</td>
                   <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      min={1}
-                      max={p.totalQuantity}
-                      value={p.quantity}
-                      className="w-16 p-2 border border-gray-300 rounded-md text-center text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      readOnly
-                    />
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {p.quantity}
+                    </span>
                   </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      value={p.price}
-                      className="w-20 p-2 border border-gray-300 rounded-md text-center text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      readOnly
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      value={p.discount}
-                      className="w-20 p-2 border border-gray-300 rounded-md text-center text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      readOnly
-                    />
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                    {calculateRowTotal(p).toFixed(2)} ج
-                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{p.price.toFixed(2)} ج</td>
+                  <td className="px-4 py-3 text-sm text-red-600">{p.discount.toFixed(2)} ج</td>
+                  <td className="px-4 py-3 text-sm font-bold text-green-600">{calculateRowTotal(p).toFixed(2)} ج</td>
                 </tr>
               ))}
               {products.length === 0 && !isLoading && (
                 <tr>
-                  <td className="px-4 py-8 text-center text-gray-500">
-                    {from || to || invoiceType
-                      ? "لا توجد فواتير مطابقة للفلتر المحدد"
-                      : "لا توجد منتجات في هذه الفاتورة"}
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <FileText className="h-12 w-12 text-gray-300" />
+                      <p className="font-medium">لا توجد منتجات في هذه الفاتورة</p>
+                      <p className="text-sm text-gray-400">
+                        {from || to || invoiceType
+                          ? "لا توجد فواتير مطابقة للفلتر المحدد"
+                          : ""}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
               {isLoading && (
                 <tr>
-                  <td className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                      جاري التحميل...
+                      <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                      <span>جاري التحميل...</span>
                     </div>
                   </td>
                 </tr>
@@ -325,145 +305,124 @@ export default function AllInvoicesFixed() {
         </div>
       </div>
 
-      {/* Invoice Details */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          تفاصيل الفاتورة
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Customer Information */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                اسم العميل
-              </label>
-              <input
-                type="text"
-                placeholder="اسم العميل"
-                value={invoiceDetails.customerName}
-                onChange={(e) =>
-                  setInvoiceDetails({
-                    ...invoiceDetails,
-                    customerName: e.target.value,
-                  })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                disabled={!products.length}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                رقم تليفون العميل
-              </label>
-              <input
-                type="text"
-                placeholder="رقم تليفون العميل"
-                value={invoiceDetails.customerPhone}
-                onChange={(e) =>
-                  setInvoiceDetails({
-                    ...invoiceDetails,
-                    customerPhone: e.target.value,
-                  })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                disabled={!products.length}
-              />
-            </div>
-
-            {/* Payment Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                نوع الدفع
-              </label>
-              <div className="flex gap-4">
-                {["خالص", "أجل", "مرتجع"].map((type) => (
-                  <label
-                    key={type}
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
-                    <input
-                      type="radio"
-                      name="paymentType"
-                      value={type}
-                      checked={invoiceDetails.paymentType === type}
-                      onChange={(e) =>
-                        setInvoiceDetails({
-                          ...invoiceDetails,
-                          paymentType: e.target.value,
-                        })
-                      }
-                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      disabled={!products.length}
-                    />
-                    <span
-                      className={`text-sm ${!products.length ? "text-gray-400" : "text-gray-700"}`}
-                    >
-                      {type}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
+      {/* Invoice Details and Summary */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Customer Information and Payment Type */}
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">اسم العميل</label>
+            <input
+              type="text"
+              placeholder="اسم العميل"
+              value={invoiceDetails.customerName}
+              onChange={(e) =>
+                setInvoiceDetails({
+                  ...invoiceDetails,
+                  customerName: e.target.value,
+                })
+              }
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50"
+              readOnly
+              disabled={!products.length}
+            />
           </div>
 
-          {/* Financial Summary */}
-          <div className="space-y-4">
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">
-                  الإجمالي:
-                </span>
-                <span className="text-lg font-semibold text-gray-900">
-                  {total.toFixed(2)} ج
-                </span>
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">رقم تليفون العميل</label>
+            <input
+              type="text"
+              placeholder="رقم تليفون العميل"
+              value={invoiceDetails.customerPhone}
+              onChange={(e) =>
+                setInvoiceDetails({
+                  ...invoiceDetails,
+                  customerPhone: e.target.value,
+                })
+              }
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50"
+              readOnly
+              disabled={!products.length}
+            />
+          </div>
 
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-gray-700">
-                  الخصم:
-                </label>
-                <div className="flex items-center gap-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">نوع الدفع</label>
+            <div className="flex gap-4">
+              {["خالص", "أجل", "مرتجع"].map((type) => (
+                <label
+                  key={type}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
                   <input
-                    type="number"
-                    value={invoiceDetails.invoiceDiscount}
+                    type="radio"
+                    name="paymentType"
+                    value={type}
+                    checked={invoiceDetails.paymentType === type}
                     onChange={(e) =>
                       setInvoiceDetails({
                         ...invoiceDetails,
-                        invoiceDiscount: Number(e.target.value) || 0,
+                        paymentType: e.target.value,
                       })
                     }
-                    className="w-24 p-2 border border-gray-300 rounded-md text-center text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 bg-gray-50"
                     disabled={!products.length}
+                    readOnly
                   />
-                  <span className="text-sm text-gray-700">ج</span>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-                <span className="text-base font-bold text-gray-900">
-                  الصافي:
-                </span>
-                <span className="text-xl font-bold text-green-600">
-                  {netTotal.toFixed(2)} ج
-                </span>
-              </div>
+                  <span
+                    className={`text-sm ${!products.length ? "text-gray-400" : "text-gray-700"}`}
+                  >
+                    {type}
+                  </span>
+                </label>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Print Button */}
-        <div className="mt-6 text-center">
-          <button
-            onClick={handlePrintInvoice}
-            disabled={!products.length}
-            className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
-          >
-            <Printer className="w-5 h-5" />
-            طباعة الفاتورة
-          </button>
+        {/* Financial Summary */}
+        <div className="space-y-4 bg-gray-50 rounded-lg p-5 border border-gray-200">
+          <div className="flex justify-between items-center">
+            <span className="text-base font-medium text-gray-700">الإجمالي:</span>
+            <span className="text-xl font-semibold text-gray-900">{total.toFixed(2)} ج</span>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <label className="text-base font-medium text-gray-700">الخصم:</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={invoiceDetails.invoiceDiscount}
+                onChange={(e) =>
+                  setInvoiceDetails({
+                    ...invoiceDetails,
+                    invoiceDiscount: Number(e.target.value) || 0,
+                  })
+                }
+                className="w-24 p-2 border border-gray-300 rounded-md text-center text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                readOnly
+                disabled={!products.length}
+              />
+              <span className="text-sm text-gray-700">ج</span>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+            <span className="text-lg font-bold text-gray-900">الصافي:</span>
+            <span className="text-2xl font-bold text-green-600">{netTotal.toFixed(2)} ج</span>
+          </div>
         </div>
+      </div>
+
+      {/* Print Button */}
+      <div className="mt-6 text-center">
+        <Button
+          onClick={handlePrintInvoice}
+          disabled={!products.length}
+          className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+        >
+          <Printer className="h-5 w-5 ml-2" />
+          طباعة الفاتورة
+        </Button>
       </div>
     </div>
   );
