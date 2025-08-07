@@ -146,9 +146,8 @@ async function generateBarCode(event) {
   }
 }
 async function getBybarcode(event, data) {
-  const { name } = data;
-  console.log(data);
-  console.log("getBybarcode name:", name);
+  const  name  = data;
+
   try {
     const db = getDatabase();
 

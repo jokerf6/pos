@@ -25,6 +25,7 @@ async function createInvoice(event, data) {
   //       };
 
   // Validate input
+  console.log("createInvoice data", data);
   if (!paymentType || products.length === 0) {
     throw new Error("الرجاء ملء جميع الحقول المطلوبة");
   }
@@ -115,10 +116,10 @@ async function beforeInvoice(event, data) {
       to = endOfDay(new Date(to)).toISOString();
     }
     // Build WHERE conditions dynamically
-    const whereClauses = ["dailyId = ?"];
-    const values = [daily[0].id];
+    const whereClauses = !data.all? ["dailyId = ?"]:[];
+    const values = !data.all? [daily[0].id]:[];
 
-    if (id && id !== null) {
+    if (id && id !== null && !data.all) {
       whereClauses.push("id < ?");
       values.push(id);
     }
@@ -142,7 +143,12 @@ async function beforeInvoice(event, data) {
     console.log("whereString", whereString, values);
 
     const [rows] = await db.execute(
-      `SELECT * FROM invoices WHERE ${whereString} ORDER BY id DESC LIMIT 1`,
+      `SELECT * FROM invoices ${whereString.length > 0 ? "WHERE" : ""} ${whereString} ORDER BY id DESC LIMIT 1`,
+      values
+    );
+
+    const [firstRows] = await db.execute(
+      `SELECT * FROM invoices ${whereString.length > 0 ? "WHERE" : ""} ${whereString} ORDER BY id ASC LIMIT 1`,
       values
     );
 
@@ -164,7 +170,7 @@ async function beforeInvoice(event, data) {
       [rows[0].id]
     );
 
-    const beforeInvoice = { ...rows[0], items };
+    const beforeInvoice = { ...rows[0], items, first:firstRows[0].id };
 
     return {
       success: true,
@@ -228,6 +234,11 @@ async function afterInvoice(event, data) {
       `SELECT * FROM invoices WHERE ${whereString} ORDER BY id ASC LIMIT 1`,
       values
     );
+        const [lastRows] = await db.execute(
+      `SELECT * FROM invoices WHERE ${whereString} ORDER BY id DESC LIMIT 1`,
+      values
+    );
+
 
     if (rows.length === 0) {
       return {
@@ -247,7 +258,7 @@ async function afterInvoice(event, data) {
       [rows[0].id]
     );
 
-    const afterInvoice = { ...rows[0], items };
+    const afterInvoice = { ...rows[0], items, last:lastRows[0].id };
 
     return {
       success: true,
@@ -321,8 +332,8 @@ async function getAllInvoices(event, data) {
 }
 
 async function updateInvoice(event, data) {
-  const { invoiceId, invoiceType } = data;
-  console.log("updateInvoice data", data);
+  const { invoiceId, paymentType } = data;
+  console.log("updateInvoice data", data,invoiceId, paymentType);
 
   try {
     const db = getDatabase();
@@ -332,7 +343,7 @@ async function updateInvoice(event, data) {
       `UPDATE invoices SET 
     paymentType = ?
    WHERE id = ?`,
-      [invoiceType, invoiceId]
+      [paymentType, invoiceId]
     );
 
     return {

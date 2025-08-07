@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../../../store";
-import { beforeInvoice } from "../../../store/slices/invoice";
+import { afterInvoice, beforeInvoice } from "../../../store/slices/invoice";
 import { Button } from "../../../components/ui/button";
 import FilterSection from "./filterSection";
 import { ChevronLeft, ChevronRight, Printer, FileText, Loader2 } from "lucide-react";
@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, Printer, FileText, Loader2 } from "lucide-re
 export default function AllInvoicesFixed() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useAppDispatch();
-
+  
   useEffect(() => {
     const fetchData = async () => {
       searchInputRef.current?.focus();
@@ -16,10 +16,10 @@ export default function AllInvoicesFixed() {
     };
     fetchData();
   }, []);
-
+  
   const [products, setProducts] = useState([]);
   const [beforeInvoiceData, setBeforeInvoiceData] = useState(undefined);
-  const [afterInvoiceData, setAfterInvoiceData] = useState<any>(undefined); // keep state, but afterInvoice is not imported
+  const [afterInvoiceData, setAfterInvoiceData] = useState<any>(undefined);
   const [canGoBefore, setCanGoBefore] = useState(true);
   const [canGoAfter, setCanGoAfter] = useState(false);
   const [from, setFrom] = useState("");
@@ -34,7 +34,7 @@ export default function AllInvoicesFixed() {
     paymentType: "خالص",
     invoiceDiscount: 0,
   });
-
+  
   // Enhanced useEffect to handle filter changes properly
   useEffect(() => {
     const applyFilters = async () => {
@@ -43,15 +43,13 @@ export default function AllInvoicesFixed() {
       setAfterInvoiceData(undefined);
       setCanGoBefore(true);
       setCanGoAfter(false);
-
       // Fetch first invoice with new filters
       await fetchFirstInvoice();
     };
-
     // Apply filters whenever any filter value changes
     applyFilters();
   }, [from, to, invoiceType]);
-
+  
   const updateInvoiceUI = (data: any) => {
     if (!data) {
       setInvoiceDetails({
@@ -69,7 +67,7 @@ export default function AllInvoicesFixed() {
       setCanGoAfter(false);
       return;
     }
-
+    
     setBeforeInvoiceData(data.id);
     setAfterInvoiceData(data.id);
     setInvoiceDetails({
@@ -80,7 +78,6 @@ export default function AllInvoicesFixed() {
       paymentType: data.paymentType || "خالص",
       invoiceDiscount: data.discount || 0,
     });
-
     setProducts(
       data.items.map((p: any) => ({
         id: p.itemId,
@@ -92,7 +89,7 @@ export default function AllInvoicesFixed() {
       }))
     );
   };
-
+  
   // New function to fetch the first invoice with current filters
   const fetchFirstInvoice = async () => {
     setIsLoading(true);
@@ -101,15 +98,17 @@ export default function AllInvoicesFixed() {
         beforeInvoice({
           id: undefined, // Start from beginning
           filter: { to, from, invoiceType },
+          all: true, // Fetch all matching invoices
         })
       );
-
+      
       if (!result.payload.data) {
         // No data found with current filters - clear UI immediately
         updateInvoiceUI(null);
       } else {
         updateInvoiceUI(result.payload.data);
-        setCanGoAfter(true);
+        // Check if there are more invoices after this one
+        checkIfMoreInvoicesAfter(result.payload.data.id);
       }
     } catch (error) {
       console.error("Error fetching first invoice:", error);
@@ -119,22 +118,60 @@ export default function AllInvoicesFixed() {
       setIsLoading(false);
     }
   };
-
+  
+  // Helper function to check if there are more invoices after the current one
+  const checkIfMoreInvoicesAfter = async (currentId: number) => {
+    try {
+      const result = await dispatch(
+        afterInvoice({
+          id: currentId,
+          filter: { to, from, invoiceType },
+        })
+      );
+      setCanGoAfter(!!result.payload.data);
+    } catch (error) {
+      console.error("Error checking for more invoices:", error);
+      setCanGoAfter(false);
+    }
+  };
+  
+  // Helper function to check if there are more invoices before the current one
+  const checkIfMoreInvoicesBefore = async (currentId: number) => {
+    try {
+      const result = await dispatch(
+        beforeInvoice({
+          id: currentId,
+          filter: { to, from, invoiceType },
+          all: true,
+        })
+      );
+      setCanGoBefore(!!result.payload.data);
+    } catch (error) {
+      console.error("Error checking for more invoices:", error);
+      setCanGoBefore(false);
+    }
+  };
+  
   const previous = async () => {
+    if (!canGoBefore || isLoading) return;
+    
     setIsLoading(true);
     try {
       const result = await dispatch(
         beforeInvoice({
           id: beforeInvoiceData,
           filter: { to, from, invoiceType },
+          all: true,
         })
       );
-
+      
       if (!result.payload.data) {
         setCanGoBefore(false);
       } else {
         updateInvoiceUI(result.payload.data);
         setCanGoAfter(true);
+        // Check if there are more invoices before this one
+        await checkIfMoreInvoicesBefore(result.payload.data.id);
       }
     } catch (error) {
       console.error("Error fetching previous invoice:", error);
@@ -142,22 +179,26 @@ export default function AllInvoicesFixed() {
       setIsLoading(false);
     }
   };
-
+  
   const after = async () => {
+    if (!canGoAfter || isLoading) return;
+    
     setIsLoading(true);
     try {
       const result = await dispatch(
-        afterInvoiceData({
+        afterInvoice({
           id: afterInvoiceData,
           filter: { to, from, invoiceType },
         })
       );
-
+      
       if (!result.payload.data) {
         setCanGoAfter(false);
       } else {
         updateInvoiceUI(result.payload.data);
         setCanGoBefore(true);
+        // Check if there are more invoices after this one
+        await checkIfMoreInvoicesAfter(result.payload.data.id);
       }
     } catch (error) {
       console.error("Error fetching next invoice:", error);
@@ -165,25 +206,24 @@ export default function AllInvoicesFixed() {
       setIsLoading(false);
     }
   };
-
+  
   const calculateRowTotal = (product: any) =>
     product.quantity * product.price - product.discount;
-
   const total = products.reduce((sum, p) => sum + calculateRowTotal(p), 0);
   const netTotal = total - invoiceDetails.invoiceDiscount;
-
+  
   const handleClearFilters = () => {
     // Clear all filters - this will trigger the useEffect to refetch data
     setFrom("");
     setTo("");
     setInvoiceType("");
   };
-
+  
   const handlePrintInvoice = () => {
     // Add print functionality here
     window.print();
   };
-
+  
   return (
     <div className="w-full mx-auto p-6 space-y-6 flex flex-col h-full overflow-hidden bg-gray-50" dir="rtl">
       {/* Header Section */}
@@ -196,7 +236,7 @@ export default function AllInvoicesFixed() {
         </div>
         <p className="text-gray-600">تصفح الفواتير السابقة وراجع تفاصيلها.</p>
       </div>
-
+      
       {/* Professional Filter Section */}
       <FilterSection
         from={from}
@@ -207,7 +247,7 @@ export default function AllInvoicesFixed() {
         setInvoiceType={setInvoiceType}
         onClearFilters={handleClearFilters}
       />
-
+      
       {/* Navigation Controls */}
       <div className="flex justify-between items-center bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <Button
@@ -219,7 +259,6 @@ export default function AllInvoicesFixed() {
           <ChevronRight className="w-4 h-4" />
           السابق
         </Button>
-
         <div className="text-center">
           <span className="text-sm text-gray-600">تصفح الفواتير</span>
           {(from || to || invoiceType) && (
@@ -230,7 +269,6 @@ export default function AllInvoicesFixed() {
             </div>
           )}
         </div>
-
         <Button
           disabled={!canGoAfter || isLoading}
           onClick={after}
@@ -241,7 +279,7 @@ export default function AllInvoicesFixed() {
           {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
         </Button>
       </div>
-
+      
       {/* Products Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -270,7 +308,7 @@ export default function AllInvoicesFixed() {
                       {p.quantity}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{parseFloat( p.price).toFixed(2)} ج</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{parseFloat(p.price).toFixed(2)} ج</td>
                   <td className="px-4 py-3 text-sm text-red-600">{parseFloat(p.discount).toFixed(2)} ج</td>
                   <td className="px-4 py-3 text-sm font-bold text-green-600">{calculateRowTotal(p).toFixed(2)} ج</td>
                 </tr>
@@ -304,7 +342,7 @@ export default function AllInvoicesFixed() {
           </table>
         </div>
       </div>
-
+      
       {/* Invoice Details and Summary */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Customer Information and Payment Type */}
@@ -326,7 +364,6 @@ export default function AllInvoicesFixed() {
               disabled={!products.length}
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">رقم تليفون العميل</label>
             <input
@@ -344,7 +381,6 @@ export default function AllInvoicesFixed() {
               disabled={!products.length}
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">نوع الدفع</label>
             <div className="flex gap-4">
@@ -378,14 +414,13 @@ export default function AllInvoicesFixed() {
             </div>
           </div>
         </div>
-
+        
         {/* Financial Summary */}
         <div className="space-y-4 bg-gray-50 rounded-lg p-5 border border-gray-200">
           <div className="flex justify-between items-center">
             <span className="text-base font-medium text-gray-700">الإجمالي:</span>
             <span className="text-xl font-semibold text-gray-900">{total.toFixed(2)} ج</span>
           </div>
-
           <div className="flex justify-between items-center">
             <label className="text-base font-medium text-gray-700">الخصم:</label>
             <div className="flex items-center gap-2">
@@ -405,14 +440,13 @@ export default function AllInvoicesFixed() {
               <span className="text-sm text-gray-700">ج</span>
             </div>
           </div>
-
           <div className="flex justify-between items-center pt-4 border-t border-gray-200">
             <span className="text-lg font-bold text-gray-900">الصافي:</span>
             <span className="text-2xl font-bold text-green-600">{netTotal.toFixed(2)} ج</span>
           </div>
         </div>
       </div>
-
+      
       {/* Print Button */}
       <div className="mt-6 text-center">
         <Button

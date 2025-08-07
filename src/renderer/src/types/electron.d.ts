@@ -90,6 +90,7 @@ interface ElectronAPI {
     create: (data: any) => Promise<any>;
     update: (data: any) => Promise<any>;
     before: (data: any) => Promise<any>;
+    after: (data: any) => Promise<any>;
   };
 
   daily: {

@@ -28,7 +28,7 @@ interface InvoiceState {
 // Async thunks
 export const createInvoice = createAsyncThunk(
   "invoice/create",
-  async (data: InvoicePayload, { rejectWithValue }) => {
+  async (data: any, { rejectWithValue }) => {
     console.log("in->", data);
     try {
       if (window.electronAPI) {
@@ -46,7 +46,7 @@ export const createInvoice = createAsyncThunk(
 
 export const updateInvoice = createAsyncThunk(
   "invoice/update",
-  async (data: UpdateInvoicePayload, { rejectWithValue }) => {
+  async (data: any, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.invoice.update(data);
@@ -65,8 +65,26 @@ export const beforeInvoice = createAsyncThunk(
   "invoice/before",
   async (data: any, { rejectWithValue }) => {
     try {
+      console.log("beforeInvoice filter", data);
       if (window.electronAPI) {
         const result = await window.electronAPI.invoice.before(data);
+        return result;
+      } else {
+        return null;
+      }
+    } catch (error: any) {
+      const message = error?.message || error?.error || "Unknown error";
+      return rejectWithValue(message.split("Error: ")[1] || message);
+    }
+  }
+);
+
+export const afterInvoice = createAsyncThunk(
+  "invoice/after",
+  async (data: any, { rejectWithValue }) => {
+    try {
+      if (window.electronAPI) {
+        const result = await window.electronAPI.invoice.after(data);
         return result;
       } else {
         return null;
