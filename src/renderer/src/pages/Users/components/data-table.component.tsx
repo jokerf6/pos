@@ -58,6 +58,19 @@ const DataTable = <T extends Record<string, any>>({
     setCurrentData(data);
   }, [data, dataTotal]);
 
+   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "+") {
+        e.preventDefault();
+        navigate("/users/create");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [navigate]);
+
   // useEffect(() => {
   //   setPage(1);
   // }, [search]);

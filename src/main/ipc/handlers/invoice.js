@@ -118,7 +118,7 @@ async function beforeInvoice(event, data) {
     const whereClauses = ["dailyId = ?"];
     const values = [daily[0].id];
 
-    if (id) {
+    if (id && id !== null) {
       whereClauses.push("id < ?");
       values.push(id);
     }

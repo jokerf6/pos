@@ -45,6 +45,19 @@ function CategoriesPage() {
   const handelEdit = (item: any) => {
     navigate(`/categories/${item.id}`);
   };
+     useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "+") {
+        e.preventDefault();
+        navigate("/categories/create");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [navigate]);
+
   return (
     <div className="flex flex-1 h-[85vh] ">
       {formattedCategories && (

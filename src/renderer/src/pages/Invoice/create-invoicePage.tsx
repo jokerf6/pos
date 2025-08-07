@@ -1,12 +1,27 @@
-import { ArrowLeft, ArrowRight, PlusCircle, Printer } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  PlusCircle,
+  Printer,
+} from "lucide-react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Modal from "../../components/common/dynamic-modal.component";
 import { Button } from "../../components/ui/button";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "store";
+import { beforeInvoice } from "store/slices/invoice";
 
+// -------------------- Interfaces --------------------
 interface InvoiceHeaderProps {
   onPrevious: () => void;
   onNext: () => void;
   canGoBefore: boolean;
+  canGoAfter: boolean;
   onNewInvoice: () => void;
 }
 
@@ -32,10 +47,12 @@ interface InvoiceDetails {
   invoiceDiscount: number;
 }
 
+// -------------------- Components --------------------
 const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
   onPrevious,
   onNext,
   canGoBefore,
+  canGoAfter,
   onNewInvoice,
 }) => (
   <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm">
@@ -45,7 +62,7 @@ const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({
     <Button onClick={onNewInvoice} variant="default">
       <PlusCircle className="mr-2 h-4 w-4" /> فاتورة جديدة
     </Button>
-    <Button onClick={onNext} variant="outline">
+    <Button onClick={onNext} disabled={!canGoAfter} variant="outline">
       فاتورة تالية <ArrowRight className="ml-2 h-4 w-4" />
     </Button>
   </div>
@@ -55,30 +72,30 @@ const CustomerDetailsSection: React.FC<CustomerDetailsProps> = ({
   details,
   handleDetailChange,
   isReadOnly,
-}) => {
-  return (
-    <div className="grid grid-cols-2 gap-4 mb-4">
-      <input
-        type="text"
-        placeholder="اسم العميل (اختياري)"
-        value={details.customerName}
-        onChange={(e) => handleDetailChange("customerName", e.target.value)}
-        className="p-2 border rounded-md focus:ring-2 focus:ring-blue-500 read-only:bg-gray-100 read-only:cursor-not-allowed"
-        readOnly={isReadOnly}
-      />
-      <input
-        type="text"
-        placeholder="رقم هاتف العميل (اختياري)"
-        value={details.customerPhone}
-        onChange={(e) => handleDetailChange("customerPhone", e.target.value)}
-        className="p-2 border rounded-md focus:ring-2 focus:ring-blue-500 read-only:bg-gray-100 read-only:cursor-not-allowed"
-        readOnly={isReadOnly}
-      />
-    </div>
-  );
-};
+}) => (
+  <div className="grid grid-cols-2 gap-4 mb-4">
+    <input
+      type="text"
+      placeholder="اسم العميل (اختياري)"
+      value={details.customerName}
+      onChange={(e) => handleDetailChange("customerName", e.target.value)}
+      className="p-2 border rounded-md focus:ring-2 focus:ring-blue-500 read-only:bg-gray-100 read-only:cursor-not-allowed"
+      readOnly={isReadOnly}
+    />
+    <input
+      type="text"
+      placeholder="رقم هاتف العميل (اختياري)"
+      value={details.customerPhone}
+      onChange={(e) => handleDetailChange("customerPhone", e.target.value)}
+      className="p-2 border rounded-md focus:ring-2 focus:ring-blue-500 read-only:bg-gray-100 read-only:cursor-not-allowed"
+      readOnly={isReadOnly}
+    />
+  </div>
+);
 
+// -------------------- Main Page Component --------------------
 const CreateInvoicePage: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -95,6 +112,12 @@ const CreateInvoicePage: React.FC = () => {
   const [isViewingArchived, setIsViewingArchived] = useState(false);
   const [isInvoiceCreated, setIsInvoiceCreated] = useState(false);
   const [canGoBefore, setCanGoBefore] = useState(true);
+  const [canGoAfter, setCanGoAfter] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const to = null;
+  const from = null;
+  const invoiceType = null;
 
   const focusSearchInput = () => {
     setTimeout(() => searchInputRef.current?.focus(), 0);
@@ -124,20 +147,79 @@ const CreateInvoicePage: React.FC = () => {
       [field]: value,
     }));
   };
+  const [afterInvoiceData, setAfterInvoiceData] = useState<any>(undefined); // keep state, but afterInvoice is not imported
 
-  // Add more methods as needed for the full functionality
-  // This is a simplified version to get TypeScript conversion started
+  const updateInvoiceUI = (data: any) => {
+    console.log("Updating invoice UI with data:", data);
+    setProducts(data.items || []);
+    setInvoiceDetails({
+      customerName: data.customerName || "",
+      customerPhone: data.customerPhone || "",
+      paymentType: data.paymentType || "خالص",
+      invoiceDiscount: data.invoiceDiscount || 0,
+    });
+    setCurrentInvoiceId(data.id);
+        setAfterInvoiceData(data.id);
+    setIsViewingArchived(true);
+    setIsInvoiceCreated(true);
+  };
+
+  const previous = async () => {
+    
+  console.log("inv->", currentInvoiceId)
+    // if (!currentInvoiceId) return;
+
+    setIsLoading(true);
+    try {
+      const result = await dispatch(
+        beforeInvoice({ id: currentInvoiceId })
+      );
+      console.log(result)
+      const data = result?.payload?.data;
+      if (!data) {
+        setCanGoBefore(false);
+      } else {
+        updateInvoiceUI(data);
+        setCanGoAfter(true);
+      }
+    } catch (error) {
+      console.error("Error fetching previous invoice:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const next = async () => {
+    if (!currentInvoiceId) return;
+    setIsLoading(true);
+    try {
+      const result = await dispatch(
+        afterInvoiceData({
+          id: currentInvoiceId,
+          filter: { to, from, invoiceType },
+        })
+      );
+      const data = result?.payload?.data;
+      if (!data) {
+        setCanGoAfter(false);
+      } else {
+        updateInvoiceUI(data);
+        setCanGoBefore(true);
+      }
+    } catch (error) {
+      console.error("Error fetching next invoice:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <InvoiceHeader
-        onPrevious={() => {
-          /* implement */
-        }}
-        onNext={() => {
-          /* implement */
-        }}
+        onPrevious={previous}
+        onNext={next}
         canGoBefore={canGoBefore}
+        canGoAfter={canGoAfter}
         onNewInvoice={resetInvoice}
       />
 
@@ -159,11 +241,12 @@ const CreateInvoicePage: React.FC = () => {
         />
       </div>
 
-      {/* Products table would go here */}
+      {/* Products table placeholder */}
       <div className="min-h-[400px] border rounded-lg p-4">
         <p className="text-center text-gray-500">
           يتم عرض المنتجات والفاتورة هنا
         </p>
+        <pre>{JSON.stringify(products,null,2)}</pre>
       </div>
 
       {/* Action buttons */}

@@ -59,7 +59,7 @@ const items = [
   },
   {
     title: "إدارة الفواتير",
-    url: "/",
+    url: "/invoiceManagement",
     group: [
       {
         title: "إنشاء فاتورة",
@@ -169,7 +169,7 @@ export function AppSidebar() {
                   <SidebarMenuItem
                     key={item.title}
                     className={`w-full rounded-lg transition-all duration-200 ease-in-out
-                      ${item.active ? "bg-blue-600 " : ""}
+                      ${item.active ? "bg-blue-600 " : " hover:bg-sidebar-accent"}
                       ${item.hide ? "hidden" : ""}`}
                   >
                     <SidebarMenuButton
@@ -192,7 +192,7 @@ export function AppSidebar() {
                   <Collapsible 
                     key={item.title}
                     className={`group/collapsible rounded-lg 
-                      ${item.active ? "bg-blue-600 hover:bg-blue-600" : ""}
+                     
                       ${item.hide ? "hidden" : ""}`}
                   >
                     <SidebarGroupLabel asChild>
@@ -227,7 +227,7 @@ export function AppSidebar() {
                           <SidebarMenuButton asChild>
                             <Link
                               className={`flex items-center gap-3 py-2 px-4 w-full text-right
-                                ${location.pathname === subItem.url ? "text-white" : "text-[#555555]"}
+                                ${location.pathname === subItem.url ? "text-white" : "text-[#555555] hover:bg-sidebar-accent"}
                               `}
                               to={subItem.url}
                             >

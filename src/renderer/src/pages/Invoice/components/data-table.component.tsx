@@ -270,8 +270,8 @@ export default function AllInvoicesFixed() {
                       {p.quantity}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{p.price.toFixed(2)} ج</td>
-                  <td className="px-4 py-3 text-sm text-red-600">{p.discount.toFixed(2)} ج</td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{parseFloat( p.price).toFixed(2)} ج</td>
+                  <td className="px-4 py-3 text-sm text-red-600">{parseFloat(p.discount).toFixed(2)} ج</td>
                   <td className="px-4 py-3 text-sm font-bold text-green-600">{calculateRowTotal(p).toFixed(2)} ج</td>
                 </tr>
               ))}
