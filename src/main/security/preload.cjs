@@ -64,11 +64,8 @@ const validChannels = {
   "credit:delete": true,
 
   // Transaction channels
-  "transactions:create": true,
-  "transactions:getAll": true,
-  "transactions:getById": true,
-  "transactions:getByDateRange": true,
-
+  "transactions:get-product-transactions": true,
+ 
   // Settings channels
   "settings:getByDomain": true,
   "settings:getByKey": true,
@@ -177,11 +174,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     close: (data) => safeInvoke("daily:close", data),
   },
   transactions: {
-    create: (transaction) => safeInvoke("transactions:create", transaction),
-    getAll: (options) => safeInvoke("transactions:getAll", options),
-    getById: (id) => safeInvoke("transactions:getById", id),
-    getByDateRange: (start, end) =>
-      safeInvoke("transactions:getByDateRange", start, end),
+    getProductTransactions: (productId) => safeInvoke("transactions:get-product-transactions", productId),
   },
 
   system: {

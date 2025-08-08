@@ -57,6 +57,15 @@ const items = [
     icon: FolderOpen,
     permissions: ["inventory.view"], // Requires inventory.view permission
   },
+    {
+    title: "إداره الاصناف",
+    group: [
+     
+    ],
+    url: "/products",
+    icon: Package,
+    permissions: ["inventory.view"], // Show if user has inventory view permission
+  },
   {
     title: "إدارة الفواتير",
     url: "/invoiceManagement",
@@ -97,26 +106,7 @@ const items = [
     icon: CreditCard,
     permissions: ["reports.financial"], // Show if user has financial reports permission
   },
-  {
-    title: "إداره الاصناف",
-    group: [
-      {
-        title: "الاصناف",
-        url: "/products",
-        icon: Boxes,
-        permissions: ["inventory.view"],
-      },
-      {
-        title: "حركه الصنف",
-        url: "/transaction/products",
-        icon: MoveRight,
-        permissions: ["inventory.view"],
-      },
-    ],
-    url: "/products",
-    icon: Package,
-    permissions: ["inventory.view"], // Show if user has inventory view permission
-  },
+
   {
     title: "الاعدادات",
     url: "/settings",

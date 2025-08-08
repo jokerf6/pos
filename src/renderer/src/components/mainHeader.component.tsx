@@ -17,10 +17,10 @@ import {
   CheckCircle,
   Menu,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  console.log("fixedDate", date, dateString)
   return date.toLocaleString("ar-EG", {
     year: "numeric",
     month: "2-digit",
@@ -55,17 +55,19 @@ export default function MainHeader() {
   const [closePrice, setClosePrice] = useState(0);
   const [open, setOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(getCurrentTime());
+  const [isDailyOpen, setIsDailyOpen] = useState(false); // حالة محلية لتتبع حالة اليومية
+  const [dailyData, setDailyData] = useState<any>(null); // حالة محلية لتخزين بيانات اليومية
+  
   const dispatch = useDispatch<AppDispatch>();
   const { daily } = useSelector((state: RootState) => state.daily) as any;
-
+  
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(getCurrentTime());
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
-
+  
   useEffect(() => {
     async function fetchData() {
       try {
@@ -78,40 +80,65 @@ export default function MainHeader() {
     }
     fetchData();
   }, [dispatch]);
-
+  
+  // تحديث الحالة المحلية عند تغيير بيانات اليومية في Redux
+  useEffect(() => {
+    if (daily?.data) {
+      setIsDailyOpen(true);
+      setDailyData(daily.data);
+    } else {
+      setIsDailyOpen(false);
+      setDailyData(null);
+    }
+  }, [daily]);
+  
+  const navigate = useNavigate();
+  
   const handleOpen = async () => {
-    dispatch(openDaily(openPrice));
-    dispatch(getDaily());
-    setOpenPrice(0);
-    setClosePrice(0);
-    setOpen(false);
+    try {
+      await dispatch(openDaily(openPrice)).unwrap();
+      // تحديث الحالة المحلية مباشرة بعد الفتح
+      setIsDailyOpen(true);
+      // جلب البيانات المحدثة
+      const result = await dispatch(getDaily()).unwrap();
+      setDailyData(Array.isArray(result) ? result[0] : result);
+      setOpenPrice(0);
+      setClosePrice(0);
+      setOpen(false);
+    } catch (error) {
+      console.error("Failed to open daily:", error);
+    }
   };
-
+  
   const handleClose = async () => {
-    dispatch(closeDaily(closePrice));
-    dispatch(getDaily());
-    setOpenPrice(0);
-    setClosePrice(0);
-    setOpen(false);
+    try {
+      await dispatch(closeDaily(closePrice)).unwrap();
+      // تحديث الحالة المحلية مباشرة بعد الإغلاق
+      setIsDailyOpen(false);
+      setDailyData(null);
+      setOpenPrice(0);
+      setClosePrice(0);
+      setOpen(false);
+    } catch (error) {
+      console.error("Failed to close daily:", error);
+    }
   };
-
-  const isDailyOpen = daily.data !== null ;
 
   return (
     <div className="flex justify-between w-full sticky right-0 rounded-t-2xl top-0 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 h-20 shrink-0 items-center gap-4 border-b border-gray-200 px-6 py-4 z-50 shadow-sm">
       <SidebarTrigger className="w-6 h-6 text-gray-600 hover:text-gray-900 transition-colors">
         <Menu size={24} />
       </SidebarTrigger>
-
+    
       <Modal
-        confirmLabel={isDailyOpen ? "فتح" : "غلق"}
+        confirmLabel={!isDailyOpen ? "فتح" : "غلق"}
         cancelLabel="إلغاء"
-        onConfirm={isDailyOpen ? handleOpen : handleClose}
-        title={isDailyOpen ? "فتح اليومية" : "غلق اليومية"}
+        onConfirm={!isDailyOpen ? handleOpen : handleClose}
+        title={!isDailyOpen ? "فتح اليومية" : "غلق اليومية"}
         open={open}
         onClose={() => setOpen(false)}
       >
-        {isDailyOpen && openSettings === true && (
+        {!isDailyOpen && openSettings === true && (
           <div className="space-y-3">
             <label className="text-sm font-medium text-gray-700">
               المبلغ الافتتاحي
@@ -126,7 +153,6 @@ export default function MainHeader() {
             />
           </div>
         )}
-
         {isDailyOpen && openSettings && (
           <div className="space-y-3">
             <label className="text-sm font-medium text-gray-700">
@@ -142,8 +168,7 @@ export default function MainHeader() {
             />
           </div>
         )}
-
-        {isDailyOpen && (
+        {isDailyOpen && dailyData && (
           <div className="bg-gray-50 rounded-lg p-4 space-y-3">
             <h4 className="font-semibold text-gray-900 mb-3">ملخص اليومية</h4>
             <div className="grid grid-cols-2 gap-4">
@@ -151,35 +176,35 @@ export default function MainHeader() {
                 <DollarSign className="w-4 h-4 text-green-600" />
                 <span className="text-sm text-gray-600">المبلغ الكلي:</span>
                 <span className="font-semibold">
-                  {Number(daily[0]?.cashInDrawer).toFixed(2)}
+                  {Number(dailyData?.cashInDrawer || 0).toFixed(2)}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-blue-600" />
                 <span className="text-sm text-gray-600">إجمالي المبيعات:</span>
                 <span className="font-semibold">
-                  {Number(daily[0]?.total_sales).toFixed(2)}
+                  {Number(dailyData?.total_sales || 0).toFixed(2)}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-red-600" />
                 <span className="text-sm text-gray-600">إجمالي المصروفات:</span>
                 <span className="font-semibold">
-                  {Number(daily[0]?.total_expenses).toFixed(2)}
+                  {Number(dailyData?.total_expenses || 0).toFixed(2)}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-orange-600" />
                 <span className="text-sm text-gray-600">إجمالي المرتجعات:</span>
                 <span className="font-semibold">
-                  {Number(daily[0]?.total_returns).toFixed(2)}
+                  {Number(dailyData?.total_returns || 0).toFixed(2)}
                 </span>
               </div>
             </div>
           </div>
         )}
       </Modal>
-
+      
       <div className="flex items-center justify-between w-full">
         {/* Date and Time Section */}
         <div className="flex items-center gap-6">
@@ -192,7 +217,7 @@ export default function MainHeader() {
             <span className="text-sm font-medium font-mono">{currentTime}</span>
           </div>
         </div>
-
+        
         {/* Daily Status Section */}
         <div className="flex items-center gap-4">
           {isDailyOpen ? (
@@ -204,7 +229,7 @@ export default function MainHeader() {
                 </span>
                 <div className="text-green-600 text-xs">
                   بدأت في:{" "}
-                 {formatDate(daily?.data?.opened_at)}
+                  {formatDate(dailyData?.opened_at || new Date().toISOString())}
                 </div>
               </div>
             </div>
@@ -216,7 +241,7 @@ export default function MainHeader() {
               </span>
             </div>
           )}
-
+          
           <div className="flex gap-2">
             {!isDailyOpen && (
               <Button
@@ -227,7 +252,6 @@ export default function MainHeader() {
                 بدء اليومية
               </Button>
             )}
-
             {isDailyOpen && (
               <Button
                 onClick={() => setOpen(true)}
@@ -240,7 +264,7 @@ export default function MainHeader() {
             )}
           </div>
         </div>
-
+        
         {/* User Actions Section */}
         <div className="flex items-center">
           <HeaderActions />

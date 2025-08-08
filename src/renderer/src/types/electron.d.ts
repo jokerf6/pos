@@ -111,6 +111,7 @@ interface ElectronAPI {
     getAll: (data?: any) => Promise<any>;
     getById: (id: number) => Promise<any>;
     getByDateRange: (data: any) => Promise<any>;
+    getProductTransactions: (productId: number) => Promise<any>;
   };
 
   settings: {

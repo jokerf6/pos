@@ -9,7 +9,7 @@ import {
 } from "../../../components/ui/table";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
-import { Pencil, Trash2, Search, Plus, Package, Filter, X, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, Search, Plus, Package, Filter, X, ChevronDown, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { showError } from "../../../components/ui/sonner";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,6 +27,7 @@ interface DataTableProps<T> {
   dataTotal: number;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
+  onInfo?: (item: T) => void;
 }
 
 interface FilterState {
@@ -45,6 +46,7 @@ const DataTable = <T extends Record<string, any>>({
   dataTotal,
   onEdit,
   onDelete,
+  onInfo,
 }: DataTableProps<T>) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -472,6 +474,14 @@ const DataTable = <T extends Record<string, any>>({
 
                     <TableCell className="px-6 py-4 text-center border-l border-gray-100">
                       <div className="flex justify-center items-center gap-2">
+                    <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors duration-150"
+                          onClick={() => onInfo?.(row)}
+                        >
+                          <Info className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"

@@ -11,6 +11,7 @@ import dailyReducer from "./slices/dailySlice"; // Importing daily slice
 import creditReducer from "./slices/creditSlice"; // Importing credit slice
 import invoiceReducer from "./slices/invoice"; // Importing invoice slice
 import settingsReducer from "./slices/settingsSlice"; // Importing invoice slice
+import  getTransaction  from "./slices/transactionSlice"; // Importing transaction slice
 
 const store = configureStore({
   reducer: {
@@ -25,6 +26,7 @@ const store = configureStore({
     confirmModal: confirmModalReducer,
     settings: settingsReducer,
     imageModal: imageModalSlice,
+    transaction: getTransaction, // Importing transaction slice
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

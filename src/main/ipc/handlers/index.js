@@ -11,6 +11,7 @@ import * as dailyH from "./daily.js"; // Import daily handlers
 import * as creditH from "./credit.js"; // Import credit handlers
 import * as invoiceH from "./invoice.js"; // Import credit handlers
 import * as settingsHandlers from "./settings.js"; // Import settings handlers
+import * as transH from "./transaction.js"; // Import transaction handlers
 
 // Error handling wrapper
 const handleError = (handler) => {
@@ -153,6 +154,8 @@ function setupIPC() {
   ipcMain.handle("invoice:getAll", secureHandler(invoiceH.getAllInvoices));
   ipcMain.handle("invoice:update", secureHandler(invoiceH.updateInvoice));
 
+    // Transaction handlers
+  ipcMain.handle("transactions:get-product-transactions", secureHandler(transH.getProductTransactions));
   // Settings handlers
   // ipcMain.handle('settings:get', secureHandler(settingsHandlers.get));
   // ipcMain.handle('settings:update', secureHandler(settingsHandlers.update));

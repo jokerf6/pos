@@ -55,6 +55,11 @@ async function createProduct(event, data) {
           category_id,
         ]
       );
+      const [find] = await db.execute(
+        "SELECT * FROM items WHERE barcode = ? LIMIT 1",
+        [generated_code]
+      ); 
+      await db.execute("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "purchase", quantity, price,  new Date()]);
     } else {
       const [rows] = await db.execute(
         "SELECT * FROM items WHERE barcode = ? LIMIT 1",
@@ -70,6 +75,11 @@ async function createProduct(event, data) {
          WHERE barcode = ?`,
         [name, description, quantity, price, buy_price, category_id, barcode]
       );
+      const [find] = await db.execute(
+        "SELECT * FROM items WHERE barcode = ? LIMIT 1",
+        [barcode]
+      ); 
+      await db.execute("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "purchase", quantity, price,  new Date()]);
     }
     return {
       success: true,
@@ -91,7 +101,7 @@ async function getAll(
 
     // Find user in database
     const [products] = await db.execute(
-      "SELECT * FROM items LIMIT ? OFFSET ?",
+      "SELECT * FROM items ORDER BY id DESC LIMIT ? OFFSET ?",
       [limit, offset]
     );
     const [rows] = await db.execute("SELECT COUNT(*) as total FROM items");
@@ -246,7 +256,7 @@ async function search(
 
     // جلب البيانات
     const [rows] = await db.execute(
-      `SELECT * FROM items WHERE ${whereSQL} LIMIT ? OFFSET ?`,
+      `SELECT * FROM items WHERE ${whereSQL} ORDER BY id DESC LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
     console.log("search products:", rows, limit, offset);

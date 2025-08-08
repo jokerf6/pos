@@ -39,8 +39,14 @@ function ProductsPage() {
     );
   };
   const handelEdit = (item: any) => {
+    
     navigate(`/products/${item.barcode}`);
+
   };
+  const handelInfo = (item: any) => {
+    navigate(`/products/statistics/${item.id}`);
+
+  }
   return (
     <div className="flex flex-1 min-h-screen bg-gray-50">
       {formattedProducts && (
@@ -50,6 +56,7 @@ function ProductsPage() {
           dataTotal={total}
           onDelete={handleDelete}
           onEdit={handelEdit}
+          onInfo={handelInfo}
         />
       )}
     </div>

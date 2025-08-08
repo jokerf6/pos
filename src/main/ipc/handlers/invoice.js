@@ -36,7 +36,6 @@ async function createInvoice(event, data) {
     const [rows] = await db.execute(
       "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
     );
-    console.log(rows);
     if (rows.length === 0) {
       throw new Error("برجاء فتح يومية جديدة");
     }
@@ -54,16 +53,27 @@ async function createInvoice(event, data) {
       ]
     );
     for (let i = 0; i < products.length; i += 1) {
-      if (paymentType !== "مرتجع")
+      if (paymentType !== "مرتجع"){
         await db.execute(
           "UPDATE items set quantity = quantity - ? WHERE id = ?",
           [products[i].quantity, products[i].id]
         );
+         const [find] = await db.execute(
+        "SELECT * FROM items WHERE id = ? LIMIT 1",
+        [products[i].id]
+      ); 
+      await db.execute("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "sale", find[0].quantity, find[0].price, new Date()]);
+    }
       else {
         await db.execute(
           "UPDATE items set quantity = quantity + ? WHERE id = ?",
           [products[i].quantity, products[i].id]
         );
+           const [find] = await db.execute(
+        "SELECT * FROM items WHERE id = ? LIMIT 1",
+        [products[i].id]
+      ); 
+      await db.execute("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "return", find[0].quantity, find[0].price, new Date()]);
       }
       await db.execute(
         "INSERT INTO invoiceItems (invoiceId,itemId,pricePerUnit,quantity,discount,price, totalPriceAfterDiscount) VALUES (?, ?, ?,?,?,?,?)",
