@@ -98,6 +98,10 @@ async function beforeInvoice(event, data) {
   const { id, filter = {} } = data || {};
   try {
     const db = getDatabase();
+    let all = false;
+    if(data && data.all) {
+     all = data.all;
+    }
     const [daily] = await db.execute(
       "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
     );
@@ -116,10 +120,10 @@ async function beforeInvoice(event, data) {
       to = endOfDay(new Date(to)).toISOString();
     }
     // Build WHERE conditions dynamically
-    const whereClauses = !data.all? ["dailyId = ?"]:[];
-    const values = !data.all? [daily[0].id]:[];
+    const whereClauses = !all? ["dailyId = ?"]:[];
+    const values = !all? [daily[0].id]:[];
 
-    if (id && id !== null && !data.all) {
+    if (id && id !== null) {
       whereClauses.push("id < ?");
       values.push(id);
     }

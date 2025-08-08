@@ -20,6 +20,7 @@ import InvoicePage from "./pages/Invoice/InvoicePage"; // ✅
 import CreateInvoicePage from "./pages/Invoice/create-invoicePage"; // ✅
 import SettingsPage from "./pages/Settings/index"; // ✅
 import { RootState, AppDispatch } from "./store";
+import CreateCreditPage from "pages/Credit/CreateCreditPage";
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -207,6 +208,18 @@ const App: React.FC = () => {
           isAuthenticated ? (
             <Layout>
               <CreateInvoicePage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+            <Route
+        path="/credit/create"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <CreateCreditPage />
             </Layout>
           ) : (
             <Navigate to="/login" />

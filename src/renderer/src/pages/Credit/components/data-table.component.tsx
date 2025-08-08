@@ -11,6 +11,11 @@ import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { Pencil, Trash2, Search, Plus, FileText, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getCredit } from "store/slices/creditSlice";
+import { AppDispatch } from "store";
+import { useDispatch } from "react-redux";
+import { unwrapResult } from "@reduxjs/toolkit";
+import { formatDate } from "utils/formDate";
 
 interface DataTableProps<T> {
   columns: any;
@@ -30,6 +35,7 @@ const DataTable = <T extends Record<string, any>>({
   onDelete,
 }: DataTableProps<T>) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   const [visibleColumns] = useState(() =>
     columns.map((col: any) => ({ ...col, visible: col.visible !== false }))
@@ -40,7 +46,7 @@ const DataTable = <T extends Record<string, any>>({
   const [total, setTotal] = useState(0);
   const [currentData, setCurrentData] = useState<T[]>(data || []);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setCurrentData(data);
@@ -82,34 +88,63 @@ const DataTable = <T extends Record<string, any>>({
     searchInputRef.current?.focus();
   }, []);
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    setPage(1); // Reset to first page on new search
+  // دالة محدثة لجلب البيانات
+  const updateData = async ({ value = "", page: requestedPage = 1 }) => {
+    console.log("updateData", value, requestedPage);
+    setIsLoading(true);
+    
+    try {
+      const action = await dispatch(
+        getCredit({ name: value, page: requestedPage })
+      );
+      const result = unwrapResult(action);
+
+      setTotal(result.total);
+      const rows = result.data.map((item: any) => ({
+        ...item,
+        created_at: formatDate(item.created_at),
+        createdAt: formatDate(item.created_at),
+        date: formatDate(item.created_at),
+      }));
+      setCurrentData(rows);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handlePage = (newPage: number) => {
+  const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = e.target.value;
+    setSearch(searchValue);
+    setPage(1);
+    
+    try {
+      await updateData({ value: searchValue, page: 1 });
+    } catch (err) {
+      console.error("Search error:", err);
+    }
+  };
+
+  const handlePage = async (newPage: number) => {
+    if (newPage === page || isLoading || newPage < 1) return;
+    
     setPage(newPage);
+    try {
+      await updateData({ value: search, page: newPage });
+    } catch (error) {
+      console.error("Page change error:", error);
+    }
   };
 
-  const filteredAndPaginatedData = useMemo(() => {
-    const lowerCaseSearch = search.toLowerCase();
-    const filtered = currentData.filter((row) =>
-      visibleColumns.some(
-        (col: any) =>
-          col.visible &&
-          String(row[col.accessorKey] ?? "")
-            .toLowerCase()
-            .includes(lowerCaseSearch)
-      )
-    );
-
-    const startIndex = (page - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
-    setTotal(filtered.length);
-    return filtered.slice(startIndex, endIndex);
-  }, [search, page, currentData, visibleColumns]);
+  // إزالة الفلترة المحلية لأن البيانات تأتي مفلترة من الـ API
+  const displayData = useMemo(() => {
+    return currentData || [];
+  }, [currentData]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const startIndex = (page - 1) * PAGE_SIZE + 1;
+  const endIndex = Math.min(page * PAGE_SIZE, total);
 
   return (
     <div className="flex flex-col w-full gap-4 p-6 text-right" dir="rtl">
@@ -133,16 +168,11 @@ const DataTable = <T extends Record<string, any>>({
             placeholder="ابحث عن مصروف... (Ctrl + K)"
             value={search}
             onChange={handleSearch}
+            disabled={isLoading}
             className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
           />
         </div>
-        <Button
-          onClick={() => navigate("/credit/create")}
-          className="flex items-center gap-2 px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-md"
-        >
-          <Plus className="w-5 h-5" />
-          إضافة مصروف جديد
-        </Button>
+
       </div>
 
       {/* Data Table */}
@@ -169,8 +199,17 @@ const DataTable = <T extends Record<string, any>>({
             </TableHeader>
 
             <TableBody className="divide-y divide-gray-100">
-              {filteredAndPaginatedData.length > 0 ? (
-                filteredAndPaginatedData.map((row, rowIndex) => (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length + 1} className="px-4 py-8 text-center text-gray-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-orange-600" />
+                      <span>جاري التحميل...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : displayData.length > 0 ? (
+                displayData.map((row, rowIndex) => (
                   <TableRow
                     key={rowIndex}
                     className={`transition-colors duration-150 ${rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-orange-50`}
@@ -182,26 +221,20 @@ const DataTable = <T extends Record<string, any>>({
                             key={colIndex}
                             className="px-4 py-3 text-right text-sm text-gray-900"
                           >
-                            {row[column.accessorKey]}
+                            {row[column.accessorKey]} {column.accessorKey === "price" && "ج.م"}
                           </TableCell>
                         )
                     )}
 
                     <TableCell className="px-4 py-3 text-center whitespace-nowrap">
                       <div className="flex justify-center items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-blue-600 hover:bg-blue-100"
-                          onClick={() => onEdit?.(row)}
-                        >
-                          <Pencil size={16} />
-                        </Button>
+                     
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-red-600 hover:bg-red-100"
                           onClick={() => onDelete?.(row)}
+                          disabled={isLoading}
                         >
                           <Trash2 size={16} />
                         </Button>
@@ -220,55 +253,46 @@ const DataTable = <T extends Record<string, any>>({
                   </TableCell>
                 </TableRow>
               )}
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={columns.length + 1} className="px-4 py-8 text-center text-gray-500">
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin text-orange-600" />
-                      <span>جاري التحميل...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </div>
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        <div className="text-sm text-gray-600">
-          عرض {Math.min(page * PAGE_SIZE, total)} من {total} مصروفات
+      {total > 0 && (
+        <div className="flex justify-between items-center mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="text-sm text-gray-600">
+            عرض {startIndex}-{endIndex} من {total} مصروفات
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1 || isLoading}
+              onClick={() => handlePage(page - 1)}
+              className="flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-4 h-4" />
+              السابق
+            </Button>
+            <span className="text-sm font-medium text-gray-700">
+              صفحة {page} من {totalPages || 1}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages || isLoading || totalPages === 0}
+              onClick={() => handlePage(page + 1)}
+              className="flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              التالي
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === 1 || isLoading}
-            onClick={() => handlePage(page - 1)}
-            className="flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors duration-200"
-          >
-            <ChevronRight className="w-4 h-4" />
-            السابق
-          </Button>
-          <span className="text-sm font-medium text-gray-700">
-            صفحة {page} من {totalPages || 1}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === totalPages || isLoading}
-            onClick={() => handlePage(page + 1)}
-            className="flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors duration-200"
-          >
-            التالي
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
 
 export default DataTable;
-

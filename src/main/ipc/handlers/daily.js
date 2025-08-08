@@ -71,6 +71,8 @@ async function getDaily(event) {
       return { success: false, message: "لا توجد يومية مفتوحة" };
     }
 
+ 
+
     const daily = dailyRows[0];
     const dailyId = daily.id;
 

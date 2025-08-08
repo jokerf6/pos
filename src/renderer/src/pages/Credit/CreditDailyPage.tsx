@@ -25,7 +25,7 @@ const CreditDailyPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(CreditByDaily());
+    dispatch(CreditByDaily({}));
   }, [dispatch]);
 
   const formattedProducts = dailyCredits?.map((item: any) => ({
@@ -44,7 +44,7 @@ const CreditDailyPage: React.FC = () => {
             .unwrap()
             .then(() => {
               showSuccess("تم حذف المصروف بنجاح");
-              dispatch(CreditByDaily());
+              dispatch(CreditByDaily({}));
             })
             .catch(() => showSuccess("فشل حذف المصروف"));
         },

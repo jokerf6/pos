@@ -166,8 +166,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     update: (data) => safeInvoke("invoice:update", data),
   },
   credit: {
-    getAll: () => safeInvoke("credit:getAll"),
-    getByDaily: () => safeInvoke("credit:getByDaily"),
+    getAll: (data) => safeInvoke("credit:getAll",data),
+    getByDaily: (data) => safeInvoke("credit:getByDaily",data),
     create: (data) => safeInvoke("credit:create", data),
     delete: (id) => safeInvoke("credit:delete", id),
   },

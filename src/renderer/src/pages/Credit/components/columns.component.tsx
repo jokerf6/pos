@@ -1,6 +1,10 @@
 import { ColumnDef } from "@tanstack/react-table";
 
 const columns: ColumnDef<any>[] = [
+    {
+    accessorKey: "reason",
+    header: "الاسم",
+  },
   {
     accessorKey: "price",
     header: "السعر",
@@ -9,10 +13,7 @@ const columns: ColumnDef<any>[] = [
     accessorKey: "reciever",
     header: "المستلم",
   },
-  {
-    accessorKey: "reason",
-    header: "الاسم",
-  },
+
 
   {
     accessorKey: "createdAt",

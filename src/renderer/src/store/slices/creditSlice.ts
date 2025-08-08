@@ -17,13 +17,13 @@ interface CreditState {
 }
 
 export const getCredit = createAsyncThunk<
-  { data: CreditItem[]; total: number },
-  void,
+  { data: any; total: number },
+  any,
   { rejectValue: string }
->("credit/getAll", async (_, { rejectWithValue }) => {
+>("credit/getAll", async (data:any, { rejectWithValue }) => {
   try {
     if (window.electronAPI) {
-      const result = await window.electronAPI.credit.getAll();
+      const result = await window.electronAPI.credit.getAll(data);
       console.log("getCredit result", result);
       return result;
     } else {
@@ -52,13 +52,14 @@ export const createCredit = createAsyncThunk<any, any, { rejectValue: string }>(
 );
 
 export const CreditByDaily = createAsyncThunk<
-  { data: CreditItem[]; total: number },
-  void,
+  { data: any; total: number },
+  any,
   { rejectValue: string }
->("credit/getByDaily", async (_, { rejectWithValue }) => {
+>("credit/getByDaily", async (data, { rejectWithValue }) => {
   try {
     if (window.electronAPI) {
-      const result = await window.electronAPI.credit.getByDaily();
+      const result = await window.electronAPI.credit.getByDaily(data);
+      console.log("fuck data->", result)
       return result;
     } else {
       return { data: [], total: 0 };
@@ -135,6 +136,7 @@ const creditSlice = createSlice({
         state.loading = true;
       })
       .addCase(CreditByDaily.fulfilled, (state, action) => {
+        console.log("CreditByDaily fulfilled", action.payload);
         state.loading = false;
         state.dailyCredits = action.payload.data;
         state.total = action.payload.total;

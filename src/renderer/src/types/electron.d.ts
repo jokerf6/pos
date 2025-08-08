@@ -100,8 +100,8 @@ interface ElectronAPI {
   };
 
   credit: {
-    getAll: () => Promise<any>;
-    getByDaily: () => Promise<any>;
+    getAll: (data) => Promise<any>;
+    getByDaily: (data) => Promise<any>;
     create: (data: any) => Promise<any>;
     delete: (id: number) => Promise<any>;
   };

@@ -22,7 +22,7 @@ const CreditPage: React.FC = () => {
   const { credits, total } = useSelector((state: RootState) => state.credit);
 
   useEffect(() => {
-    dispatch(getCredit());
+    dispatch(getCredit({ page: 1 }));
   }, [dispatch]);
 
   const formattedProducts = credits?.map((item: any) => ({
@@ -41,7 +41,7 @@ const CreditPage: React.FC = () => {
             .unwrap()
             .then(() => {
               showSuccess("تم حذف المصروف بنجاح");
-              dispatch(getCredit());
+              dispatch(getCredit({ page: 1 })); // Refresh data after deletion
             })
             .catch(() => showSuccess("فشل حذف المصروف"));
         },

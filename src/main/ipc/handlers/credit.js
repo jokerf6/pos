@@ -42,53 +42,98 @@ async function createCredit(event, data) {
 }
 
 async function getAllCredit(
-  event,
-  { page = 1, limit = 10 } = { page: 1, limit: 10 }
+ event, args = {}
 ) {
-  try {
-    const db = getDatabase();
+try {
+  const db = getDatabase();
+    const name = typeof args?.name === "string" && args.name.trim() ? args.name.trim() : null;
+    const page = Number.isInteger(args?.page) && args.page > 0 ? args.page : 1;
+    const limit = Number.isInteger(args?.limit) && args.limit > 0 ? args.limit : 10;
     const offset = (page - 1) * limit;
 
-    // Find credit in database
-    const [data] = await db.execute("SELECT * FROM credit LIMIT ? OFFSET ?", [
-      limit,
-      offset,
-    ]);
-    const [rows] = await db.execute("SELECT COUNT(*) as total FROM credit");
-    return {
-      success: true,
-      data,
-      total: rows[0].total,
-    };
-  } catch (error) {
-    log.error("credit error:", error.message);
-    throw error;
+    // build WHERE and parameters for filtering (without pagination)
+    let whereString = "";
+    const whereParams = [];
+
+    if (name) {
+      // search in reason (text) and price (cast to char so LIKE works on numbers)
+      whereString = `WHERE reason LIKE ? OR CAST(price AS CHAR) LIKE ?`;
+      whereParams.push(`%${name}%`, `%${name}%`);
+    }
+
+    // params for SELECT (where params + limit + offset)
+    const selectParams = [...whereParams, limit, offset];
+
+    // run select (with pagination)
+    const [dataRows] = await db.execute(
+      `SELECT * FROM credit ${whereString} ORDER BY id DESC LIMIT ? OFFSET ?`,
+      selectParams
+    );
+
+    // run count (only where params)
+    const [countRows] = await db.execute(
+      `SELECT COUNT(*) as total FROM credit ${whereString}`,
+      whereParams
+    );
+   
+    const total = (Array.isArray(countRows) && countRows[0] && Number(countRows[0].total)) || 0;
+
+    return { data:dataRows || [], total };
+  } catch (err) {
+    console.error("Error in credit:getAll handler:", err);
+    // return a shape the frontend expects (or throw/ reject depending on your IPC conventions)
+    return { data: [], total: 0, error: err?.message || "unknown error" };
   }
 }
 
-async function getCreditByDaily() {
+async function getCreditByDaily(
+  event,
+  { name, page = 1, limit = 10 } = { page: 1, limit: 10 }
+) {
   try {
     const db = getDatabase();
 
+    // جلب الـ daily المفتوح
     const [rows] = await db.execute(
       "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
     );
     if (rows.length === 0) {
       return {
         success: true,
-        users: [],
+        data: [],
+        total: 0,
       };
     }
-    console.log("helllo");
 
-    const [data] = await db.execute("SELECT * FROM credit WHERE daily_id = ?", [
-      rows[0].id,
-    ]);
-    console.log(data);
+    const offset = (page - 1) * limit;
+
+    // تجهيز شروط البحث
+    let whereClause = "WHERE daily_id = ?";
+    let params = [rows[0].id];
+
+    if (name) {
+      whereClause += " AND name LIKE ?";
+      params.push(`%${name}%`);
+    }
+
+    // جلب البيانات مع الباجيناشن
+    const [data] = await db.execute(
+      `SELECT * FROM credit ${whereClause} LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+
+    // جلب العدد الكلي
+    const [countRows] = await db.execute(
+      `SELECT COUNT(*) as total FROM credit ${whereClause}`,
+      params
+    );
 
     return {
       success: true,
-      users: data,
+      data,
+      total: countRows[0].total,
+      page,
+      limit,
     };
   } catch (error) {
     throw error;

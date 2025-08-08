@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../../../store";
-import { afterInvoice, beforeInvoice } from "../../../store/slices/invoice";
+import { afterInvoice, beforeInvoice, updateInvoice } from "../../../store/slices/invoice";
 import { Button } from "../../../components/ui/button";
 import FilterSection from "./filterSection";
 import { ChevronLeft, ChevronRight, Printer, FileText, Loader2 } from "lucide-react";
+import { showSuccess } from "components/ui/sonner";
 
 export default function AllInvoicesFixed() {
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -26,6 +27,7 @@ export default function AllInvoicesFixed() {
   const [to, setTo] = useState("");
   const [invoiceType, setInvoiceType] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [currentInvoiceId, setCurrentInvoiceId] = useState(null);
   const [invoiceDetails, setInvoiceDetails] = useState({
     customerName: "",
     customerPhone: "",
@@ -51,6 +53,7 @@ export default function AllInvoicesFixed() {
   }, [from, to, invoiceType]);
   
   const updateInvoiceUI = (data: any) => {
+    console.log("Updating invoice UI with data:", data);
     if (!data) {
       setInvoiceDetails({
         customerName: "",
@@ -108,6 +111,7 @@ export default function AllInvoicesFixed() {
       } else {
         updateInvoiceUI(result.payload.data);
         // Check if there are more invoices after this one
+        setCurrentInvoiceId(result.payload.data.id)
         checkIfMoreInvoicesAfter(result.payload.data.id);
       }
     } catch (error) {
@@ -198,6 +202,7 @@ export default function AllInvoicesFixed() {
         updateInvoiceUI(result.payload.data);
         setCanGoBefore(true);
         // Check if there are more invoices after this one
+        setCurrentInvoiceId(result.payload.data.id);
         await checkIfMoreInvoicesAfter(result.payload.data.id);
       }
     } catch (error) {
@@ -292,7 +297,6 @@ export default function AllInvoicesFixed() {
                 <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 border-b border-gray-200">اسم المنتج</th>
                 <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200">الكمية</th>
                 <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200">السعر</th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200">الخصم</th>
                 <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200">الإجمالي</th>
               </tr>
             </thead>
@@ -309,7 +313,6 @@ export default function AllInvoicesFixed() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700">{parseFloat(p.price).toFixed(2)} ج</td>
-                  <td className="px-4 py-3 text-sm text-red-600">{parseFloat(p.discount).toFixed(2)} ج</td>
                   <td className="px-4 py-3 text-sm font-bold text-green-600">{calculateRowTotal(p).toFixed(2)} ج</td>
                 </tr>
               ))}
@@ -394,12 +397,16 @@ export default function AllInvoicesFixed() {
                     name="paymentType"
                     value={type}
                     checked={invoiceDetails.paymentType === type}
-                    onChange={(e) =>
-                      setInvoiceDetails({
-                        ...invoiceDetails,
-                        paymentType: e.target.value,
-                      })
-                    }
+                    onChange={async(e) => {
+                      if (type === "خالص") {
+                        setInvoiceDetails({
+                          ...invoiceDetails,
+                          paymentType: e.target.value,
+                        });
+                        await dispatch(updateInvoice({invoiceId:currentInvoiceId, paymentType:e.target.value}));
+                        showSuccess("تم تحديث الفاتورة بنجاح");
+                      }
+                    }}
                     className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 bg-gray-50"
                     disabled={!products.length}
                     readOnly
