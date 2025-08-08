@@ -85,10 +85,10 @@ export const generateBarCode = createAsyncThunk(
 
 export const searchProducts = createAsyncThunk(
   "products/search",
-  async (data: SearchProductsPayload, { rejectWithValue }) => {
+  async (data: any, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.products.search(data.name);
+        const result = await window.electronAPI.products.search(data);
         return result;
       } else {
         return null;

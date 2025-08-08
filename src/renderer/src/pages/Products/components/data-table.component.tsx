@@ -9,14 +9,17 @@ import {
 } from "../../../components/ui/table";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
-import { Pencil, Trash2, Search, Plus, Package, Filter } from "lucide-react";
+import { Pencil, Trash2, Search, Plus, Package, Filter, X, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { showError } from "../../../components/ui/sonner";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   searchProducts,
   getProducts,
 } from "../../../store/slices/productsSlice";
+import { getByKey } from "store/slices/settingsSlice";
+import { MdWarning } from "react-icons/md";
+import { getCategories } from "store/slices/categoriesSlice";
 
 interface DataTableProps<T> {
   columns: any;
@@ -24,6 +27,14 @@ interface DataTableProps<T> {
   dataTotal: number;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
+}
+
+interface FilterState {
+  quantityFrom: string;
+  quantityTo: string;
+  priceFrom: string;
+  priceTo: string;
+  category: string;
 }
 
 const PAGE_SIZE = 10;
@@ -45,16 +56,64 @@ const DataTable = <T extends Record<string, any>>({
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [limit, setLimit] = useState(0);
   const [currentData, setCurrentData] = useState<T[]>(data || []);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    quantityFrom: "",
+    quantityTo: "",
+    priceFrom: "",
+    priceTo: "",
+    category: ""
+  });
+  const [activeFiltersCount, setActiveFiltersCount] = useState(0);
+
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const categories = useSelector((state: any) => state.categories);
+
+  // Main useEffect for fetching products with search and filters
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const result = await dispatch(searchProducts({ name: search, page, filters }) as any);
+        if (!result.error) {
+          const formattedProducts = result?.payload?.products?.map((item: T) => ({
+            ...item,
+            createdAt: new Date(item.created_at).toISOString().split("T")[0],
+          }));
+          setTotal(result?.payload?.total || 0);
+          setCurrentData(formattedProducts || []);
+        } else {
+          showError(result?.payload || "حدث خطأ في البحث");
+        }
+      } catch (error) {
+        showError("فشل الاتصال بالخادم");
+      }
+    };
+
+    fetchProducts();
+  }, [search, page, filters, dispatch]);
 
   useEffect(() => {
-    setCurrentData(data);
-    setTotal(dataTotal);
-  }, [data, dataTotal]);
+    dispatch(getCategories() as any);
+  }, [dispatch]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const data = await dispatch(getByKey("warning") as any);
+      setLimit(data?.payload?.data.value || 0);
+    }
+    fetchData();
+  }, [dispatch]);
+
+  // Remove the local data override since we're fetching from API
+  // useEffect(() => {
+  //   setCurrentData(data);
+  //   setTotal(dataTotal);
+  // }, [data, dataTotal]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log(e.key);
       if (e.key === "/" || (e.ctrlKey && e.key.toLowerCase() === "k")) {
         e.preventDefault();
         searchInputRef.current?.focus();
@@ -82,69 +141,117 @@ const DataTable = <T extends Record<string, any>>({
 
   useEffect(() => {
     setPage(1);
-  }, [search]);
+  }, [search, filters]); // Reset page when search or filters change
 
   useEffect(() => {
     searchInputRef.current?.focus();
   }, []);
 
-  const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearch(value);
+  // Count active filters
+  useEffect(() => {
+    const count = Object.values(filters).filter(value => value !== "").length;
+    setActiveFiltersCount(count);
+  }, [filters]);
 
-    try {
-      const result = await dispatch(
-        searchProducts({ name: value, page }) as any
-      );
-      if (!result.error) {
-        const formatedProducts = result?.payload?.products?.map((item: T) => ({
-          ...item,
-          createdAt: new Date(item.created_at).toISOString().split("T")[0], // Format date to YYYY-MM-DD
-        }));
-        setTotal(result?.payload?.total || 0);
-        setCurrentData(formatedProducts || []);
-      } else {
-        showError(result?.payload || "حدث خطأ في البحث");
-      }
-    } catch {
-      showError("فشل الاتصال بالخادم");
-    }
+  const handlePage = async (newPage: number) => {
+    setPage(newPage);
+    // The useEffect will handle the API call when page changes
   };
 
-  const handlePage = async (page: number) => {
-    setPage((prev) => page);
-
-    try {
-      const result = await dispatch(getProducts({ page }) as any);
-      if (!result.error) {
-        const formatedProducts = result?.payload?.products?.map((item: T) => ({
-          ...item,
-          createdAt: new Date(item.created_at).toISOString().split("T")[0], // Format date to YYYY-MM-DD
-        }));
-        setTotal(result?.payload?.total || 0);
-        setCurrentData(formatedProducts || []);
-      } else {
-        showError(result?.payload || "حدث خطأ في البحث");
-      }
-    } catch {
-      showError("فشل الاتصال بالخادم");
-    }
+  const handleFilterChange = (key: keyof FilterState, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
 
-  const filteredData = useMemo(() => {
-    if (!search) return currentData;
-    return currentData?.filter((row) =>
-      visibleColumns.some(
-        (col: { visible: boolean; accessorKey: string }) =>
-          col.visible &&
-          String(row[col.accessorKey] ?? "")
-            .toLowerCase()
-            .includes(search.toLowerCase())
-      )
-    );
-  }, [search, currentData, visibleColumns]);
+  const clearFilters = () => {
+    setFilters({
+      quantityFrom: "",
+      quantityTo: "",
+      priceFrom: "",
+      priceTo: "",
+      category: ""
+    });
+  };
+
+  const clearSingleFilter = (key: keyof FilterState) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: ""
+    }));
+  };
+
+  // Remove local filtering since we're filtering on the server
+  const filteredData = currentData;
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const ActiveFilters = () => {
+    const activeFilters = [];
+    
+    if (filters.quantityFrom || filters.quantityTo) {
+      const label = filters.quantityFrom && filters.quantityTo 
+        ? `الكمية: ${filters.quantityFrom} - ${filters.quantityTo}`
+        : filters.quantityFrom 
+          ? `الكمية من: ${filters.quantityFrom}`
+          : `الكمية إلى: ${filters.quantityTo}`;
+      activeFilters.push({ key: 'quantity', label });
+    }
+
+    if (filters.priceFrom || filters.priceTo) {
+      const label = filters.priceFrom && filters.priceTo 
+        ? `السعر: ${filters.priceFrom} - ${filters.priceTo} ج.م`
+        : filters.priceFrom 
+          ? `السعر من: ${filters.priceFrom} ج.م`
+          : `السعر إلى: ${filters.priceTo} ج.م`;
+      activeFilters.push({ key: 'price', label });
+    }
+
+    if (filters.category) {
+      // Find category name by ID
+      const categoryName = categories.categories.find((cat: any) => cat.id == filters.category)?.name || filters.category;
+      activeFilters.push({ key: 'category', label: `الفئة: ${categoryName}` });
+    }
+
+    if (activeFilters.length === 0) return null;
+
+    return (
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <span className="text-sm font-medium text-gray-600 ml-2">المرشحات النشطة:</span>
+        {activeFilters.map((filter) => (
+          <div 
+            key={filter.key}
+            className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm border border-blue-200"
+          >
+            <span>{filter.label}</span>
+            <button
+              onClick={() => {
+                if (filter.key === 'quantity') {
+                  setFilters(prev => ({ ...prev, quantityFrom: "", quantityTo: "" }));
+                } else if (filter.key === 'price') {
+                  setFilters(prev => ({ ...prev, priceFrom: "", priceTo: "" }));
+                } else {
+                  clearSingleFilter(filter.key as keyof FilterState);
+                }
+              }}
+              className="hover:bg-blue-200 rounded-full p-0.5 transition-colors duration-150"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={clearFilters}
+          className="text-gray-500 hover:text-gray-700 px-2 py-1 h-auto text-sm"
+        >
+          مسح الكل
+        </Button>
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col w-full gap-6 p-6 bg-gray-50/50 min-h-full" dir="rtl">
@@ -172,21 +279,131 @@ const DataTable = <T extends Record<string, any>>({
         </div>
 
         {/* Search and Filter Section */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              ref={searchInputRef}
-              placeholder="ابحث عن المنتجات بالاسم أو الكود..."
-              value={search}
-              onChange={handleSearch}
-              className="pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 bg-white"
-            />
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                ref={searchInputRef}
+                placeholder="ابحث عن المنتجات بالاسم أو الكود..."
+                value={search}
+                onChange={(e)=>setSearch(e.target.value)}
+                className="pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 bg-white"
+              />
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowFilters(!showFilters)}
+              className={`relative border-gray-300 hover:bg-gray-50 transition-all duration-200 ${
+                showFilters ? 'bg-blue-50 border-blue-300 text-blue-700' : ''
+              }`}
+            >
+              <Filter className="h-4 w-4 ml-2" />
+              تصفية متقدمة
+              <ChevronDown className={`h-3 w-3 mr-1 transition-transform duration-200 ${
+                showFilters ? 'rotate-180' : ''
+              }`} />
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-1 -left-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </Button>
           </div>
-          <Button variant="outline" className="border-gray-300 hover:bg-gray-50">
-            <Filter className="h-4 w-4 ml-2" />
-            تصفية
-          </Button>
+
+          {/* Advanced Filters Panel */}
+          {showFilters && (
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-4 animate-in slide-in-from-top-2 duration-200">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Quantity Filter */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">الكمية</label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      placeholder="من"
+                      value={filters.quantityFrom}
+                      onChange={(e) => handleFilterChange('quantityFrom', e.target.value)}
+                      className="text-center border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-500 text-sm">إلى</span>
+                    <Input
+                      type="number"
+                      placeholder="إلى"
+                      value={filters.quantityTo}
+                      onChange={(e) => handleFilterChange('quantityTo', e.target.value)}
+                      className="text-center border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Price Filter */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">السعر (ج.م)</label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      placeholder="من"
+                      value={filters.priceFrom}
+                      onChange={(e) => handleFilterChange('priceFrom', e.target.value)}
+                      className="text-center border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-500 text-sm">إلى</span>
+                    <Input
+                      type="number"
+                      placeholder="إلى"
+                      value={filters.priceTo}
+                      onChange={(e) => handleFilterChange('priceTo', e.target.value)}
+                      className="text-center border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Category Filter */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">الفئة</label>
+                  <select
+                    value={filters.category}
+                    onChange={(e) => handleFilterChange('category', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">جميع الفئات</option>
+                    {categories.categories?.map((category:any) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                <div className="text-sm text-gray-600">
+                  النتائج المطابقة: {total.toLocaleString('ar-EG')}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="text-gray-600 hover:text-gray-800"
+                  >
+                    مسح المرشحات
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFilters(false)}
+                    className="border-gray-300"
+                  >
+                    إخفاء التصفية
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <ActiveFilters />
         </div>
       </div>
 
@@ -233,13 +450,14 @@ const DataTable = <T extends Record<string, any>>({
                               </span>
                             ) : column.accessorKey === 'quantity' ? (
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                row[column.accessorKey] > 10 
+                                row[column.accessorKey] > +limit 
                                   ? 'bg-green-100 text-green-800' 
                                   : row[column.accessorKey] > 0 
                                     ? 'bg-yellow-100 text-yellow-800'
                                     : 'bg-red-100 text-red-800'
                               }`}>
                                 {row[column.accessorKey]}
+                                {row[column.accessorKey] > +limit ? ' ' : row[column.accessorKey] > 0 ? <MdWarning className="mr-1" /> : ''}
                               </span>
                             ) : column.accessorKey === 'barcode' ? (
                               <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
@@ -283,8 +501,15 @@ const DataTable = <T extends Record<string, any>>({
                     <div className="flex flex-col items-center gap-3">
                       <Package className="h-12 w-12 text-gray-300" />
                       <div>
-                        <p className="text-gray-500 font-medium">لا توجد منتجات</p>
-                        <p className="text-gray-400 text-sm">قم بإضافة منتج جديد للبدء</p>
+                        <p className="text-gray-500 font-medium">
+                          {search || activeFiltersCount > 0 ? "لا توجد نتائج مطابقة" : "لا توجد منتجات"}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          {search || activeFiltersCount > 0 
+                            ? "جرب تعديل معايير البحث أو التصفية" 
+                            : "قم بإضافة منتج جديد للبدء"
+                          }
+                        </p>
                       </div>
                     </div>
                   </TableCell>

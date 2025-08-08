@@ -149,7 +149,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     delete: (id) => safeInvoke("categories:delete", id),
   },
   products: {
-    getAll: () => safeInvoke("products:getAll"),
+    getAll: (data) => safeInvoke("products:getAll",data),
     getById: (id) => safeInvoke("products:getById", id),
     create: (product) => safeInvoke("products:create", product),
     update: (id, product) => safeInvoke("products:update", id, product),

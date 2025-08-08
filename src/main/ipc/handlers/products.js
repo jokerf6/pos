@@ -17,7 +17,6 @@ async function createProduct(event, data) {
     generated_code,
   } = data;
 
-  console.log("Creating product with data:", data);
 
   // Validate input
   if (
@@ -84,7 +83,7 @@ async function createProduct(event, data) {
 
 async function getAll(
   event,
-  { page = 1, limit = 10 } = { page: 1, limit: 10 }
+  { page=1, limit = 10 } = { page: 1, limit: 10 }
 ) {
   try {
     const db = getDatabase();
@@ -156,7 +155,6 @@ async function getBybarcode(event, data) {
       [`%${name}%`]
     );
 
-    console.log("getBybarcode rows:", rows);
 
     return {
       success: true,
@@ -189,20 +187,74 @@ async function findById(event, { id }) {
 
 async function search(
   event,
-  { name, page = 1, limit = 10 } = { name: "", page: 1, limit: 10 }
+  {
+    name = "",
+    page = 1,
+    limit = 10,
+    filters = {
+      quantityFrom: "",
+      quantityTo: "",
+      priceFrom: "",
+      priceTo: "",
+      category: "",
+    },
+  } = {}
 ) {
   try {
     const db = getDatabase();
     const offset = (page - 1) * limit;
+    // بناء شروط البحث الديناميكية
+    const whereClauses = [];
+    const params = [];
 
-    // Find user in database
+    // البحث بالاسم أو الباركود
+    if (name) {
+      whereClauses.push("(name LIKE ? OR barcode LIKE ?)");
+      params.push(`%${name}%`, `%${name}%`);
+    }
+
+    // فلترة بالكمية
+    if (filters.quantityFrom) {
+      whereClauses.push("quantity >= ?");
+      params.push(Number(filters.quantityFrom));
+    }
+    if (filters.quantityTo) {
+      whereClauses.push("quantity <= ?");
+      params.push(Number(filters.quantityTo));
+    }
+
+    // فلترة بالسعر
+    if (filters.priceFrom) {
+      whereClauses.push("price >= ?");
+      params.push(Number(filters.priceFrom));
+    }
+    if (filters.priceTo) {
+      whereClauses.push("price <= ?");
+      params.push(Number(filters.priceTo));
+    }
+
+    // فلترة بالتصنيف
+    if (filters.category) {
+      whereClauses.push("category_id = ?");
+      params.push(filters.category);
+    }
+
+    console.log(whereClauses, params);
+
+    // لو مفيش شروط، نحط 1=1
+    const whereSQL = whereClauses.length > 0 ? whereClauses.join(" AND ") : "1=1";
+
+    // جلب البيانات
     const [rows] = await db.execute(
-      "SELECT * FROM items WHERE name LIKE ? OR barcode LIKE ? LIMIT ? OFFSET ?",
-      [`%${name}%`, `%${name}%`, limit, offset]
+      `SELECT * FROM items WHERE ${whereSQL} LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
     );
+    console.log("search products:", rows, limit, offset);
+
+    // حساب الإجمالي
     const [search] = await db.execute(
-      "SELECT COUNT(*) as total FROM items WHERE name LIKE ? OR barcode LIKE ?",
-      [`%${name}%`, `%${name}%`]
+      `SELECT COUNT(*) as total FROM items WHERE ${whereSQL}`,
+      params
     );
 
     return {
