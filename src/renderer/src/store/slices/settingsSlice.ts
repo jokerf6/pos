@@ -31,6 +31,7 @@ export const getByDomain = createAsyncThunk<
   try {
     if (window.electronAPI) {
       const result = await window.electronAPI.settings.getByDomain(data);
+      console.log("getByDomain result:", result);
       return result;
     } else {
       return null;
@@ -104,6 +105,21 @@ const settingsSlice = createSlice({
         state.loading = false;
         state.error = action.payload || "Failed to get settings";
       })
+
+       .addCase(getByDomain.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getByDomain.fulfilled, (state, action) => {
+        state.loading = false;
+        state.settings = action.payload;
+        state.error = null;
+      })
+      .addCase(getByDomain.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to get settings";
+      })
+
       // Update cases
       .addCase(updateSetting.pending, (state) => {
         state.loading = true;

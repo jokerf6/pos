@@ -22,7 +22,7 @@ export default function DailyHeader() {
   useEffect(() => {
     if (settings) {
       console.log("settings", settings);
-      setLocalSettings(settings);
+      setLocalSettings(settings.data);
     }
   }, [settings]);
 

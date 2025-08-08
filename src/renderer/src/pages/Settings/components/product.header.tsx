@@ -21,7 +21,7 @@ export default function ProductHeader() {
 
   useEffect(() => {
     if (settings) {
-      setLocalSettings(settings);
+      setLocalSettings(settings.data);
     }
   }, [settings]);
 
@@ -76,7 +76,6 @@ export default function ProductHeader() {
             <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
               {getFieldIcon(inputType)}
             </div>
-            
             <div className="flex-1">
               <label className="block text-base font-medium text-slate-900 dark:text-white mb-2">
                 {item.name}
@@ -134,6 +133,7 @@ export default function ProductHeader() {
     <div className="space-y-6">
       {/* Settings Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
         {localSettings &&
           localSettings.map((item, index) => renderInput(item, index))}
       </div>
