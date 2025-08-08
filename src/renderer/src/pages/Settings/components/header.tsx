@@ -1,8 +1,8 @@
 "use client";
 import * as React from "react";
 import ProductHeader from "./product.header";
-import DailyHeader from "./daily.header";
 import { Settings, Package, Calendar, ChevronRight } from "lucide-react";
+import DailyHeader from "./daily.header";
 
 interface HeaderItem {
   title: string;
