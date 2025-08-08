@@ -151,7 +151,7 @@ export const ProductById = createAsyncThunk(
 
 export const ProductByBarcode = createAsyncThunk(
   "products/getByBarcode",
-  async (data: SearchProductsPayload, { rejectWithValue }) => {
+  async (data: any, { rejectWithValue }) => {
     console.log("Barcode data:", data);
     try {
       if (window.electronAPI) {

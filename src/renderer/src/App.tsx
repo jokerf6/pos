@@ -155,7 +155,7 @@ const App: React.FC = () => {
         }
       />
       <Route
-        path="/products/edit/:id"
+        path="/products/:id"
         element={
           isAuthenticated ? (
             <Layout>

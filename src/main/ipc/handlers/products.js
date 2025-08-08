@@ -269,18 +269,18 @@ async function search(
 }
 
 async function update(event, data) {
-  const { name, description, quantity, price, buy_price } = data;
+  const { name, description, quantity, price, buy_price,id } = data;
 
   // Validate input
   if (!name || !quantity || !price || !buy_price) {
     throw new Error("برجاء إدخال اسم المنتج والكمية والسعر وسعر الشراء");
   }
-
+  console.log("Update product data:", quantity,id);
   try {
     const db = getDatabase();
 
     await db.execute(
-      "UPDATE items SET name = ?, quantity = ?, price = ?, buy_price=? WHERE id = ?",
+      "UPDATE items SET name = ?, quantity = ?, price = ?, buy_price=? WHERE barcode = ?",
       [name, quantity, price, buy_price, id]
     );
 

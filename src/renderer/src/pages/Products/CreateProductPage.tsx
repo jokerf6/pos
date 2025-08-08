@@ -32,6 +32,8 @@ const CreateProductPage = () => {
   const [categoryData, setCategoryData] = useState<{ id: number; name: string } | null>(null);
   const [barcodeNumber, setBarcodeNumber] = useState(0);
   const [openPrint, setOpenPrint] = useState(false);
+  const [isExistingProduct, setIsExistingProduct] = useState(false);
+  const [originalQuantity, setOriginalQuantity] = useState(0);
   const printRef = useRef(null);
 
   useEffect(() => {
@@ -42,68 +44,86 @@ const CreateProductPage = () => {
     name: "",
     description: "",
     quantity: 1,
+    new_quantity: 0, // الكمية الجديدة
     price: 0,
     buy_price: 0,
     barcode: undefined,
     generated_code: undefined,
     category_id: 0,
   });
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      quantity: 1,
+      new_quantity: 0,
+      price: 0,
+      buy_price: 0,
+      barcode: undefined,
+      generated_code: undefined,
+      category_id: 0,
+    });
+    setCategoryData(null);
+    setIsExistingProduct(false);
+    setOriginalQuantity(0);
+  };
+
   const handleSearch = async (name: string) => {
     try {
       if (name.length === 0) {
-        setFormData({
-          name: "",
-          description: "",
-          quantity: 1,
-          price: 0,
-          buy_price: 0,
-          barcode: undefined,
-          generated_code: undefined,
-          category_id: 0,
-        });
-        setCategoryData(null);
+        resetForm();
         return;
       }
       const result = await dispatch(ProductByBarcode({ name }));
       if (!result.payload.error) {
         const data = result.payload || {};
-        // setCategoryData(
-        //   categories?.filter((item) => item.id === data.category_id) || null
-        // );
-        if (!data) {
-          setFormData({
+        
+        if (!data || !data.id) {
+          // منتج جديد
+          setIsExistingProduct(false);
+          setOriginalQuantity(0);
+          setFormData(prev => ({
+            ...prev,
             name: "",
             description: "",
             quantity: 1,
+            new_quantity: 0,
             price: 0,
-            generated_code: undefined,
             buy_price: 0,
-            barcode: undefined,
             category_id: 0,
-          });
-        }
-        if (data.category_id) {
-          const categoryResult = await dispatch(
-            CategoryById(data.category_id) as any
-          );
-          console.log("categoryResult", categoryResult);
-          if (!categoryResult.error) {
-            setCategoryData(categoryResult.payload.user);
-          } else {
-            showError(categoryResult?.payload || "فشل في جلب الفئة");
-          }
-        } else {
+          }));
           setCategoryData(null);
+        } else {
+          // منتج موجود
+          setIsExistingProduct(true);
+          setOriginalQuantity(data.quantity || 0);
+          
+          if (data.category_id) {
+            const categoryResult = await dispatch(
+              CategoryById(data.category_id) as any
+            );
+            console.log("categoryResult", categoryResult);
+            if (!categoryResult.error) {
+              setCategoryData(categoryResult.payload.user);
+            } else {
+              showError(categoryResult?.payload || "فشل في جلب الفئة");
+            }
+          } else {
+            setCategoryData(null);
+          }
+          
+          setFormData((prev) => ({
+            ...prev,
+            name: data.name || "",
+            description: data.description || "",
+            quantity: data.quantity || 0, // الكمية الموجودة (disabled)
+            new_quantity: 0, // الكمية الجديدة (يدخلها المستخدم)
+            price: data.price || 0,
+            buy_price: data.buy_price || 0,
+            category_id: data.category_id || 0,
+          }));
         }
-        setFormData((prev) => ({
-          ...prev,
-          name: data.name || "",
-          description: data.description || "",
-          quantity: data.quantity || 1,
-          price: data.price || 0,
-          buy_price: data.buy_price || 0,
-          category_id: data.category_id || "",
-        }));
       } else {
         showError(result?.payload || "حدث خطأ في البحث");
       }
@@ -122,6 +142,7 @@ const CreateProductPage = () => {
     },
     []
   );
+  
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -167,28 +188,38 @@ const CreateProductPage = () => {
       ...prev,
       generated_code: data || undefined,
     }));
+    // عند توليد كود جديد، يكون منتج جديد
+    setIsExistingProduct(false);
+    setOriginalQuantity(0);
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await dispatch(createProduct(formData) as any);
+    
+    // تحضير البيانات للإرسال
+    const submitData = { ...formData };
+    
+    // إذا كان منتج موجود، اجمع الكمية الموجودة مع الجديدة
+    if (isExistingProduct) {
+      submitData.quantity = originalQuantity + Number(formData.new_quantity);
+    }
+    
+    const result = await dispatch(createProduct(submitData) as any);
     if (!result.error) {
       showSuccess("تم إضافه المنتج بنجاح");
-      setCategoryData(null);
-      setFormData({
-        name: "",
-        description: "",
-        quantity: 1,
-        price: 0,
-        buy_price: 0,
-        barcode: undefined,
-        generated_code: undefined,
-        category_id: 0,
-      });
-      setOpenPrint(true);
+      
+      // إذا كان منتج جديد مع كود مولد، اعرض خيار الطباعة
+      if (!isExistingProduct && formData.generated_code) {
+        setOpenPrint(true);
+      } else {
+        // إعادة تعيين النموذج مباشرة
+        resetForm();
+      }
     } else {
       showError(result?.payload || "فشل في إضافه المنتج");
     }
   };
+
   useEffect(() => {
     if ((formData.generated_code || formData.barcode) && barcodeNumber > 0) {
       for (let i = 0; i < barcodeNumber; i++) {
@@ -204,16 +235,22 @@ const CreateProductPage = () => {
       }
     }
   }, [formData.generated_code, formData.barcode, barcodeNumber]);
+
   const handelPrint = useReactToPrint({
     contentRef: printRef,
   });
+
   const fields = [
     { name: "barcode", placeholder: "الباركود" },
     { name: "name", placeholder: "اسم المنتج" },
     { name: "description", placeholder: "الوصف", type: "area" },
-    { name: "category_id", placeholder: "الفئة", type: "select" }, // Assuming you will handle categories separately
-
-    { name: "quantity", placeholder: "الكمية", type: "number" },
+    { name: "category_id", placeholder: "الفئة", type: "select" },
+    ...(isExistingProduct ? [
+      { name: "quantity", placeholder: "الكمية الموجودة", type: "number", disabled: true },
+      { name: "new_quantity", placeholder: "الكمية الجديدة", type: "number" }
+    ] : [
+      { name: "quantity", placeholder: "الكمية", type: "number" }
+    ]),
     { name: "price", placeholder: "سعر البيع", type: "number" },
     { name: "buy_price", placeholder: "سعر الشراء", type: "number" },
   ];
@@ -226,33 +263,14 @@ const CreateProductPage = () => {
           onClose={() => {
             setOpenPrint(false);
             setTimeout(() => {
-              setFormData({
-                name: "",
-                description: "",
-                quantity: 1,
-                price: 0,
-                buy_price: 0,
-                barcode: undefined,
-                generated_code: undefined,
-                category_id: 0,
-              });
+              resetForm();
             }, 1000);
           }}
           onConfirm={() => {
             handelPrint();
             setTimeout(() => {
-              setFormData({
-                name: "",
-                description: "",
-                quantity: 1,
-                price: 0,
-                buy_price: 0,
-                barcode: undefined,
-                generated_code: undefined,
-                category_id: 0,
-              });
+              resetForm();
             }, 1000);
-
             setOpenPrint(false);
           }}
           title="طباعة باركود"
@@ -281,9 +299,25 @@ const CreateProductPage = () => {
             <div className="p-2 bg-green-100 rounded-lg">
               <Package className="h-6 w-6 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">إضافة منتج جديد</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {isExistingProduct ? "تحديث منتج موجود" : "إضافة منتج جديد"}
+            </h2>
           </div>
-          <p className="text-gray-600">قم بملء البيانات التالية لإضافة منتج جديد إلى المخزون</p>
+          <p className="text-gray-600">
+            {isExistingProduct 
+              ? "قم بتعديل بيانات المنتج أو إضافة كمية جديدة" 
+              : "قم بملء البيانات التالية لإضافة منتج جديد إلى المخزون"
+            }
+          </p>
+          
+          {isExistingProduct && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-800 text-sm">
+                <strong>منتج موجود:</strong> الكمية الحالية {originalQuantity} - 
+                سيتم إضافة الكمية الجديدة إلى الكمية الموجودة
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Form Section */}
@@ -293,6 +327,7 @@ const CreateProductPage = () => {
               <div key={field.name} className="space-y-2">
                 <label htmlFor={field.name} className="text-sm font-medium text-gray-700 block">
                   {field.placeholder}
+                  {field.disabled && <span className="text-gray-500 text-xs"> (للعرض فقط)</span>}
                 </label>
 
                 {field.type === "select" ? (
@@ -340,18 +375,34 @@ const CreateProductPage = () => {
                       name={field.name}
                       type={field.type || "text"}
                       min={field.type === "number" ? 0 : undefined}
+                      disabled={field.disabled}
                       value={
                         field.name === "barcode"
                           ? formData.barcode || formData.generated_code
                           : (formData as any)[field.name]
                       }
                       onChange={handleChange}
-                      className="flex-1 border border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                      className={`flex-1 border border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                        field.disabled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
+                      }`}
                     />
                   </div>
                 )}
               </div>
             ))}
+
+            {/* عرض المجموع الإجمالي للكمية إذا كان منتج موجود */}
+            {isExistingProduct && (
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-sm text-gray-600">
+                  <p><strong>الكمية الحالية:</strong> {originalQuantity}</p>
+                  <p><strong>الكمية الجديدة:</strong> {formData.new_quantity}</p>
+                  <p className="text-lg font-semibold text-blue-600 mt-2">
+                    <strong>إجمالي الكمية:</strong> {originalQuantity + Number(formData.new_quantity)}
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-4 pt-6 border-t border-gray-200">
               <Button 
@@ -359,7 +410,7 @@ const CreateProductPage = () => {
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
               >
                 <Package className="h-4 w-4 ml-2" />
-                إضافة المنتج
+                {isExistingProduct ? "تحديث المنتج" : "إضافة المنتج"}
               </Button>
               <Button
                 type="button"
