@@ -61,6 +61,7 @@ const DataTable = <T extends Record<string, any>>({
   const [limit, setLimit] = useState(0);
   const [currentData, setCurrentData] = useState<T[]>(data || []);
   const [showFilters, setShowFilters] = useState(false);
+  const { user } = useSelector((state: any) => state.auth);
   const [filters, setFilters] = useState<FilterState>({
     quantityFrom: "",
     quantityTo: "",
@@ -271,13 +272,13 @@ const DataTable = <T extends Record<string, any>>({
               </p>
             </div>
           </div>
-          <Button 
+       {(user.role === "admin" || user?.permissions?.includes("inventory.create")) &&   <Button 
             onClick={() => navigate("/products/create")}
             className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200 px-6 py-2.5"
           >
             <Plus className="h-4 w-4 ml-2" />
             إضافة منتج جديد
-          </Button>
+          </Button>}
         </div>
 
         {/* Search and Filter Section */}
@@ -426,9 +427,14 @@ const DataTable = <T extends Record<string, any>>({
                       </TableHead>
                     )
                 )}
-                <TableHead className="px-6 py-4 text-center font-semibold text-gray-700 w-32">
-                  الإجراءات
-                </TableHead>
+               {(user.role === "admin" ||
+                               ( user?.permissions.includes("inventory.edit") &&
+                                user?.permissions.includes("inventory.delete")&&
+                                user?.permissions.includes("inventory.statistics")
+               )
+                                ) &&   <TableHead className="w-[1%] border-r text-center p-0">
+                            الإجراءات
+                          </TableHead>}
               </TableRow>
             </TableHeader>
 
@@ -472,34 +478,43 @@ const DataTable = <T extends Record<string, any>>({
                         )
                     )}
 
-                    <TableCell className="px-6 py-4 text-center border-l border-gray-100">
+            {  (user.role === "admin" ||
+                               ( user?.permissions?.includes("inventory.edit") &&
+                                user?.permissions?.includes("inventory.delete")
+                              &&
+                               user?.permissions?.includes("inventory.statistics")
+                              )
+                                )&&     <TableCell className="px-6 py-4 text-center border-l border-gray-100">
                       <div className="flex justify-center items-center gap-2">
-                    <Button
+                   {(user.role === "admin" ||
+                          user?.permissions?.includes("inventory.statistics")) && <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors duration-150"
                           onClick={() => onInfo?.(row)}
                         >
                           <Info className="h-4 w-4" />
-                        </Button>
-                        <Button
+                        </Button>}
+                       {(user.role === "admin" ||
+                          user?.permissions?.includes("inventory.edit")) && <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors duration-150"
                           onClick={() => onEdit?.(row)}
                         >
                           <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
+                        </Button>}
+                    {(user.role === "admin" ||
+                          user?.permissions?.includes("inventory.delete")) &&    <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors duration-150"
                           onClick={() => onDelete?.(row)}
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </Button>}
                       </div>
-                    </TableCell>
+                    </TableCell>}
                   </TableRow>
                 ))
               ) : (

@@ -55,7 +55,7 @@ const items = [
     url: "/categories",
     group: [],
     icon: FolderOpen,
-    permissions: ["inventory.view"], // Requires inventory.view permission
+    permissions: ["category.view"], // Requires inventory.view permission
   },
     {
     title: "إداره الاصناف",
@@ -93,18 +93,18 @@ const items = [
         title: "مصروفات اليوم",
         url: "/credit/daily",
         icon: DollarSign,
-        permissions: ["reports.financial"],
+        permissions: ["credit.create"],
       },
       {
         title: "كل المصروفات",
         url: "/credit",
         icon: Wallet,
-        permissions: ["reports.financial"],
+        permissions: ["credit.view"],
       },
     ],
     url: "/credit",
     icon: CreditCard,
-    permissions: ["reports.financial"], // Show if user has financial reports permission
+    permissions: ["credit.view","credit.create"], // Show if user has financial reports permission
   },
 
   {
@@ -112,7 +112,7 @@ const items = [
     url: "/settings",
     group: [],
     icon: Settings,
-    permissions: ["system.settings"], // Requires system.settings permission
+    permissions: ["settings.view"], // Requires system.settings permission
   },
 ];
 
@@ -122,6 +122,7 @@ export function AppSidebar() {
 
   // Helper function to check if user has any of the required permissions
  const hasPermission = (requiredPermissions: string[]): boolean => {
+  console.log("Checking permissions for user:", requiredPermissions,);
   if (!requiredPermissions || requiredPermissions.length === 0) return true;
   if (user?.role === "admin") return true;
   return requiredPermissions.some(p => user?.permissions?.includes(p));

@@ -54,6 +54,8 @@ export default function MainHeader() {
   const [openPrice, setOpenPrice] = useState(0);
   const [closePrice, setClosePrice] = useState(0);
   const [open, setOpen] = useState(false);
+    const { user } = useSelector((state: any) => state.auth);
+
   const [currentTime, setCurrentTime] = useState(getCurrentTime());
   const [isDailyOpen, setIsDailyOpen] = useState(false); // حالة محلية لتتبع حالة اليومية
   const [dailyData, setDailyData] = useState<any>(null); // حالة محلية لتخزين بيانات اليومية
@@ -243,7 +245,7 @@ export default function MainHeader() {
           )}
           
           <div className="flex gap-2">
-            {!isDailyOpen && (
+            {!isDailyOpen && (user?.role === "admin" || user?.permissions?.includes("cashier.open")) && (
               <Button
                 onClick={() => setOpen(true)}
                 type="button"
@@ -252,7 +254,7 @@ export default function MainHeader() {
                 بدء اليومية
               </Button>
             )}
-            {isDailyOpen && (
+            {isDailyOpen && (user?.role === "admin" || user?.permissions?.includes("cashier.close")) && (
               <Button
                 onClick={() => setOpen(true)}
                 type="button"

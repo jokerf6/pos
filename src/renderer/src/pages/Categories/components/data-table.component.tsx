@@ -12,7 +12,7 @@ import { Button } from "../../../components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { showError } from "../../../components/ui/sonner";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   getCategories,
   searchCategories,
@@ -117,7 +117,7 @@ const DataTable = <T extends Record<string, any>>({
   }, [search, currentData, visibleColumns]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
-
+   const {user} = useSelector((state: any) => state.auth);
   return (
     <div className="flex flex-col w-full gap-4 p-4 text-right" dir="rtl">
       <div className="flex items-center justify-between gap-4">
@@ -127,12 +127,12 @@ const DataTable = <T extends Record<string, any>>({
           onChange={handleSearch}
           className="max-w-sm"
         />
-        <Button onClick={() => navigate("/categories/create")}>
+       { (user.role === "admin" || user?.permissions?.includes("category.create")) && <Button onClick={() => navigate("/categories/create")}>
           <span className="flex items-center gap-2">
             <Pencil size={16} />
             إنشاء
           </span>
-        </Button>
+        </Button>}
       </div>
 
       <div className="overflow-auto rounded-md border">
@@ -150,9 +150,9 @@ const DataTable = <T extends Record<string, any>>({
                     </TableHead>
                   )
               )}
-              <TableHead className="w-[1%] border-r text-center p-0">
+            {(user.role === "admin" || (user?.permissions?.includes("category.delete") && user?.permissions?.includes("category.edit"))) &&  <TableHead className="w-[1%] border-r text-center p-0">
                 الإجراءات
-              </TableHead>
+              </TableHead>}
             </TableRow>
           </TableHeader>
 
@@ -200,14 +200,14 @@ const DataTable = <T extends Record<string, any>>({
                       >
                         <Pencil size={16} />
                       </Button> */}
-                      <Button
+                     {(user.role === "admin" || (user?.permissions?.includes("category.edit"))) && <Button
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-red-600"
                         onClick={() => onDelete?.(row)}
                       >
                         <Trash2 size={16} />
-                      </Button>
+                      </Button>}
                     </div>
                   </TableCell>
                 </TableRow>

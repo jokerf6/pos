@@ -20,6 +20,7 @@ import { getDaily } from "store/slices/dailySlice";
 interface QuickActionCardProps {
   title: string;
   description: string;
+  hide:boolean;
   icon: React.ReactNode;
   onClick: () => void;
   shortcut?: string;
@@ -30,6 +31,7 @@ const QuickActionCard: React.FC<QuickActionCardProps> = ({
   title,
   description,
   icon,
+  hide,
   onClick,
   shortcut,
   color,
@@ -37,6 +39,7 @@ const QuickActionCard: React.FC<QuickActionCardProps> = ({
 
   return (
     <div
+    hidden={hide}
       className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 cursor-pointer 
         hover:shadow-md hover:scale-105 transition-all duration-200 ease-in-out
         hover:border-blue-200 group relative overflow-hidden`}
@@ -113,11 +116,11 @@ const StatCard: React.FC<StatCardProps> = ({
 
 export default function HomePage() {
   const navigate = useNavigate();
-
+ const {user} = useSelector((state:any) => state.auth); 
     const dispatch = useDispatch<AppDispatch>();
   const daily = useSelector((state:any) => state.daily.data);
  console.log("Daily data:", daily);
-  const stats = daily
+  const stats = daily && (user.role === "admin" || user?.permissions?.includes("transaction.view"))
     ? [
         {
           title: "مبيعات اليوم",
@@ -159,6 +162,7 @@ export default function HomePage() {
       icon: <Receipt size={24} />,
       onClick: () => navigate("/invoice/create"),
       shortcut: "Ctrl + N",
+      hide: user?.role !== "admin" && !user?.permissions?.includes("sales.create"),
       color: "blue",
     },
     {
@@ -167,6 +171,7 @@ export default function HomePage() {
       icon: <Package size={24} />,
       onClick: () => navigate("/products"),
       shortcut: "Ctrl + P",
+            hide: user?.role !== "admin" && !user?.permissions?.includes("inventory.view"),
       color: "green",
     },
     {
@@ -174,6 +179,8 @@ export default function HomePage() {
       description: "تسجيل وإدارة المصروفات اليومية",
       icon: <CreditCard size={24} />,
       onClick: () => navigate("/credit"),
+            hide: user?.role !== "admin" && !user?.permissions?.includes("credit.view"),
+
       shortcut: "Ctrl + E",
       color: "orange",
     },
@@ -183,15 +190,9 @@ export default function HomePage() {
       icon: <Users size={24} />,
       onClick: () => navigate("/users"),
       shortcut: "Ctrl + U",
+            hide: user?.role !== "admin" && !user?.permissions?.includes("users.view"),
+
       color: "purple",
-    },
-    {
-      title: "التقارير والإحصائيات",
-      description: "عرض تقارير المبيعات والأرباح",
-      icon: <BarChart3 size={24} />,
-      onClick: () => navigate("/reports"),
-      shortcut: "Ctrl + R",
-      color: "cyan",
     },
     {
       title: "إعدادات النظام",
@@ -199,6 +200,7 @@ export default function HomePage() {
       icon: <Settings size={24} />,
       onClick: () => navigate("/settings"),
       shortcut: "Ctrl + S",
+            hide: user?.role !== "admin" && !user?.permissions?.includes("settings.view"),
       color: "gray",
     },
   ];

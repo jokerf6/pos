@@ -12,7 +12,7 @@ import { Button } from "../../../components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { showError } from "../../../components/ui/sonner";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { searchUsers, getUsers } from "../../../store/slices/usersSlice";
 
 interface Column<T> {
@@ -52,13 +52,14 @@ const DataTable = <T extends Record<string, any>>({
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [currentData, setCurrentData] = useState<T[]>(data || []);
+  const { user } = useSelector((state: any) => state.auth);
 
   useEffect(() => {
     setTotal(dataTotal || 0);
     setCurrentData(data);
   }, [data, dataTotal]);
 
-   useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "+") {
         e.preventDefault();
@@ -82,7 +83,7 @@ const DataTable = <T extends Record<string, any>>({
     try {
       // searchUsers expects a string (name), not an object
       const data = { name: value, page };
-      
+
       const result = await dispatch(searchUsers(data as any) as any);
       console.log("search result", result);
       if (!result.error) {
@@ -147,12 +148,12 @@ const DataTable = <T extends Record<string, any>>({
           onChange={handleSearch}
           className="max-w-sm"
         />
-        <Button onClick={() => navigate("/users/create")}>
+        {(user.role === "admin" || user.permissions.includes("users.create")) && <Button onClick={() => navigate("/users/create")}>
           <span className="flex items-center gap-2">
             <Pencil size={16} />
             إنشاء
           </span>
-        </Button>
+        </Button>}
       </div>
 
       {/* جدول البيانات */}
@@ -171,9 +172,11 @@ const DataTable = <T extends Record<string, any>>({
                     </TableHead>
                   )
               )}
-              <TableHead className="w-[1%] border-r text-center p-0">
+           {(user.role === "admin" ||
+                    user.permissions.includes("users.delete") ||
+                    user.permissions.includes("users.edit")) &&   <TableHead className="w-[1%] border-r text-center p-0">
                 الإجراءات
-              </TableHead>
+              </TableHead>}
             </TableRow>
           </TableHeader>
 
@@ -192,26 +195,36 @@ const DataTable = <T extends Record<string, any>>({
                         </TableCell>
                       )
                   )}
-                  <TableCell className="px-4 py-2 border-r text-center whitespace-nowrap">
-                    <div className="flex justify-center items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-blue-600"
-                        onClick={() => onEdit?.(row)}
-                      >
-                        <Pencil size={16} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-600"
-                        onClick={() => onDelete?.(row)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {(user.role === "admin" ||
+                   ( user.permissions.includes("users.delete") &&
+                    user.permissions.includes("users.edit"))) && (
+                    <TableCell className="px-4 py-2 border-r text-center whitespace-nowrap">
+                      <div className="flex justify-center items-center gap-1">
+                        {(user.role === "admin" ||
+                          user.permissions.includes("users.edit")) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-blue-600"
+                            onClick={() => onEdit?.(row)}
+                          >
+                            <Pencil size={16} />
+                          </Button>
+                        )}
+                        {(user.role === "admin" ||
+                          user.permissions.includes("users.delete")) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-600"
+                            onClick={() => onDelete?.(row)}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             ) : (

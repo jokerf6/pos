@@ -29,6 +29,10 @@ const categoryNames: Record<string, string> = {
   products: 'المنتجات',
   users: 'إدارة المستخدمين',
   system: 'النظام',
+  category: 'الاقسام',
+  credit:"المصروفات",
+  settings:"الإعدادات",
+
 };
 
 const PermissionsSelector: React.FC<PermissionsSelectorProps> = ({

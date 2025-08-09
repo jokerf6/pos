@@ -13,7 +13,7 @@ import { Pencil, Trash2, Search, Plus, FileText, Loader2, ChevronLeft, ChevronRi
 import { useNavigate } from "react-router-dom";
 import { getCredit } from "store/slices/creditSlice";
 import { AppDispatch } from "store";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { formatDate } from "utils/formDate";
 
@@ -47,6 +47,7 @@ const DataTable = <T extends Record<string, any>>({
   const [currentData, setCurrentData] = useState<T[]>(data || []);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useSelector((state: any) => state.auth);
 
   useEffect(() => {
     setCurrentData(data);
@@ -192,9 +193,9 @@ const DataTable = <T extends Record<string, any>>({
                       </TableHead>
                     )
                 )}
-                <TableHead className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200 w-[1%]">
+               {user.role === "admin" && user?.permissions?.includes("credit.delete") && <TableHead className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200 w-[1%]">
                   الإجراءات
-                </TableHead>
+                </TableHead>}
               </TableRow>
             </TableHeader>
 
@@ -226,7 +227,7 @@ const DataTable = <T extends Record<string, any>>({
                         )
                     )}
 
-                    <TableCell className="px-4 py-3 text-center whitespace-nowrap">
+              {user.role === "admin" && user?.permissions?.includes("credit.delete") &&      <TableCell className="px-4 py-3 text-center whitespace-nowrap">
                       <div className="flex justify-center items-center gap-2">
                      
                         <Button
@@ -239,7 +240,7 @@ const DataTable = <T extends Record<string, any>>({
                           <Trash2 size={16} />
                         </Button>
                       </div>
-                    </TableCell>
+                    </TableCell>}
                   </TableRow>
                 ))
               ) : (
