@@ -15,13 +15,11 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <I18nextProvider i18n={i18n}>
       <Provider store={store}>
         <HashRouter>
           <App />
         </HashRouter>
       </Provider>
-    </I18nextProvider>
   </React.StrictMode>
 );
 

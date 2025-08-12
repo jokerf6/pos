@@ -51,6 +51,9 @@ const validChannels = {
   "invoice:after": true,
   "invoice:getAll": true,
   "invoice:update": true,
+  "invoice:print": true,
+
+  
 
   // Daily channels
   "daily:get": true,
@@ -161,6 +164,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     before: (data) => safeInvoke("invoice:before", data),
     getAll: (data) => safeInvoke("invoice:getAll", data),
     update: (data) => safeInvoke("invoice:update", data),
+    print: (data) => safeInvoke("invoice:print", data),
+    
   },
   credit: {
     getAll: (data) => safeInvoke("credit:getAll",data),

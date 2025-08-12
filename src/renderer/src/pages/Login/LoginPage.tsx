@@ -11,7 +11,6 @@ interface FormData {
 
 const LoginPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { t } = useTranslation();
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState<FormData>({
@@ -52,18 +51,18 @@ const LoginPage: React.FC = () => {
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            {t("login")}
+            تسجيل الدخول للنظام
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Enter your credentials to access the system
+            أدخل بيانات الدخول الخاصة بك لتسجيل الدخول
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" dir="rtl" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="sr-only">
-                Username
+                الاسم
               </label>
               <input
                 id="username"
@@ -71,14 +70,14 @@ const LoginPage: React.FC = () => {
                 type="text"
                 required
                 className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Username"
+                placeholder="الاسم"
                 value={formData.username}
                 onChange={handleChange}
               />
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
-                Password
+                كلمة السر
               </label>
               <input
                 id="password"
@@ -86,7 +85,7 @@ const LoginPage: React.FC = () => {
                 type="password"
                 required
                 className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                placeholder="كلمة السر"
                 value={formData.password}
                 onChange={handleChange}
               />
@@ -127,17 +126,19 @@ const LoginPage: React.FC = () => {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Signing in...
+                  جاري تسجيل الدخول...
                 </div>
               ) : (
-                "Sign in"
+                "تسجبل الدخول"
               )}
             </button>
           </div>
         </form>
 
         <div className="text-center">
-          <p className="text-xs text-gray-500">{t("Developed by")}</p>
+          <p className="text-xs text-gray-500">
+         Sailentra   تم التصميم والتطوير بواسطة 
+          </p>
         </div>
       </div>
     </div>

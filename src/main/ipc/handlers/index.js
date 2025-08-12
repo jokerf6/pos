@@ -153,6 +153,7 @@ function setupIPC() {
   ipcMain.handle("invoice:before", secureHandler(invoiceH.beforeInvoice));
   ipcMain.handle("invoice:getAll", secureHandler(invoiceH.getAllInvoices));
   ipcMain.handle("invoice:update", secureHandler(invoiceH.updateInvoice));
+  ipcMain.handle("invoice:print", secureHandler(invoiceH.PrintInvoice));
 
     // Transaction handlers
   ipcMain.handle("transactions:get-product-transactions", secureHandler(transH.getProductTransactions));

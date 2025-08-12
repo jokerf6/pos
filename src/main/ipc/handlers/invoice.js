@@ -2,6 +2,14 @@ import bcrypt from "bcryptjs";
 import log from "electron-log";
 import { getDatabase } from "../../database/connection.js";
 import { startOfDay, endOfDay } from "date-fns";
+import pkg from "electron-pos-printer";
+import { BrowserWindow } from "electron";
+import path from "path";
+import escpos from 'escpos';
+import escposUsb from 'escpos-usb';
+import printer, { CharacterSet, PrinterTypes, ThermalPrinter } from 'node-thermal-printer';
+ const {PosPrinter } = pkg;
+escpos.USB = escposUsb;
 
 /**
  * Product handler
@@ -369,7 +377,303 @@ async function updateInvoice(event, data) {
     throw error;
   }
 }
+
+
+
+/*
+ async function PrintInvoice() {
+  try {
+    // فتح اتصال مع الطابعة
+    const device = new escpos.USB();
+    const printer = new escpos.Printer(device, { encoding: "CP864" }); // CP864 للغة العربية
+
+    device.open(() => {
+      printer
+        .align('CT')
+        .size(2, 2)
+        .text('فاتورة مبيعات')
+        .size(1, 1)
+        .align('LT')
+        .text('--------------------------')
+        .text('المنتج: كيبورد')
+        .text('السعر: 150.00')
+        .text('--------------------------')
+        .cut()
+        .close();
+    });
+  } catch (err) {
+    console.error("خطأ في الطباعة:", err);
+  }
+}
+*/
+
+
+ async function PrintInvoice() {
+  try {
+const options = {
+    preview: false,
+    margin: '0 0 0 0',
+    copies: 1,
+    printerName: '',
+    timeOutPerLine: 400,
+    pageSize: '80mm', // page size,
+        defaultStyle: {
+        fontFamily: 'Arial', // أو 'Tahoma', 'Cairo' لو الخط العربي مهم
+    },
+}
+const itemsTable = {
+
+};
+
+const paymentDetails = [
+    {
+        type: 'table',
+        style: {marginTop: "5px"},
+        tableHeader: [],
+        tableBody: [
+            [
+                { type: 'text', value: 'عدد القطع', style: { textAlign: 'right', fontSize: '12px' } },
+                { type: 'text', value: '2', style: { textAlign: 'left', fontSize: '12px' } }
+            ],
+            [
+                { type: 'text', value: 'طريقة الدفع', style: { textAlign: 'right', fontSize: '12px' } },
+                { type: 'text', value: 'كاش', style: { textAlign: 'left', fontSize: '12px' } }
+            ],
+            [
+                { type: 'text', value: 'الإجمالي', style: { textAlign: 'right', fontSize: '12px' } },
+                { type: 'text', value: '240 جنيه مصري', style: { textAlign: 'left', fontSize: '12px' } }
+            ],
+            [
+                { type: 'text', value: 'المطلوب', style: { textAlign: 'right', fontSize: '12px', border: '1px dashed black' } },
+                { type: 'text', value: '240 جنيه مصري', style: { textAlign: 'left', fontSize: '12px', border: '1px dashed black' } }
+            ]
+        ],
+        tableFooter: []
+    }
+];
+const data = [
+ {
+        type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
+        value: 'فابريكا السلطان',
+        style: {fontWeight: "700", textAlign: 'center', fontSize: "24px"}
+    },
+   {
+    type: 'text',
+    value: '01092758520',
+    style: {
+        fontWeight: '700',
+        textAlign: 'center',
+        fontSize: '24px',
+        backgroundColor: 'black', // الخلفية سوداء
+        color: 'white'             // النص أبيض
+    }
+},
+    {
+        type: 'text',                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
+        value: 'بيان أسعار',
+        style: {fontSize: "18px", textAlign: "center"}
+    },
+    {
+        type: 'table',
+        // style the table
+        style: {},
+        // list of the columns to be rendered in the table header
+        tableHeader: [],
+        // multi dimensional array depicting the rows and columns of the table body
+        tableBody: [
+      [
+        { type: 'text', value: '30/06/2025  11:40PM', style: { fontSize: "10px", textAlign: "left", fontWeight: 'bold' } },
+        { type: 'text', value: 'تاريخ', style: { fontSize: "10px", textAlign: "right",fontWeight: 'bold', } }
+      ],
+      [
+        { type: 'text', value: '3712', style: { fontSize: "10px", textAlign: "left",fontWeight: 'bold', } },
+        { type: 'text', value: 'رقم', style: { fontSize: "10px", textAlign: "right",fontWeight: 'bold', } }
+      ],
+      [
+        { type: 'text', value: 'أحمد', style: { fontSize: "10px", textAlign: "left" ,fontWeight: 'bold',} },
+        { type: 'text', value: 'الكاشير', style: { fontSize: "10px", textAlign: "right",fontWeight: 'bold', } }
+      ]
+    ],
+        // list of columns to be rendered in the table footer
+        tableFooter: [],
+        // custom style for the table header
+        tableHeaderStyle: { },
+        // custom style for the table body
+        tableBodyStyle: {},
+        // custom style for the table footer
+        tableFooterStyle: {},
+    },
+      {
+        type: 'table',
+        // style the table
+        style: {border: '1px solid black'},
+        // list of the columns to be rendered in the table header
+        tableHeader: [
+                { type: 'text', value: 'الإجمالي', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+        { type: 'text', value: 'السعر', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+        { type: 'text', value: 'الكمية', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+        { type: 'text', value: 'اسم المنتج', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } }
+ 
+        ],
+
+        // multi dimensional array depicting the rows and columns of the table body
+        tableBody: [
+             [
+  { type: 'text', value: '120', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+  { type: 'text', value: '120', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+  { type: 'text', value: '1', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+  { type: 'text', value: 'L باغة لانسوس خلفي', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } }
+],
+[
+  { type: 'text', value: '120', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+  { type: 'text', value: '120', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+  { type: 'text', value: '1', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+  { type: 'text', value: 'L باغة لانسوس خلفي', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } }
+]
+
+    ],
+        // list of columns to be rendered in the table footer
+        tableFooter: [],
+        // custom style for the table header
+        tableHeaderStyle: {
+              fontWeight: 'bold',
+        border: '1px solid black',
+        textAlign: 'center'
+         },
+        // custom style for the table body
+        tableBodyStyle: {
+               fontWeight: 'bold',           // يخلي الصفوف Bold
+        border: '1px solid black',    // يعمل خطوط بين الأعمدة والصفوف
+        textAlign: 'center'  
+        },
+        // custom style for the table footer
+        tableFooterStyle: {},
+    },
+
+       {
+        type: 'table',
+        // style the table
+        style: {},
+        // list of the columns to be rendered in the table header
+        tableHeader: [
+      
+        ],
+
+        // multi dimensional array depicting the rows and columns of the table body
+        tableBody: [
+              [
+             { type: 'text', value: '', style: { textAlign: 'right', fontSize: '12px' } },
+                { type: 'text', value: '2', style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
+
+                { type: 'text', value: 'عدد القطع', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
+            ],
+            [
+             { type: 'text', value: '', style: { textAlign: 'right', fontSize: '12px' } },
+                { type: 'text', value: 'كاش', style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
+                { type: 'text', value: 'طريقة الدفع', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
+            ],
+            [
+              { type: 'text', value: ' جنيه مصري', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } },
+                { type: 'text', value: '240', style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
+
+                { type: 'text', value: 'الإجمالي', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
+            ],
+            [
+
+                            { type: 'text', value: ' جنيه مصري', style: { textAlign: 'right',border: '1px dashed black', fontSize: '12px',fontWeight: 'bold' } },
+
+                { type: 'text', value: '240', style: { textAlign: 'left', fontSize: '12px', border: '1px dashed black',fontWeight: 'bold' } },
+
+                { type: 'text', value: 'المطلوب', style: { textAlign: 'right', fontSize: '12px', border: '1px dashed black',fontWeight: 'bold' } }
+            ]
+
+    ],
+        // list of columns to be rendered in the table footer
+        tableFooter: [],
+        // custom style for the table header
+        tableHeaderStyle: {
+         
+         },
+        // custom style for the table body
+        tableBodyStyle: {
+   
+        },
+        // custom style for the table footer
+        tableFooterStyle: {},
+    },
+     {
+        type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
+        value: 'ملحوظه : الاستبدال بالفاتورة',
+        style: {fontWeight: "700", textAlign: 'center', fontSize: "14px", marginTop:"5px"}
+    },
+      {
+        type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
+        value: 'يمكنكم زيارتنا بالعنوان التالي',
+        style: {fontWeight: "700", textAlign: 'center', fontSize: "14px"}
+    },
+      {
+        type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
+        value: 'أكتوبر الحي الحادي عشر المجاورة السابعه عماره عشرين',
+        style: {fontWeight: "700", textAlign: 'center', fontSize: "14px"}
+    },
+    {
+    type: 'text',
+    value: '__________________________________________',
+    style: { textAlign: 'center' },
+    
+},
+{
+    type: 'text',
+    value: '© All Copyrights Reserved To Sailentra 2025  01034097707',
+    style: { textAlign: 'center',fontWeight: 'bold' }
+},
+
+
+]
+
+const data2 = [
+    
+    {
+        type: 'table',
+        style: {marginTop: "5px"},
+        tableHeader: [],
+        tableBody: [
+            [
+                { type: 'text', value: 'عدد القطع', style: { textAlign: 'right', fontSize: '12px' } },
+                { type: 'text', value: '2', style: { textAlign: 'left', fontSize: '12px' } }
+            ],
+            [
+                { type: 'text', value: 'طريقة الدفع', style: { textAlign: 'right', fontSize: '12px' } },
+                { type: 'text', value: 'كاش', style: { textAlign: 'left', fontSize: '12px' } }
+            ],
+            [
+                { type: 'text', value: 'الإجمالي', style: { textAlign: 'right', fontSize: '12px' } },
+                { type: 'text', value: '240 جنيه مصري', style: { textAlign: 'left', fontSize: '12px' } }
+            ],
+            [
+                { type: 'text', value: 'المطلوب', style: { textAlign: 'right', fontSize: '12px', border: '1px dashed black' } },
+                { type: 'text', value: '240 جنيه مصري', style: { textAlign: 'left', fontSize: '12px', border: '1px dashed black' } }
+            ]
+        ],
+        tableFooter: []
+    }
+];
+
+
+  try {
+    await PosPrinter.print(data, options);
+    console.log('Printed successfully');
+  } catch (err) {
+    console.error('Print error', err);
+  }
+
+  } catch (err) {
+    console.error("خطأ في الطباعة:", err);
+  }
+}
+
 export {
+  PrintInvoice,
   createInvoice,
   afterInvoice,
   beforeInvoice,

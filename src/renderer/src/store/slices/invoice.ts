@@ -44,6 +44,24 @@ export const createInvoice = createAsyncThunk(
   }
 );
 
+export const printInvoice = createAsyncThunk(
+  "invoice/print",
+  async (data: any, { rejectWithValue }) => {
+    console.log("in->", data);
+    try {
+      if (window.electronAPI) {
+        const result = await window.electronAPI.invoice.print(data);
+        return result;
+      } else {
+        return null;
+      }
+    } catch (error: any) {
+      const message = error?.message || error?.error || "Unknown error";
+      return rejectWithValue(message.split("Error: ")[1] || message);
+    }
+  }
+);
+
 export const updateInvoice = createAsyncThunk(
   "invoice/update",
   async (data: any, { rejectWithValue }) => {

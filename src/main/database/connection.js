@@ -13,9 +13,9 @@ let connectionPool = null;
 // Database configuration
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 3307,
+  port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "fahd200",
+  password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "casher",
   charset: "utf8mb4",
   timezone: "+00:00",
@@ -39,7 +39,7 @@ async function initDatabase() {
     log.info("Database connection established successfully");
 
     // Run migrations
-    await runMigrations();
+   // await runMigrations();
 
     // Set global database reference
     database = connectionPool;
@@ -48,11 +48,7 @@ async function initDatabase() {
   } catch (error) {
     log.error("Database initialization failed:", error.message);
 
-    // If database doesn't exist, try to create it
-    if (error.code === "ER_BAD_DB_ERROR") {
-      await createDatabase();
-      return await initDatabase();
-    }
+    
 
     throw error;
   }
@@ -85,6 +81,7 @@ async function createDatabase() {
 /**
  * Run database migrations
  */
+/*
 async function runMigrations() {
   try {
     log.info("Running database migrations...");
@@ -139,6 +136,7 @@ async function runMigrations() {
 /**
  * Execute a single migration file
  */
+/*
 async function executeMigration(filename) {
   try {
     log.info("Executing migration:", filename);
@@ -173,6 +171,7 @@ async function executeMigration(filename) {
 /**
  * Create initial database schema
  */
+/*
 async function createInitialSchema() {
   try {
     log.info("Creating initial database schema...");
@@ -308,6 +307,7 @@ async function createInitialSchema() {
     throw error;
   }
 }
+
 
 /**
  * Get database connection

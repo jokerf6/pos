@@ -24,11 +24,12 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { PosPrinter } from "electron-pos-printer";
 import Modal from "../../components/common/dynamic-modal.component";
 import { Button } from "../../components/ui/button";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "store";
-import { afterInvoice, beforeInvoice, createInvoice, updateInvoice } from "store/slices/invoice";
+import { afterInvoice, beforeInvoice, createInvoice, printInvoice, updateInvoice } from "store/slices/invoice";
 import { ProductByBarcode } from "store/slices/productsSlice";
 import { showSuccess, showWarning } from "components/ui/sonner";
 import { after } from "node:test";
@@ -370,6 +371,7 @@ const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({
     </div>
   );
 };
+
 // -------------------- Printable Invoice Component --------------------
 const PrintableInvoice: React.FC<{
   products: Product[];
@@ -379,7 +381,7 @@ const PrintableInvoice: React.FC<{
   const subtotal = products.reduce((sum, product) => sum + (product.quantity * product.price), 0);
   const discountAmount = (subtotal * invoiceDetails.invoiceDiscount) / 100;
   const total = subtotal - discountAmount;
-  
+
   // Format current date and time
   const now = new Date();
   const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
@@ -715,6 +717,62 @@ F1 : عرض هذه المساعدة`);
     }
   };
 
+
+    const print = async () => {
+    
+    setIsSaving(true);
+    try {
+      const subtotal = products.reduce((sum, product) => sum + (product.quantity * product.price), 0);
+      const discountAmount = (subtotal * invoiceDetails.invoiceDiscount) / 100;
+      const total = subtotal - discountAmount;
+      const invoiceData = {
+        products: products.map(product => ({
+          id: product.id,
+          quantity: product.quantity,
+          price: product.price,
+          discount:0,
+        })),
+        total: subtotal,
+        netTotal: total,
+        customerName : invoiceDetails.customerName,
+        customerPhone: invoiceDetails.customerPhone,
+        invoiceDiscount: invoiceDetails.invoiceDiscount,
+        paymentType: invoiceDetails.paymentType,
+      };
+      const result = await dispatch(printInvoice(invoiceData));
+      
+      if (result.meta.requestStatus === 'fulfilled') {
+        showSuccess("تم طباعة الفاتورة بنجاح!");
+        setIsInvoiceCreated(true);
+        setCurrentInvoiceId(result.payload?.id || null);
+        setIsViewingArchived(true);
+        resetInvoice();
+        
+        // After saving, check if there are previous/next invoices
+        if (result.payload?.id) {
+          // Check if there's a previous invoice
+          const prevResult = await dispatch(beforeInvoice({ id: result.payload.id }));
+          setCanGoBefore(!!prevResult?.payload?.data);
+          
+          // Check if there's a next invoice
+          const nextResult = await dispatch(afterInvoice({
+            id: result.payload.id,
+            filter: { to, from, invoiceType },
+          }));
+          setCanGoAfter(!!nextResult?.payload?.data);
+        
+        }
+      } else {
+        alert("حدث خطأ أثناء حفظ الفاتورة");
+      }
+    } catch (error) {
+      console.error("Error saving invoice:", error);
+      alert("حدث خطأ أثناء حفظ الفاتورة");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const updateInvoiceUI = (data: any) => {
     console.log("Updating invoice UI with data:", data);
     setProducts(data.items || []);
@@ -896,7 +954,7 @@ useEffect(() => {
               </Button>
               
               <Button
-                onClick={() => setOpenPrint(true)}
+                onClick={print}
                 disabled={products.length === 0}
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2 px-6 py-3 border-gray-300 text-gray-700 hover:bg-gray-50"
