@@ -24,7 +24,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { PosPrinter } from "electron-pos-printer";
 import Modal from "../../components/common/dynamic-modal.component";
 import { Button } from "../../components/ui/button";
 import { useDispatch } from "react-redux";
@@ -32,7 +31,6 @@ import type { AppDispatch } from "store";
 import { afterInvoice, beforeInvoice, createInvoice, printInvoice, updateInvoice } from "store/slices/invoice";
 import { ProductByBarcode } from "store/slices/productsSlice";
 import { showSuccess, showWarning } from "components/ui/sonner";
-import { after } from "node:test";
 
 // -------------------- Interfaces --------------------
 interface InvoiceHeaderProps {
@@ -717,9 +715,11 @@ F1 : عرض هذه المساعدة`);
     }
   };
 
-
-    const print = async () => {
-    
+const SaveAndPrintInvoice = async() =>{
+    if (products.length === 0) {
+      alert("يجب إضافة منتج واحد على الأقل للفاتورة");
+      return;
+    }
     setIsSaving(true);
     try {
       const subtotal = products.reduce((sum, product) => sum + (product.quantity * product.price), 0);
@@ -739,10 +739,11 @@ F1 : عرض هذه المساعدة`);
         invoiceDiscount: invoiceDetails.invoiceDiscount,
         paymentType: invoiceDetails.paymentType,
       };
-      const result = await dispatch(printInvoice(invoiceData));
-      
+      const result = await dispatch(createInvoice(invoiceData));
+       await dispatch(printInvoice(invoiceData));
+
       if (result.meta.requestStatus === 'fulfilled') {
-        showSuccess("تم طباعة الفاتورة بنجاح!");
+        showSuccess("تم حفظ الفاتورة بنجاح!");
         setIsInvoiceCreated(true);
         setCurrentInvoiceId(result.payload?.id || null);
         setIsViewingArchived(true);
@@ -771,8 +772,8 @@ F1 : عرض هذه المساعدة`);
     } finally {
       setIsSaving(false);
     }
-  };
-
+}
+  
   const updateInvoiceUI = (data: any) => {
     console.log("Updating invoice UI with data:", data);
     setProducts(data.items || []);
@@ -945,22 +946,22 @@ useEffect(() => {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">الإجراءات</h2>
             <div className="space-y-3">
               <Button
-                onClick={saveInvoice}
+                onClick={SaveAndPrintInvoice}
                 disabled={isViewingArchived || isSaving || products.length === 0}
                 className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium disabled:opacity-50"
               >
                 <Save className="h-4 w-4" />
-                {isSaving ? "جاري الحفظ..." : "حفظ الفاتورة (Ctrl + S)"}
+                {isSaving ? "جاري الحفظ..." : "حفظ وطباعة  الفاتورة (Ctrl + S)"}
               </Button>
               
               <Button
-                onClick={print}
+                onClick={saveInvoice}
                 disabled={products.length === 0}
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2 px-6 py-3 border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 <Printer className="h-4 w-4" />
-                طباعة الفاتورة (Ctrl + P)
+                حفظ الفاتورة (Ctrl + P)
               </Button>
               
               <Button
