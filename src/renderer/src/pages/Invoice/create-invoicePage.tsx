@@ -513,7 +513,7 @@ const CreateInvoicePage: React.FC = () => {
       if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
         if (!isViewingArchived && products.length > 0) {
-          saveInvoice();
+          SaveAndPrintInvoice();
         }
       }
       
@@ -521,7 +521,7 @@ const CreateInvoicePage: React.FC = () => {
       if (e.ctrlKey && e.key === 'p') {
         e.preventDefault();
         if (products.length > 0) {
-          setOpenPrint(true);
+          saveInvoice();
         }
       }
       

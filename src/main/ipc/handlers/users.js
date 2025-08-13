@@ -26,7 +26,6 @@ async function createUser(event, credentials) {
     }
 
     // Start transaction
-    await db.execute('START TRANSACTION');
 
     try {
       // Hash password
@@ -223,7 +222,6 @@ async function update(event, user) {
     }
 
     // Start transaction
-    await db.execute('START TRANSACTION');
 
     try {
       // Update user basic info
@@ -262,16 +260,12 @@ async function update(event, user) {
       }
 
     
-      // Commit transaction
-      await db.execute('COMMIT');
-
       return {
         success: true,
         message: "تم تحديث المستخدم بنجاح",
       };
     } catch (error) {
       // Rollback transaction
-      await db.execute('ROLLBACK');
       throw error;
     }
   } catch (error) {
@@ -296,7 +290,6 @@ async function deleteUser(event, id) {
     }
 
     // Start transaction
-    await db.execute('START TRANSACTION');
 
     try {
       // Delete user permissions first (due to foreign key constraint)
@@ -306,7 +299,6 @@ async function deleteUser(event, id) {
       await db.execute("DELETE FROM users WHERE id = ?", [id]);
 
       // Commit transaction
-      await db.execute('COMMIT');
 
       return {
         success: true,
@@ -314,7 +306,6 @@ async function deleteUser(event, id) {
       };
     } catch (error) {
       // Rollback transaction
-      await db.execute('ROLLBACK');
       throw error;
     }
   } catch (error) {

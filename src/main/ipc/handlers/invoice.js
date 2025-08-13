@@ -408,50 +408,31 @@ async function updateInvoice(event, data) {
 */
 
 
- async function PrintInvoice() {
+ async function PrintInvoice(event, data) {
   try {
 const options = {
     preview: false,
     margin: '0 0 0 0',
     copies: 1,
-    printerName: '',
+    printerName: 'POSPrinter POS80',
     timeOutPerLine: 400,
     pageSize: '80mm', // page size,
         defaultStyle: {
         fontFamily: 'Arial', // أو 'Tahoma', 'Cairo' لو الخط العربي مهم
     },
 }
-const itemsTable = {
+  const {
+    customerName,
+    customerPhone,
+    paymentType,
+    invoiceDiscount,
+    total,
+    netTotal,
+    products,
+  } = data;
+    const db = getDatabase();
 
-};
-
-const paymentDetails = [
-    {
-        type: 'table',
-        style: {marginTop: "5px"},
-        tableHeader: [],
-        tableBody: [
-            [
-                { type: 'text', value: 'عدد القطع', style: { textAlign: 'right', fontSize: '12px' } },
-                { type: 'text', value: '2', style: { textAlign: 'left', fontSize: '12px' } }
-            ],
-            [
-                { type: 'text', value: 'طريقة الدفع', style: { textAlign: 'right', fontSize: '12px' } },
-                { type: 'text', value: 'كاش', style: { textAlign: 'left', fontSize: '12px' } }
-            ],
-            [
-                { type: 'text', value: 'الإجمالي', style: { textAlign: 'right', fontSize: '12px' } },
-                { type: 'text', value: '240 جنيه مصري', style: { textAlign: 'left', fontSize: '12px' } }
-            ],
-            [
-                { type: 'text', value: 'المطلوب', style: { textAlign: 'right', fontSize: '12px', border: '1px dashed black' } },
-                { type: 'text', value: '240 جنيه مصري', style: { textAlign: 'left', fontSize: '12px', border: '1px dashed black' } }
-            ]
-        ],
-        tableFooter: []
-    }
-];
-const data = [
+const data2 = [
  {
         type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
         value: 'فابريكا السلطان',
@@ -473,7 +454,26 @@ const data = [
         value: 'بيان أسعار',
         style: {fontSize: "18px", textAlign: "center"}
     },
-    {
+
+]
+
+const [rows] = await db.execute(
+  `SELECT d.*, u.username
+   FROM daily d
+   JOIN users u ON u.id = d.userId
+   WHERE d.closed_at IS NULL
+   LIMIT 1`
+);
+const username = rows[0].username;
+const [rows2] = await db.execute(
+  `SELECT id 
+   FROM invoices 
+   ORDER BY id DESC 
+   LIMIT 1`
+);
+const now = new Date();
+const date = formatDate(now);
+data2.push(    {
         type: 'table',
         // style the table
         style: {},
@@ -482,15 +482,15 @@ const data = [
         // multi dimensional array depicting the rows and columns of the table body
         tableBody: [
       [
-        { type: 'text', value: '30/06/2025  11:40PM', style: { fontSize: "10px", textAlign: "left", fontWeight: 'bold' } },
+        { type: 'text', value: `${date}`, style: { fontSize: "10px", textAlign: "left", fontWeight: 'bold' } },
         { type: 'text', value: 'تاريخ', style: { fontSize: "10px", textAlign: "right",fontWeight: 'bold', } }
       ],
       [
-        { type: 'text', value: '3712', style: { fontSize: "10px", textAlign: "left",fontWeight: 'bold', } },
+        { type: 'text', value: `${rows2[0].id}`, style: { fontSize: "10px", textAlign: "left",fontWeight: 'bold', } },
         { type: 'text', value: 'رقم', style: { fontSize: "10px", textAlign: "right",fontWeight: 'bold', } }
       ],
       [
-        { type: 'text', value: 'أحمد', style: { fontSize: "10px", textAlign: "left" ,fontWeight: 'bold',} },
+        { type: 'text', value: `${username}`, style: { fontSize: "10px", textAlign: "left" ,fontWeight: 'bold',} },
         { type: 'text', value: 'الكاشير', style: { fontSize: "10px", textAlign: "right",fontWeight: 'bold', } }
       ]
     ],
@@ -502,8 +502,25 @@ const data = [
         tableBodyStyle: {},
         // custom style for the table footer
         tableFooterStyle: {},
-    },
-      {
+    },)
+const tableBody = await Promise.all(
+  products.map(async (p) => {
+    const [find] = await db.execute(
+      "SELECT * FROM items WHERE id = ? LIMIT 1",
+      [p.id]
+    );
+
+    const item = find[0]; // أول صف من جدول items
+
+    return [
+      { type: 'text', value: String(p.quantity * item.price),    style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+      { type: 'text', value: String(item.price),    style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+      { type: 'text', value: String(p.quantity), style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
+      { type: 'text', value: item.name,          style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } }
+    ];
+  })
+);
+    data2.push(      {
         type: 'table',
         // style the table
         style: {border: '1px solid black'},
@@ -517,21 +534,7 @@ const data = [
         ],
 
         // multi dimensional array depicting the rows and columns of the table body
-        tableBody: [
-             [
-  { type: 'text', value: '120', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-  { type: 'text', value: '120', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-  { type: 'text', value: '1', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-  { type: 'text', value: 'L باغة لانسوس خلفي', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } }
-],
-[
-  { type: 'text', value: '120', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-  { type: 'text', value: '120', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-  { type: 'text', value: '1', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-  { type: 'text', value: 'L باغة لانسوس خلفي', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } }
-]
-
-    ],
+    tableBody,
         // list of columns to be rendered in the table footer
         tableFooter: [],
         // custom style for the table header
@@ -549,8 +552,8 @@ const data = [
         // custom style for the table footer
         tableFooterStyle: {},
     },
-
-       {
+)
+data2.push(       {
         type: 'table',
         // style the table
         style: {},
@@ -563,7 +566,7 @@ const data = [
         tableBody: [
               [
              { type: 'text', value: '', style: { textAlign: 'right', fontSize: '12px' } },
-                { type: 'text', value: '2', style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
+                { type: 'text', value: String(products.length), style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
 
                 { type: 'text', value: 'عدد القطع', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
             ],
@@ -573,16 +576,16 @@ const data = [
                 { type: 'text', value: 'طريقة الدفع', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
             ],
             [
-              { type: 'text', value: ' جنيه مصري', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } },
-                { type: 'text', value: '240', style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
+              { type: 'text', value: ' جنيه مصري', style: { textAlign: 'left', fontSize: '12px',fontWeight: 'bold' } },
+                { type: 'text', value: String(total), style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
 
                 { type: 'text', value: 'الإجمالي', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
             ],
             [
 
-                            { type: 'text', value: ' جنيه مصري', style: { textAlign: 'right',border: '1px dashed black', fontSize: '12px',fontWeight: 'bold' } },
+                            { type: 'text', value: ' جنيه مصري', style: { textAlign: 'left',border: '1px dashed black', fontSize: '12px',fontWeight: 'bold' } },
 
-                { type: 'text', value: '240', style: { textAlign: 'left', fontSize: '12px', border: '1px dashed black',fontWeight: 'bold' } },
+                { type: 'text', value: String(netTotal), style: { textAlign: 'left', fontSize: '12px', border: '1px dashed black',fontWeight: 'bold' } },
 
                 { type: 'text', value: 'المطلوب', style: { textAlign: 'right', fontSize: '12px', border: '1px dashed black',fontWeight: 'bold' } }
             ]
@@ -600,7 +603,9 @@ const data = [
         },
         // custom style for the table footer
         tableFooterStyle: {},
-    },
+    },)
+
+    data2.push(...[
      {
         type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
         value: 'ملحوظه : الاستبدال بالفاتورة',
@@ -626,42 +631,9 @@ const data = [
     type: 'text',
     value: '© All Copyrights Reserved To Sailentra 2025  01034097707',
     style: { textAlign: 'center',fontWeight: 'bold' }
-},
-
-
-]
-
-const data2 = [
-    
-    {
-        type: 'table',
-        style: {marginTop: "5px"},
-        tableHeader: [],
-        tableBody: [
-            [
-                { type: 'text', value: 'عدد القطع', style: { textAlign: 'right', fontSize: '12px' } },
-                { type: 'text', value: '2', style: { textAlign: 'left', fontSize: '12px' } }
-            ],
-            [
-                { type: 'text', value: 'طريقة الدفع', style: { textAlign: 'right', fontSize: '12px' } },
-                { type: 'text', value: 'كاش', style: { textAlign: 'left', fontSize: '12px' } }
-            ],
-            [
-                { type: 'text', value: 'الإجمالي', style: { textAlign: 'right', fontSize: '12px' } },
-                { type: 'text', value: '240 جنيه مصري', style: { textAlign: 'left', fontSize: '12px' } }
-            ],
-            [
-                { type: 'text', value: 'المطلوب', style: { textAlign: 'right', fontSize: '12px', border: '1px dashed black' } },
-                { type: 'text', value: '240 جنيه مصري', style: { textAlign: 'left', fontSize: '12px', border: '1px dashed black' } }
-            ]
-        ],
-        tableFooter: []
-    }
-];
-
-
+},])
   try {
-    await PosPrinter.print(data, options);
+    await PosPrinter.print(data2, options);
     console.log('Printed successfully');
   } catch (err) {
     console.error('Print error', err);
@@ -671,7 +643,20 @@ const data2 = [
     console.error("خطأ في الطباعة:", err);
   }
 }
+function formatDate(date) {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
 
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // 0 -> 12
+  hours = String(hours).padStart(2, '0');
+
+  return `${day}/${month}/${year}  ${hours}:${minutes}${ampm}`;
+}
 export {
   PrintInvoice,
   createInvoice,
