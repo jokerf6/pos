@@ -112,7 +112,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "concurrently": "^8.2.2",
-    "electron": "^28.0.0",
+     "electron": "12.2.3",
     "electron-builder": "^24.13.3",
     "eslint": "^8.55.0",
     "eslint-config-prettier": "^9.1.0",
