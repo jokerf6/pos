@@ -46,8 +46,8 @@ function CreateUserPage() {
 
     if (!formData.password) {
       newErrors.password = "كلمة المرور مطلوبة";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "كلمة المرور يجب أن تكون 6 أحرف على الأقل";
+    } else if (formData.password.length < 1) {
+      newErrors.password = "كلمة المرور يجب أن تكون 1 أحرف على الأقل";
     }
 
     if (formData.password !== formData.confirmPassword) {
