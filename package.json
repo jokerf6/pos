@@ -30,7 +30,7 @@
     "build": "npm run build:renderer && npm run build:main",
     "build:renderer": "cd src/renderer && npm run start",
     "clean": "rimraf dist",
-    "build:main": "electron-builder",
+    "build:main": "electron-builder --win --ia32 --x64=false",
     "prebuild:win": "taskkill /f /im \"Casher Desktop.exe\" 2>nul & rmdir /s /q dist 2>nul & exit 0",
     "build:win": "electron-builder --win --ia32",
     "build:win:smart": "node scripts/build-windows.cjs",
@@ -71,6 +71,7 @@
     "builder-util-runtime": "^9.3.1",
     "class-variance-authority": "^0.7.1",
     "conf": "^14.0.0",
+    "date-fns": "^4.1.0",
     "debug": "^4.4.1",
     "dotenv": "^16.3.1",
     "electron-is-dev": "^3.0.1",
@@ -112,7 +113,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "concurrently": "^8.2.2",
-    "electron": "12.2.3",
+    "electron": "22.3.27",
     "electron-builder": "^24.13.3",
     "eslint": "^8.55.0",
     "eslint-config-prettier": "^9.1.0",
@@ -139,19 +140,13 @@
     },
     "npmRebuild": true,
     "nodeGypRebuild": false,
-    "asar": false,
+    "asar": true,
     "asarUnpack": [
-      "node_modules/bcryptjs/**/*",
-      "node_modules/mysql2/**/*",
-      "node_modules/fs-extra/**/*",
-      "node_modules/jsonwebtoken/**/*"
+      "node_modules/**"
     ],
     "files": [
-      "src/main/**/*",
-      "src/renderer/build/**/*",
-      "src/shared/**/*",
-      "package.json",
-      "node_modules/**/*"
+      "**/*",
+      "node_modules/**"
     ],
     "mac": {
       "category": "public.app-category.business",
@@ -163,7 +158,7 @@
         {
           "target": "nsis",
           "arch": [
-            "x64"
+            "ia32"
           ]
         }
       ],
