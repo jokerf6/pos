@@ -12,6 +12,8 @@ import * as creditH from "./credit.js"; // Import credit handlers
 import * as invoiceH from "./invoice.js"; // Import credit handlers
 import * as settingsHandlers from "./settings.js"; // Import settings handlers
 import * as transH from "./transaction.js"; // Import transaction handlers
+import * as reportsH from "./reports.js"; // Import reports handlers
+import * as pdfExportH from "./pdf-export.js"; // Import PDF export handlers
 
 // Error handling wrapper
 const handleError = (handler) => {
@@ -157,6 +159,18 @@ function setupIPC() {
 
     // Transaction handlers
   ipcMain.handle("transactions:get-product-transactions", secureHandler(transH.getProductTransactions));
+
+  // Reports handlers
+  ipcMain.handle("reports:daily-sales", secureHandler(reportsH.getDailySalesReport));
+  ipcMain.handle("reports:monthly-sales", secureHandler(reportsH.getMonthlySalesReport));
+  ipcMain.handle("reports:product-performance", secureHandler(reportsH.getProductPerformanceReport));
+  ipcMain.handle("reports:cashier-performance", secureHandler(reportsH.getCashierPerformanceReport));
+  ipcMain.handle("reports:inventory", secureHandler(reportsH.getInventoryReport));
+  ipcMain.handle("reports:financial-summary", secureHandler(reportsH.getFinancialSummaryReport));
+
+  // PDF Export handlers
+  ipcMain.handle("pdf:generate-report", secureHandler(pdfExportH.generatePDFReport));
+
   // Settings handlers
   // ipcMain.handle('settings:get', secureHandler(settingsHandlers.get));
   // ipcMain.handle('settings:update', secureHandler(settingsHandlers.update));
