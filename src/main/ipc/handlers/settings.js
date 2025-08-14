@@ -1,5 +1,5 @@
-import log from "electron-log";
-import { getDatabase } from "../../database/connection.js";
+const log = require("electron-log");
+const { getDatabase } = require("../../database/connection.js");
 
 async function getByDomain(event, domain) {
   try {
@@ -84,4 +84,4 @@ async function updateSettings(event, data) {
   }
 }
 
-export { getByDomain, getAll, updateSettings, getByKey };
+module.exports = { getByDomain, getAll, updateSettings, getByKey };

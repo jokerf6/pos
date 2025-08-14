@@ -1,11 +1,11 @@
-import mysql from "mysql2/promise";
-import { dirname, join } from "path";
-import { promises as fs } from "fs";
-import { fileURLToPath } from "url";
-import log from "electron-log";
+const mysql = require("mysql2/promise");
+const { dirname, join } = require("path");
+const fs = require("fs").promises;
+const { fileURLToPath } = require("url");
+const log = require("electron-log");
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// const __filename = __filename || fileURLToPath(require.main.filename);
+// const __dirname = __dirname || dirname(__filename);
 
 let database = null;
 let connectionPool = null;
@@ -14,7 +14,7 @@ let connectionPool = null;
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
   port: process.env.DB_PORT || 3307,
-  user: process.env.DB_USER || "fahd",
+  user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "fahd200",
   database: process.env.DB_NAME || "casher",
   charset: "utf8mb4",
@@ -346,4 +346,4 @@ async function healthCheck() {
   }
 }
 
-export { initDatabase, getDatabase, closeDatabase, healthCheck };
+module.exports = { initDatabase, getDatabase, closeDatabase, healthCheck };

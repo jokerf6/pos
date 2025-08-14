@@ -1,14 +1,10 @@
-import bcrypt from "bcryptjs";
-import log from "electron-log";
-import { getDatabase } from "../../database/connection.js";
-import { startOfDay, endOfDay } from "date-fns";
-import pkg from "electron-pos-printer";
-import { BrowserWindow } from "electron";
-import path from "path";
-import escpos from 'escpos';
-import escposUsb from 'escpos-usb';
-import printer, { CharacterSet, PrinterTypes, ThermalPrinter } from 'node-thermal-printer';
- const {PosPrinter } = pkg;
+const log = require("electron-log");
+const { getDatabase } = require("../../database/connection.js");
+const { startOfDay, endOfDay } = require("date-fns");
+const pkg = require("electron-pos-printer");
+const escpos = require('escpos');
+const escposUsb = require('escpos-usb');
+const { PosPrinter } = pkg;
 escpos.USB = escposUsb;
 
 /**
@@ -657,7 +653,7 @@ function formatDate(date) {
 
   return `${day}/${month}/${year}  ${hours}:${minutes}${ampm}`;
 }
-export {
+module.exports = {
   PrintInvoice,
   createInvoice,
   afterInvoice,

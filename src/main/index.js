@@ -1,16 +1,15 @@
-import { app, BrowserWindow, screen } from "electron";
-import isDev from "electron-is-dev";
-import updater from "electron-updater";
+const { app, BrowserWindow, screen } = require("electron");
+const updater = require("electron-updater");
 const { autoUpdater } = updater;
-import { initDatabase } from "./database/connection.js";
-import { setupIPC } from "./ipc/handlers/index.js";
-import path from "path";
-import { fileURLToPath } from "url";
-import log from "electron-log";
-
+const { initDatabase } = require("./database/connection.js");
+const { setupIPC } = require("./ipc/handlers/index.js");
+const path = require("path");
+const { fileURLToPath } = require("url");
+const log = require("electron-log");
+const isDev = true;
 // Fix for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = __filename || fileURLToPath(require.main.filename);
+// const __dirname = __dirname || path.dirname(__filename);
 
 // Keep a global reference of the window object
 let mainWindow;
@@ -223,4 +222,4 @@ process.on("SIGINT", () => {
 });
 
 // Export for testing
-export { app, mainWindow };
+module.exports = { app, mainWindow };

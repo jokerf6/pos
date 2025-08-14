@@ -1,6 +1,6 @@
-import log from "electron-log";
-import { getDatabase } from "../../database/connection.js";
-import Store from "electron-store";
+const log = require("electron-log");
+const { getDatabase } = require("../../database/connection.js");
+const Store = require("electron-store");
 
 async function openDaily(event, openPrice = 0) {
   const store = new Store();
@@ -193,4 +193,4 @@ function formatDateForMySQL(date = new Date()) {
 
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
-export { openDaily, closeDaily, getDaily };
+module.exports = { openDaily, closeDaily, getDaily };

@@ -1,17 +1,17 @@
-import { ipcMain } from "electron";
-import log from "electron-log";
+const { ipcMain } = require("electron");
+const log = require("electron-log");
 
 // Import individual handlers
-import * as authHandlers from "./auth.js";
-import * as usersH from "./users.js";
-import * as permissionsH from "./permissions.js";
-import * as categoriesH from "./categories.js";
-import * as productsH from "./products.js"; // Import products handlers
-import * as dailyH from "./daily.js"; // Import daily handlers
-import * as creditH from "./credit.js"; // Import credit handlers
-import * as invoiceH from "./invoice.js"; // Import credit handlers
-import * as settingsHandlers from "./settings.js"; // Import settings handlers
-import * as transH from "./transaction.js"; // Import transaction handlers
+const authHandlers = require("./auth.js");
+const usersH = require("./users.js");
+const permissionsH = require("./permissions.js");
+const categoriesH = require("./categories.js");
+const productsH = require("./products.js"); // Import products handlers
+const dailyH = require("./daily.js"); // Import daily handlers
+const creditH = require("./credit.js"); // Import credit handlers
+const invoiceH = require("./invoice.js"); // Import credit handlers
+const settingsHandlers = require("./settings.js"); // Import settings handlers
+const transH = require("./transaction.js"); // Import transaction handlers
 
 // Error handling wrapper
 const handleError = (handler) => {
@@ -188,4 +188,4 @@ function cleanupIPC() {
   rateLimiter.clear();
 }
 
-export { setupIPC, cleanupIPC };
+module.exports = { setupIPC, cleanupIPC };

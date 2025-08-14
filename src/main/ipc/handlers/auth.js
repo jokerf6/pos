@@ -1,8 +1,8 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import log from "electron-log";
-import { getDatabase } from "../../database/connection.js";
-import Store from "electron-store";
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const log = require("electron-log");
+const { getDatabase } = require("../../database/connection.js");
+const Store = require("electron-store");
 
 // JWT secret - in production, this should be loaded from environment variables
 const JWT_SECRET =
@@ -202,4 +202,4 @@ function validateSession() {
   }
 }
 
-export { login, logout, checkAuth, getCurrentSession, validateSession };
+module.exports = { login, logout, checkAuth, getCurrentSession, validateSession };

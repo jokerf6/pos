@@ -1,6 +1,6 @@
-import bcrypt from "bcryptjs";
-import log from "electron-log";
-import { getDatabase } from "../../database/connection.js";
+const bcrypt = require("bcryptjs");
+const log = require("electron-log");
+const { getDatabase } = require("../../database/connection.js");
 
 /**
  * Product handler
@@ -329,7 +329,7 @@ async function deleteProduct(event, id) {
     throw error;
   }
 }
-export {
+module.exports = {
   createProduct,
   getAll,
   findById,

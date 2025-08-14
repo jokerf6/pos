@@ -1,5 +1,5 @@
-import log from "electron-log";
-import { getDatabase } from "../../database/connection.js";
+const log = require("electron-log");
+const { getDatabase } = require("../../database/connection.js");
 
 /**
  * Get all available permissions
@@ -250,7 +250,7 @@ async function getUsersWithPermission(event, { permissionName }) {
   }
 }
 
-export {
+module.exports = {
   getAllPermissions,
   getPermissionsByCategory,
   getUserPermissions,

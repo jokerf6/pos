@@ -1,6 +1,6 @@
-import bcrypt from "bcryptjs";
-import log from "electron-log";
-import { getDatabase } from "../../database/connection.js";
+const bcrypt = require("bcryptjs");
+const log = require("electron-log");
+const { getDatabase } = require("../../database/connection.js");
 
 /**
  * Create user handler
@@ -313,4 +313,4 @@ async function deleteUser(event, id) {
     throw error;
   }
 }
-export { createUser, getAll, getById, getByName, search, update, deleteUser };
+module.exports = { createUser, getAll, getById, getByName, search, update, deleteUser };

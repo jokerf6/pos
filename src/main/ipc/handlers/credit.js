@@ -1,5 +1,5 @@
-import log from "electron-log";
-import { getDatabase } from "../../database/connection.js";
+const log = require("electron-log");
+const { getDatabase } = require("../../database/connection.js");
 
 /**
  * Product handler
@@ -165,4 +165,4 @@ async function deleteCredit(event, id) {
     throw error;
   }
 }
-export { createCredit, getAllCredit, deleteCredit, getCreditByDaily };
+module.exports = { createCredit, getAllCredit, deleteCredit, getCreditByDaily };

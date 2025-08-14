@@ -1,14 +1,12 @@
-import log from "electron-log";
-import { getDatabase } from "../../database/connection.js";
-import * as path from "path";
-import * as fs from "fs";
+const log = require("electron-log");
+const { getDatabase } = require("../../database/connection.js");
+const path = require("path");
+const fs = require("fs");
 async function createCategory(event, data) {
   const { name, image } = data;
   let savedImagePath = null;
 
   if (image) {
-    const dirname = path.dirname(import.meta.url);
-    console.log("dirname", dirname);
     const uploadsPath = path
       .join(dirname, "../../", "public", "uploads", name)
       .split("file:")[1]; // or a custom static folder
@@ -192,7 +190,7 @@ async function deleteCategory(event, id) {
     throw error;
   }
 }
-export {
+module.exports = {
   createCategory,
   getAll,
   findById,

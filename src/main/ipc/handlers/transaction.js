@@ -1,6 +1,6 @@
 // src/electron-api/productTransactions.js
 
-import { getDatabase } from "../../database/connection.js";
+const { getDatabase } = require("../../database/connection.js");
 
 async function getProductTransactions(event, data) {
   const { productId, page = 1, limit = 10 } = data;
@@ -99,4 +99,4 @@ async function getProductTransactions(event, data) {
     };
   }
 }
-export { getProductTransactions };
+module.exports = { getProductTransactions };
