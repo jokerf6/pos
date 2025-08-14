@@ -32,7 +32,7 @@
     "clean": "rimraf dist",
     "build:main": "electron-builder",
     "prebuild:win": "taskkill /f /im \"Casher Desktop.exe\" 2>nul & rmdir /s /q dist 2>nul & exit 0",
-    "build:win": "npm run build:renderer && electron-builder --win --x64",
+    "build:win": "electron-builder --win --ia32",
     "build:win:smart": "node scripts/build-windows.cjs",
     "analyze:deps": "node scripts/analyze-dependencies.js",
     "debug:app": "node scripts/debug-app.js",
