@@ -1,3 +1,4 @@
+require('dotenv').config(); // لازم يكون في أول سطر قبل أي استخدام لـ process.env
 const mysql = require("mysql2/promise");
 const { dirname, join } = require("path");
 const fs = require("fs").promises;
@@ -11,6 +12,7 @@ let database = null;
 let connectionPool = null;
 
 // Database configuration
+console.log(process.env);
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
   port: process.env.DB_PORT || 3306,

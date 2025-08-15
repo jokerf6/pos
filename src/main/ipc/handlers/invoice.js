@@ -1,9 +1,10 @@
+require('dotenv').config(); // لازم يكون في أول سطر قبل أي استخدام لـ process.env
 const log = require("electron-log");
 const { getDatabase } = require("../../database/connection.js");
 const { startOfDay, endOfDay } = require("date-fns");
 const pkg = require("electron-pos-printer");
-const escpos = require('escpos');
-const escposUsb = require('escpos-usb');
+const escpos = require("escpos");
+const escposUsb = require("escpos-usb");
 const { PosPrinter } = pkg;
 escpos.USB = escposUsb;
 
@@ -57,27 +58,32 @@ async function createInvoice(event, data) {
       ]
     );
     for (let i = 0; i < products.length; i += 1) {
-      if (paymentType !== "مرتجع"){
+      if (paymentType !== "مرتجع") {
         await db.execute(
           "UPDATE items set quantity = quantity - ? WHERE id = ?",
           [products[i].quantity, products[i].id]
         );
-         const [find] = await db.execute(
-        "SELECT * FROM items WHERE id = ? LIMIT 1",
-        [products[i].id]
-      ); 
-      await db.execute("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "sale", find[0].quantity, find[0].price, new Date()]);
-    }
-      else {
+        const [find] = await db.execute(
+          "SELECT * FROM items WHERE id = ? LIMIT 1",
+          [products[i].id]
+        );
+        await db.execute(
+          "INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)",
+          [find[0].id, "sale", find[0].quantity, find[0].price, new Date()]
+        );
+      } else {
         await db.execute(
           "UPDATE items set quantity = quantity + ? WHERE id = ?",
           [products[i].quantity, products[i].id]
         );
-           const [find] = await db.execute(
-        "SELECT * FROM items WHERE id = ? LIMIT 1",
-        [products[i].id]
-      ); 
-      await db.execute("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "return", find[0].quantity, find[0].price, new Date()]);
+        const [find] = await db.execute(
+          "SELECT * FROM items WHERE id = ? LIMIT 1",
+          [products[i].id]
+        );
+        await db.execute(
+          "INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)",
+          [find[0].id, "return", find[0].quantity, find[0].price, new Date()]
+        );
       }
       await db.execute(
         "INSERT INTO invoiceItems (invoiceId,itemId,pricePerUnit,quantity,discount,price, totalPriceAfterDiscount) VALUES (?, ?, ?,?,?,?,?)",
@@ -113,8 +119,8 @@ async function beforeInvoice(event, data) {
   try {
     const db = getDatabase();
     let all = false;
-    if(data && data.all) {
-     all = data.all;
+    if (data && data.all) {
+      all = data.all;
     }
     const [daily] = await db.execute(
       "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
@@ -134,8 +140,8 @@ async function beforeInvoice(event, data) {
       to = endOfDay(new Date(to)).toISOString();
     }
     // Build WHERE conditions dynamically
-    const whereClauses = !all? ["dailyId = ?"]:[];
-    const values = !all? [daily[0].id]:[];
+    const whereClauses = !all ? ["dailyId = ?"] : [];
+    const values = !all ? [daily[0].id] : [];
 
     if (id && id !== null) {
       whereClauses.push("id < ?");
@@ -188,7 +194,7 @@ async function beforeInvoice(event, data) {
       [rows[0].id]
     );
 
-    const beforeInvoice = { ...rows[0], items, first:firstRows[0].id };
+    const beforeInvoice = { ...rows[0], items, first: firstRows[0].id };
 
     return {
       success: true,
@@ -252,11 +258,10 @@ async function afterInvoice(event, data) {
       `SELECT * FROM invoices WHERE ${whereString} ORDER BY id ASC LIMIT 1`,
       values
     );
-        const [lastRows] = await db.execute(
+    const [lastRows] = await db.execute(
       `SELECT * FROM invoices WHERE ${whereString} ORDER BY id DESC LIMIT 1`,
       values
     );
-
 
     if (rows.length === 0) {
       return {
@@ -276,7 +281,7 @@ async function afterInvoice(event, data) {
       [rows[0].id]
     );
 
-    const afterInvoice = { ...rows[0], items, last:lastRows[0].id };
+    const afterInvoice = { ...rows[0], items, last: lastRows[0].id };
 
     return {
       success: true,
@@ -351,7 +356,7 @@ async function getAllInvoices(event, data) {
 
 async function updateInvoice(event, data) {
   const { invoiceId, paymentType } = data;
-  console.log("updateInvoice data", data,invoiceId, paymentType);
+  console.log("updateInvoice data", data, invoiceId, paymentType);
 
   try {
     const db = getDatabase();
@@ -374,282 +379,410 @@ async function updateInvoice(event, data) {
   }
 }
 
-
-
-/*
- async function PrintInvoice() {
+async function PrintInvoice(event, data) {
   try {
-    // فتح اتصال مع الطابعة
-    const device = new escpos.USB();
-    const printer = new escpos.Printer(device, { encoding: "CP864" }); // CP864 للغة العربية
-
-    device.open(() => {
-      printer
-        .align('CT')
-        .size(2, 2)
-        .text('فاتورة مبيعات')
-        .size(1, 1)
-        .align('LT')
-        .text('--------------------------')
-        .text('المنتج: كيبورد')
-        .text('السعر: 150.00')
-        .text('--------------------------')
-        .cut()
-        .close();
-    });
-  } catch (err) {
-    console.error("خطأ في الطباعة:", err);
-  }
-}
-*/
-
-
- async function PrintInvoice(event, data) {
-  try {
-const options = {
-    preview: false,
-    margin: '0 0 0 0',
-    copies: 1,
-    printerName: 'POSPrinter POS80',
-    timeOutPerLine: 400,
-    pageSize: '80mm', // page size,
-        defaultStyle: {
-        fontFamily: 'Arial', // أو 'Tahoma', 'Cairo' لو الخط العربي مهم
-    },
-}
-  const {
-    customerName,
-    customerPhone,
-    paymentType,
-    invoiceDiscount,
-    total,
-    netTotal,
-    products,
-  } = data;
+    const options = {
+      preview: false,
+      margin: "0 0 0 0",
+      copies: 1,
+      printerName: "POSPrinter POS80",
+      timeOutPerLine: 400,
+      pageSize: "80mm", // page size,
+      defaultStyle: {
+        fontFamily: "Arial", // أو 'Tahoma', 'Cairo' لو الخط العربي مهم
+      },
+    };
+    const {
+      customerName,
+      customerPhone,
+      paymentType,
+      invoiceDiscount,
+      total,
+      netTotal,
+      products,
+    } = data;
     const db = getDatabase();
 
-const data2 = [
- {
-        type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
-        value: 'فابريكا السلطان',
-        style: {fontWeight: "700", textAlign: 'center', fontSize: "24px"}
-    },
-   {
-    type: 'text',
-    value: '01092758520',
-    style: {
-        fontWeight: '700',
-        textAlign: 'center',
-        fontSize: '24px',
-        backgroundColor: 'black', // الخلفية سوداء
-        color: 'white'             // النص أبيض
-    }
-},
-    {
-        type: 'text',                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
-        value: 'بيان أسعار',
-        style: {fontSize: "18px", textAlign: "center"}
-    },
+    const data2 = [
+      {
+        type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
+        value: process.env.COMPANY_NAME,
+        style: { fontWeight: "700", textAlign: "center", fontSize: "24px" },
+      },
+      {
+        type: "text",
+        value: process.env.COMPANY_PHONE,
+        style: {
+          fontWeight: "700",
+          textAlign: "center",
+          fontSize: "24px",
+          backgroundColor: "black", // الخلفية سوداء
+          color: "white", // النص أبيض
+        },
+      },
+      {
+        type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table'
+        value: "بيان أسعار",
+        style: { fontSize: "18px", textAlign: "center" },
+      },
+    ];
 
-]
-
-const [rows] = await db.execute(
-  `SELECT d.*, u.username
+    const [rows] = await db.execute(
+      `SELECT d.*, u.username
    FROM daily d
    JOIN users u ON u.id = d.userId
    WHERE d.closed_at IS NULL
    LIMIT 1`
-);
-const username = rows[0].username;
-const [rows2] = await db.execute(
-  `SELECT id 
+    );
+    const username = rows[0].username;
+    const [rows2] = await db.execute(
+      `SELECT id 
    FROM invoices 
    ORDER BY id DESC 
    LIMIT 1`
-);
-const now = new Date();
-const date = formatDate(now);
-data2.push(    {
-        type: 'table',
-        // style the table
-        style: {},
-        // list of the columns to be rendered in the table header
-        tableHeader: [],
-        // multi dimensional array depicting the rows and columns of the table body
-        tableBody: [
-      [
-        { type: 'text', value: `${date}`, style: { fontSize: "10px", textAlign: "left", fontWeight: 'bold' } },
-        { type: 'text', value: 'تاريخ', style: { fontSize: "10px", textAlign: "right",fontWeight: 'bold', } }
-      ],
-      [
-        { type: 'text', value: `${rows2[0].id}`, style: { fontSize: "10px", textAlign: "left",fontWeight: 'bold', } },
-        { type: 'text', value: 'رقم', style: { fontSize: "10px", textAlign: "right",fontWeight: 'bold', } }
-      ],
-      [
-        { type: 'text', value: `${username}`, style: { fontSize: "10px", textAlign: "left" ,fontWeight: 'bold',} },
-        { type: 'text', value: 'الكاشير', style: { fontSize: "10px", textAlign: "right",fontWeight: 'bold', } }
-      ]
-    ],
-        // list of columns to be rendered in the table footer
-        tableFooter: [],
-        // custom style for the table header
-        tableHeaderStyle: { },
-        // custom style for the table body
-        tableBodyStyle: {},
-        // custom style for the table footer
-        tableFooterStyle: {},
-    },)
-const tableBody = await Promise.all(
-  products.map(async (p) => {
-    const [find] = await db.execute(
-      "SELECT * FROM items WHERE id = ? LIMIT 1",
-      [p.id]
     );
-
-    const item = find[0]; // أول صف من جدول items
-
-    return [
-      { type: 'text', value: String(p.quantity * item.price),    style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-      { type: 'text', value: String(item.price),    style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-      { type: 'text', value: String(p.quantity), style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-      { type: 'text', value: item.name,          style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } }
-    ];
-  })
-);
-    data2.push(      {
-        type: 'table',
-        // style the table
-        style: {border: '1px solid black'},
-        // list of the columns to be rendered in the table header
-        tableHeader: [
-                { type: 'text', value: 'الإجمالي', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-        { type: 'text', value: 'السعر', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-        { type: 'text', value: 'الكمية', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } },
-        { type: 'text', value: 'اسم المنتج', style: { fontWeight: 'bold', border: '1px solid black', textAlign: 'center' } }
- 
+    const now = new Date();
+    const date = formatDate(now);
+    data2.push({
+      type: "table",
+      // style the table
+      style: {},
+      // list of the columns to be rendered in the table header
+      tableHeader: [],
+      // multi dimensional array depicting the rows and columns of the table body
+      tableBody: [
+        [
+          {
+            type: "text",
+            value: `${date}`,
+            style: { fontSize: "10px", textAlign: "left", fontWeight: "bold" },
+          },
+          {
+            type: "text",
+            value: "تاريخ",
+            style: { fontSize: "10px", textAlign: "right", fontWeight: "bold" },
+          },
         ],
-
-        // multi dimensional array depicting the rows and columns of the table body
-    tableBody,
-        // list of columns to be rendered in the table footer
-        tableFooter: [],
-        // custom style for the table header
-        tableHeaderStyle: {
-              fontWeight: 'bold',
-        border: '1px solid black',
-        textAlign: 'center'
-         },
-        // custom style for the table body
-        tableBodyStyle: {
-               fontWeight: 'bold',           // يخلي الصفوف Bold
-        border: '1px solid black',    // يعمل خطوط بين الأعمدة والصفوف
-        textAlign: 'center'  
-        },
-        // custom style for the table footer
-        tableFooterStyle: {},
-    },
-)
-data2.push(       {
-        type: 'table',
-        // style the table
-        style: {},
-        // list of the columns to be rendered in the table header
-        tableHeader: [
-      
+        [
+          {
+            type: "text",
+            value: `${rows2[0].id}`,
+            style: { fontSize: "10px", textAlign: "left", fontWeight: "bold" },
+          },
+          {
+            type: "text",
+            value: "رقم",
+            style: { fontSize: "10px", textAlign: "right", fontWeight: "bold" },
+          },
         ],
+        [
+          {
+            type: "text",
+            value: `${username}`,
+            style: { fontSize: "10px", textAlign: "left", fontWeight: "bold" },
+          },
+          {
+            type: "text",
+            value: "الكاشير",
+            style: { fontSize: "10px", textAlign: "right", fontWeight: "bold" },
+          },
+        ],
+      ],
+      // list of columns to be rendered in the table footer
+      tableFooter: [],
+      // custom style for the table header
+      tableHeaderStyle: {},
+      // custom style for the table body
+      tableBodyStyle: {},
+      // custom style for the table footer
+      tableFooterStyle: {},
+    });
+    const tableBody = await Promise.all(
+      products.map(async (p) => {
+        const [find] = await db.execute(
+          "SELECT * FROM items WHERE id = ? LIMIT 1",
+          [p.id]
+        );
 
-        // multi dimensional array depicting the rows and columns of the table body
-        tableBody: [
-              [
-             { type: 'text', value: '', style: { textAlign: 'right', fontSize: '12px' } },
-                { type: 'text', value: String(products.length), style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
+        const item = find[0]; // أول صف من جدول items
 
-                { type: 'text', value: 'عدد القطع', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
-            ],
-            [
-             { type: 'text', value: '', style: { textAlign: 'right', fontSize: '12px' } },
-                { type: 'text', value: 'كاش', style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
-                { type: 'text', value: 'طريقة الدفع', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
-            ],
-            [
-              { type: 'text', value: ' جنيه مصري', style: { textAlign: 'left', fontSize: '12px',fontWeight: 'bold' } },
-                { type: 'text', value: String(total), style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
-
-                { type: 'text', value: 'الإجمالي', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
-            ],
-            [
-
-                            { type: 'text', value: ' جنيه مصري', style: { textAlign: 'left',border: '1px dashed black', fontSize: '12px',fontWeight: 'bold' } },
-
-                { type: 'text', value: String(netTotal), style: { textAlign: 'left', fontSize: '12px', border: '1px dashed black',fontWeight: 'bold' } },
-
-                { type: 'text', value: 'المطلوب', style: { textAlign: 'right', fontSize: '12px', border: '1px dashed black',fontWeight: 'bold' } }
-            ]
-
-    ],
-        // list of columns to be rendered in the table footer
-        tableFooter: [],
-        // custom style for the table header
-        tableHeaderStyle: {
-         
-         },
-        // custom style for the table body
-        tableBodyStyle: {
-   
+        return [
+          {
+            type: "text",
+            value: String(p.quantity * item.price),
+            style: {
+              fontWeight: "bold",
+              border: "1px solid black",
+              textAlign: "center",
+            },
+          },
+          {
+            type: "text",
+            value: String(item.price),
+            style: {
+              fontWeight: "bold",
+              border: "1px solid black",
+              textAlign: "center",
+            },
+          },
+          {
+            type: "text",
+            value: String(p.quantity),
+            style: {
+              fontWeight: "bold",
+              border: "1px solid black",
+              textAlign: "center",
+            },
+          },
+          {
+            type: "text",
+            value: item.name,
+            style: {
+              fontWeight: "bold",
+              border: "1px solid black",
+              textAlign: "center",
+            },
+          },
+        ];
+      })
+    );
+    data2.push({
+      type: "table",
+      // style the table
+      style: { border: "1px solid black" },
+      // list of the columns to be rendered in the table header
+      tableHeader: [
+        {
+          type: "text",
+          value: "الإجمالي",
+          style: {
+            fontWeight: "bold",
+            border: "1px solid black",
+            textAlign: "center",
+          },
         },
-        // custom style for the table footer
-        tableFooterStyle: {},
-    },)
+        {
+          type: "text",
+          value: "السعر",
+          style: {
+            fontWeight: "bold",
+            border: "1px solid black",
+            textAlign: "center",
+          },
+        },
+        {
+          type: "text",
+          value: "الكمية",
+          style: {
+            fontWeight: "bold",
+            border: "1px solid black",
+            textAlign: "center",
+          },
+        },
+        {
+          type: "text",
+          value: "اسم المنتج",
+          style: {
+            fontWeight: "bold",
+            border: "1px solid black",
+            textAlign: "center",
+          },
+        },
+      ],
 
-    data2.push(...[
-     {
-        type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
-        value: 'ملحوظه : الاستبدال بالفاتورة',
-        style: {fontWeight: "700", textAlign: 'center', fontSize: "14px", marginTop:"5px"}
-    },
-      {
-        type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
-        value: 'يمكنكم زيارتنا بالعنوان التالي',
-        style: {fontWeight: "700", textAlign: 'center', fontSize: "14px"}
-    },
-      {
-        type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
-        value: 'أكتوبر الحي الحادي عشر المجاورة السابعه عماره عشرين',
-        style: {fontWeight: "700", textAlign: 'center', fontSize: "14px"}
-    },
-    {
-    type: 'text',
-    value: '__________________________________________',
-    style: { textAlign: 'center' },
-    
-},
-{
-    type: 'text',
-    value: '© All Copyrights Reserved To Sailentra 2025  01034097707',
-    style: { textAlign: 'center',fontWeight: 'bold' }
-},])
-  try {
-    await PosPrinter.print(data2, options);
-    console.log('Printed successfully');
-  } catch (err) {
-    console.error('Print error', err);
-  }
+      // multi dimensional array depicting the rows and columns of the table body
+      tableBody,
+      // list of columns to be rendered in the table footer
+      tableFooter: [],
+      // custom style for the table header
+      tableHeaderStyle: {
+        fontWeight: "bold",
+        border: "1px solid black",
+        textAlign: "center",
+      },
+      // custom style for the table body
+      tableBodyStyle: {
+        fontWeight: "bold", // يخلي الصفوف Bold
+        border: "1px solid black", // يعمل خطوط بين الأعمدة والصفوف
+        textAlign: "center",
+      },
+      // custom style for the table footer
+      tableFooterStyle: {},
+    });
+    data2.push({
+      type: "table",
+      // style the table
+      style: {},
+      // list of the columns to be rendered in the table header
+      tableHeader: [],
 
+      // multi dimensional array depicting the rows and columns of the table body
+      tableBody: [
+        [
+          {
+            type: "text",
+            value: "",
+            style: { textAlign: "right", fontSize: "12px" },
+          },
+          {
+            type: "text",
+            value: String(products.length),
+            style: {
+              textAlign: "center",
+              fontSize: "12px",
+              fontWeight: "bold",
+            },
+          },
+
+          {
+            type: "text",
+            value: "عدد القطع",
+            style: { textAlign: "right", fontSize: "12px", fontWeight: "bold" },
+          },
+        ],
+        [
+          {
+            type: "text",
+            value: "",
+            style: { textAlign: "right", fontSize: "12px" },
+          },
+          {
+            type: "text",
+            value: "كاش",
+            style: {
+              textAlign: "center",
+              fontSize: "12px",
+              fontWeight: "bold",
+            },
+          },
+          {
+            type: "text",
+            value: "طريقة الدفع",
+            style: { textAlign: "right", fontSize: "12px", fontWeight: "bold" },
+          },
+        ],
+        [
+          {
+            type: "text",
+            value: " جنيه مصري",
+            style: { textAlign: "left", fontSize: "12px", fontWeight: "bold" },
+          },
+          {
+            type: "text",
+            value: String(total),
+            style: {
+              textAlign: "center",
+              fontSize: "12px",
+              fontWeight: "bold",
+            },
+          },
+
+          {
+            type: "text",
+            value: "الإجمالي",
+            style: { textAlign: "right", fontSize: "12px", fontWeight: "bold" },
+          },
+        ],
+        [
+          {
+            type: "text",
+            value: " جنيه مصري",
+            style: {
+              textAlign: "left",
+              border: "1px dashed black",
+              fontSize: "12px",
+              fontWeight: "bold",
+            },
+          },
+
+          {
+            type: "text",
+            value: String(netTotal),
+            style: {
+              textAlign: "left",
+              fontSize: "12px",
+              border: "1px dashed black",
+              fontWeight: "bold",
+            },
+          },
+
+          {
+            type: "text",
+            value: "المطلوب",
+            style: {
+              textAlign: "right",
+              fontSize: "12px",
+              border: "1px dashed black",
+              fontWeight: "bold",
+            },
+          },
+        ],
+      ],
+      // list of columns to be rendered in the table footer
+      tableFooter: [],
+      // custom style for the table header
+      tableHeaderStyle: {},
+      // custom style for the table body
+      tableBodyStyle: {},
+      // custom style for the table footer
+      tableFooterStyle: {},
+    });
+
+    data2.push(
+      ...[
+        {
+          type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
+          value: "ملحوظه : الاستبدال بالفاتورة",
+          style: {
+            fontWeight: "700",
+            textAlign: "center",
+            fontSize: "14px",
+            marginTop: "5px",
+          },
+        },
+        {
+          type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
+          value: "يمكنكم زيارتنا بالعنوان التالي",
+          style: { fontWeight: "700", textAlign: "center", fontSize: "14px" },
+        },
+        {
+          type: "text", // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
+          value: process.env.COMPANY_ADDRESS,
+          style: { fontWeight: "700", textAlign: "center", fontSize: "14px" },
+        },
+        {
+          type: "text",
+          value: "__________________________________________",
+          style: { textAlign: "center" },
+        },
+        {
+          type: "text",
+          value: "© All Copyrights Reserved To Sailentra 2025  01034097707",
+          style: { textAlign: "center", fontWeight: "bold" },
+        },
+      ]
+    );
+    try {
+      await PosPrinter.print(data2, options);
+      console.log("Printed successfully");
+    } catch (err) {
+      console.error("Print error", err);
+    }
   } catch (err) {
     console.error("خطأ في الطباعة:", err);
   }
 }
 function formatDate(date) {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
 
   let hours = date.getHours();
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12;
   hours = hours ? hours : 12; // 0 -> 12
-  hours = String(hours).padStart(2, '0');
+  hours = String(hours).padStart(2, "0");
 
   return `${day}/${month}/${year}  ${hours}:${minutes}${ampm}`;
 }
