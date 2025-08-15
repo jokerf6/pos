@@ -3,6 +3,8 @@ import * as React from "react";
 import ProductHeader from "./product.header";
 import { Settings, Package, Calendar, ChevronRight } from "lucide-react";
 import DailyHeader from "./daily.header";
+import { MdBackup } from "react-icons/md";
+import BackupHeader from "./backup.header";
 
 interface HeaderItem {
   title: string;
@@ -27,6 +29,12 @@ export default function SettingsHeader() {
       icon: <Calendar className="w-5 h-5" />,
       description: "إعدادات العمليات اليومية والتقارير"
     },
+    {
+      title: "النسخ الاحتياطي",
+      component: <BackupHeader />,
+      icon: <MdBackup className="w-5 h-5" />,
+      description: "إعدادات النسخ الاحتياطي واستعادة البيانات"
+    }
   ];
 
   return (

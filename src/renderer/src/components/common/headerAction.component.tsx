@@ -28,7 +28,7 @@ export function HeaderActions() {
               <div className="flex items-center gap-2">
                 <span className="">{user?.username}</span>
                 <img
-                  src={user?.avatar || "/images/avatar.png"}
+                  src={"images/avatar.png"}
                   alt="User Avatar"
                   className="w-10 h-10 rounded-full object-cover"
                 />

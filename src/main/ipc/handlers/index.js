@@ -95,6 +95,7 @@ function setupIPC() {
 
   // Settings handlers
   ipcMain.handle("settings:getAll", secureHandler(settingsHandlers.getAll));
+  ipcMain.handle("settings:backupDatabase", secureHandler(settingsHandlers.backupDatabase));
   ipcMain.handle(
     "settings:getByDomain",
     secureHandler(settingsHandlers.getByDomain)

@@ -121,6 +121,7 @@ interface ElectronAPI {
     getByKey: (key: string) => Promise<any>;
     getByDomain: (domain: string) => Promise<any>;
     update: (data: any) => Promise<any>;
+    backupDatabase: () => Promise<any>;
   };
 
   system: {

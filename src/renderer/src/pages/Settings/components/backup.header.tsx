@@ -7,16 +7,16 @@ import {
 } from "../../../store/slices/settingsSlice";
 import { useEffect, useState } from "react";
 import { showError, showSuccess } from "../../../components/ui/sonner";
-import { Save, Package, Settings, CheckCircle, AlertCircle, Hash, Type, ToggleLeft, ToggleRight } from "lucide-react";
+import { Save, Calendar, Settings, CheckCircle, AlertCircle, Hash, Type, Clock, TrendingUp } from "lucide-react";
 
-export default function ProductHeader() {
+export default function BackupHeader() {
   const dispatch = useAppDispatch();
   const { settings } = useSelector((state: any) => state.settings);
   const [localSettings, setLocalSettings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    dispatch(getByDomain("products"));
+    dispatch(getByDomain("backup"));
   }, [dispatch]);
 
   useEffect(() => {
@@ -24,6 +24,18 @@ export default function ProductHeader() {
       setLocalSettings(settings.data);
     }
   }, [settings]);
+
+  const handleChange = (index: number, newValue: any) => {
+    const updated = [...localSettings];
+    const base =
+      typeof updated[index] === "object" && updated[index] !== null
+        ? updated[index]
+        : {};
+    const updatedItem = { ...base, value: newValue };
+    (updated as any[])[index] = updatedItem;
+    console.log("Updated item:", updatedItem);
+    setLocalSettings(updated);
+  };
 
   const handelSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,18 +53,14 @@ export default function ProductHeader() {
     }
   };
 
-  const handleChange = (index: number, newValue: any) => {
-    const updated = [...localSettings];
-    const base =
-      typeof updated[index] === "object" && updated[index] !== null
-        ? updated[index]
-        : {};
-    const updatedItem = { ...base, value: newValue };
-    (updated as any[])[index] = updatedItem;
-    setLocalSettings(updated);
-  };
-
-  const getFieldIcon = (inputType: string) => {
+  const getFieldIcon = (inputType: string, itemName: string) => {
+    if (itemName.includes("وقت") || itemName.includes("تاريخ")) {
+      return <Clock className="w-4 h-4" />;
+    }
+    if (itemName.includes("تقرير") || itemName.includes("إحصائية")) {
+      return <TrendingUp className="w-4 h-4" />;
+    }
+    
     switch (inputType) {
       case "number":
         return <Hash className="w-4 h-4" />;
@@ -74,8 +82,9 @@ export default function ProductHeader() {
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 hover:shadow-md transition-all duration-200 hover:border-blue-300 dark:hover:border-blue-600">
           <div className="flex items-start gap-4">
             <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
-              {getFieldIcon(inputType)}
+              {getFieldIcon(inputType, item.name)}
             </div>
+            
             <div className="flex-1">
               <label className="block text-base font-medium text-slate-900 dark:text-white mb-2">
                 {item.name}
@@ -131,9 +140,25 @@ export default function ProductHeader() {
 
   return (
     <div className="space-y-6">
+      {/* Info Banner */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h3 className="font-medium text-blue-900 dark:text-blue-100">
+             النسخ الاحتياطي لقاعدة البيانات
+            </h3>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+              تحكم في إعدادات النسخ الاحتياطي لقاعدة البيانات
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Settings Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
         {localSettings &&
           localSettings.map((item, index) => renderInput(item, index))}
       </div>
@@ -142,13 +167,13 @@ export default function ProductHeader() {
       <div className="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 p-6 -mx-6 -mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-            <Package className="w-4 h-4" />
-            <span>{localSettings?.length} إعداد متاح</span>
+            <Calendar className="w-4 h-4" />
+            <span>{localSettings.length} إعداد يومي متاح</span>
           </div>
           
           <button
-            type="submit"
             onClick={handelSubmit}
+            type="submit"
             disabled={isLoading}
             className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
           >

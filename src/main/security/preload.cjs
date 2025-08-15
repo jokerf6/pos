@@ -74,6 +74,7 @@ const validChannels = {
   "settings:getByKey": true,
   "settings:getAll": true,
   "settings:update": true,
+  "settings:backupDatabase": true,
 
   // System channels
   "system:getVersion": true,
@@ -139,6 +140,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getByDomain: (key) => safeInvoke("settings:getByDomain", key),
     update: (data) => safeInvoke("settings:update", data),
     getByKey: (key) => safeInvoke("settings:getByKey", key),
+    backupDatabase: () => safeInvoke("settings:backupDatabase"),
   },
   categories: {
     create: (data) => safeInvoke("categories:create", data),
@@ -209,6 +211,21 @@ contextBridge.exposeInMainWorld("electronAPI", {
       return;
     }
     ipcRenderer.removeAllListeners(channel);
+  },
+});
+  contextBridge.exposeInMainWorld("assets", {
+  /**
+   * يعطيك المسار الكامل للـ asset سواء في development أو build
+   * @param {string} relativePath - المسار النسبي من مجلد public أو build
+   */
+  getPath: (relativePath) => {
+    if (isDev) {
+      // أثناء التطوير: مجلد public
+      return path.join(__dirname, "../../renderer/public", relativePath);
+    } else {
+      // بعد build: مجلد build/resources أو مسار النسخة النهائية
+      return path.join(process.resourcesPath, "renderer", "build", relativePath);
+    }
   },
 });
 

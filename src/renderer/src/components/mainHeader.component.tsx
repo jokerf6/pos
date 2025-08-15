@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { AppDispatch, RootState } from "store";
 import { getByKey } from "store/slices/settingsSlice";
-import { closeDaily, getDaily, openDaily } from "store/slices/dailySlice";
+import { backupDatabase, closeDaily, getDaily, openDaily } from "store/slices/dailySlice";
 import { SidebarTrigger } from "./ui/sidebar";
 import Modal from "./common/dynamic-modal.component";
 import { Input } from "./ui/input";
@@ -115,6 +115,8 @@ export default function MainHeader() {
   const handleClose = async () => {
     try {
       await dispatch(closeDaily(closePrice)).unwrap();
+      await dispatch(backupDatabase()).unwrap();
+      await dispatch(getDaily()).unwrap();
       // تحديث الحالة المحلية مباشرة بعد الإغلاق
       setIsDailyOpen(false);
       setDailyData(null);

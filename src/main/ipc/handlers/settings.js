@@ -1,6 +1,8 @@
 const log = require("electron-log");
 const { getDatabase } = require("../../database/connection.js");
-
+const path = require("path");
+const {app} = require("electron");
+const fs = require("fs");
 async function getByDomain(event, domain) {
   try {
     const db = getDatabase();
@@ -52,6 +54,7 @@ async function getAll(event) {
   }
 }
 async function updateSettings(event, data) {
+  console.log("update->", data);
   if (!Array.isArray(data) || data.length === 0) {
     throw new Error("Invalid data: Must be a non-empty array");
   }
@@ -60,6 +63,7 @@ async function updateSettings(event, data) {
     const db = getDatabase();
 
     const promises = data.map(({ key, value }) => {
+      console.log(key, value);
       if (!key || value === undefined) return null;
 
       return db.run("UPDATE settings SET value = ? WHERE `key` = ?", [
@@ -68,15 +72,12 @@ async function updateSettings(event, data) {
       ]);
     });
 
-    const results = await Promise.all(promises.filter(Boolean));
+     await Promise.all(promises.filter(Boolean));
 
-    const updatedCount = results.reduce((acc, [result]) => {
-      return acc + (result.affectedRows > 0 ? 1 : 0);
-    }, 0);
 
     return {
       success: true,
-      message: `${updatedCount} setting(s) updated successfully`,
+      message: `update setting(s) updated successfully`,
     };
   } catch (error) {
     log.error("Settings update error:", error.message);
@@ -84,4 +85,30 @@ async function updateSettings(event, data) {
   }
 }
 
-module.exports = { getByDomain, getAll, updateSettings, getByKey };
+
+async function backupDatabase(event) {
+  try {
+    const db = getDatabase();
+    const data = await db.all(
+      "SELECT * FROM settings WHERE `key` = 'backupPath' LIMIT 1"
+    );
+    const now = new Date().toISOString().slice(0, 10);
+    const targetPath = data[0]?.value + `/casher_${now}.db`;
+
+    const DB_PATH = path.join(app.getPath('userData'), 'casher.db');
+    const dir = path.dirname(`${targetPath}`);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    fs.copyFileSync(DB_PATH, targetPath);
+
+    return { success: true, path: targetPath };
+  } catch (err) {
+    console.error('Backup failed', err);
+    return { success: false, error: err.message };
+  }
+}
+
+
+module.exports = { getByDomain, getAll, updateSettings, getByKey, backupDatabase };

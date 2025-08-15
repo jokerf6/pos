@@ -1,5 +1,5 @@
 require('dotenv').config(); 
-const { app, BrowserWindow, screen } = require("electron");
+const { app, BrowserWindow, screen,contextBridge } = require("electron");
 const updater = require("electron-updater");
 const { autoUpdater } = updater;
 const { initDatabase } = require("./database/connection.js");
@@ -7,7 +7,7 @@ const { setupIPC } = require("./ipc/handlers/index.js");
 const path = require("path");
 const { fileURLToPath } = require("url");
 const log = require("electron-log");
-const isDev = !app.isPackaged;
+ const isDev = !app.isPackaged;
 
 // Fix for ES modules
 // const __filename = __filename || fileURLToPath(require.main.filename);
@@ -87,6 +87,8 @@ function createWindow() {
     log.warn("Blocked attempt to open external URL:", url);
     return { action: "deny" };
   });
+
+
 mainWindow.webContents.on("did-fail-load", (event, errorCode, errorDescription) => {
   console.error("Failed to load:", errorDescription);
   mainWindow.webContents.openDevTools();

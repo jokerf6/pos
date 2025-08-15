@@ -177,7 +177,8 @@ INSERT INTO permissions (id, name, display_name, description, category, created_
 INSERT INTO settings (id, domain, key, value, name, type) VALUES
 (1, 'products', 'warning', '3', 'تحذير بنفاذ الكمية بعد', 'number'),
 (2, 'daily', 'open', 'true', 'فتح اليومية بمبلغ مالي', 'boolean'),
-(3, 'daily', 'closeWithSchudledInvoice', 'false', 'غلف اليومية بوجود فواتير أجل', 'boolean');
+(3, 'daily', 'closeWithSchudledInvoice', 'false', 'غلف اليومية بوجود فواتير أجل', 'boolean'),
+(4, 'backup', 'backupPath', '/src/main/database/backup', 'مسار النسخ الاحتياطي لقاعدة البيانات', 'string');
 
 -- Insert initial data for user_permissions
 INSERT INTO user_permissions (id, user_id, permission_id, granted_by, granted_at) VALUES

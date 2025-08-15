@@ -112,3 +112,4 @@ Desktop.ini
 
 src/main/public/uploads
 src/main/window/createWindow.js
+src/main/ipc/handlers/uploads/*

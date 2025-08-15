@@ -32,6 +32,7 @@ function CreateCategoryPage() {
       let imageData = null;
       if (formData.image instanceof File) {
         const arrayBuffer = await formData.image.arrayBuffer();
+        console.log("here",arrayBuffer);
         imageData = {
           name: formData.image.name,
           type: formData.image.type,

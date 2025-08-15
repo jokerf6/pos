@@ -3,22 +3,23 @@ const { getDatabase } = require("../../database/connection.js");
 const path = require("path");
 const fs = require("fs");
 async function createCategory(event, data) {
+
+
   const { name, image } = data;
+  console.warn("createCategory data:", data);
   let savedImagePath = null;
 if (!name) {
   throw new Error("برجاء إدخال اسم القسم");
 }
   const dirname = path.join(__dirname, `../../public/uploads/${name}`);
   if (image) {
-    const uploadsPath = dirname
-      .split("file:")[1]; // or a custom static folder
-   
-      if (!fs.existsSync(uploadsPath)) {
-      fs.mkdirSync(uploadsPath, { recursive: true });
-    }
 
-    const filePath = path.join(uploadsPath, image.name);
-    fs.writeFileSync(filePath, Buffer.from(image.buffer));
+        const buffer = Buffer.from(data.image.buffer);
+
+    const filePath = path.join(__dirname, "uploads", data.image.name);
+    fs.writeFileSync(filePath, buffer);
+
+    
 
     savedImagePath = `${filePath}`; // You can use this path in frontend
   }

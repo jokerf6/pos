@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
+// Extend the Window interface to include the 'assets' property
+
+
 import {
   Sidebar,
   SidebarContent,
@@ -145,7 +148,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="pt-4 pb-8 font-bold text-3xl text-center flex items-center justify-center">
             <img
-              src="/images/logo.png"
+              src={"images/logo.png"}
               alt="Logo"
               className="w-24 h-24 object-contain"
             />

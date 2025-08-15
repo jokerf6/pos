@@ -69,6 +69,21 @@ export const closeDaily = createAsyncThunk<
   }
 });
 
+export const backupDatabase = createAsyncThunk<
+  { rejectValue: string }
+>("settings/backupDatabase", async (_, { rejectWithValue }) => {
+  try {
+    if (window.electronAPI) {
+      const result = await window.electronAPI.settings.backupDatabase();
+      return result;
+    } else {
+      return null;
+    }
+  } catch (error: any) {
+    return rejectWithValue(error.message);
+  }
+});
+
 const initialState: DailyState = {
   daily: [],
   data: null,
