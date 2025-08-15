@@ -31,14 +31,14 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async(e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!formData.username || !formData.password) {
       return;
     }
 
-    dispatch(
+   await dispatch(
       loginUser({
         username: formData.username,
         password: formData.password,
@@ -94,7 +94,8 @@ const LoginPage: React.FC = () => {
 
           {error && (
             <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+              <div className="text-sm text-red-700">اسم المستخدم أو كلمة المرور غير صحيحة</div>
+
             </div>
           )}
 

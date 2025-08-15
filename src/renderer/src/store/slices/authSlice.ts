@@ -32,32 +32,21 @@ export const loginUser = createAsyncThunk<
   LoginCredentials,
   { rejectValue: string }
 >("auth/login", async (credentials, { rejectWithValue } ) => {
+ if (!window.electronAPI) {
+    return rejectWithValue("Electron API غير متاح");
+  }
+
   try {
-    if (window.electronAPI) {
-      const result = await window.electronAPI.auth.login(credentials);
-      return result;
-    } else {
-      // Fallback for development without Electron
-      if (
-        credentials.username === "admin" &&
-        credentials.password === "admin123"
-      ) {
-        return {
-          success: true,
-          user: {
-            id: 1,
-            username: "admin",
-            email: "admin@casher.local",
-            role: "admin",
-            permissions: [] 
-          },
-        };
-      } else {
-        throw new Error("اسم المستخدم أو كلمة المرور غير صحيحة");
-      }
+    const result = await window.electronAPI.auth.login(credentials);
+    if (!result || !result.success) {
+      return rejectWithValue("اسم المستخدم أو كلمة المرور غير صحيحة");
     }
-  } catch (error) {
-    return rejectWithValue("اسم المستخدم أو كلمة المرور غير صحيحة");
+    return result;
+  } catch (error: any) {
+    console.error("Electron login error:", error);
+    return rejectWithValue(
+      error?.message || "حدث خطأ أثناء تسجيل الدخول"
+    );
   }
 });
 
@@ -133,6 +122,7 @@ const authSlice = createSlice({
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
+        console.log("Login pending");
       })
       .addCase(loginUser.fulfilled, (state, action) => {
 
@@ -146,6 +136,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = false;
         state.user = null;
+        state.error = action.payload || "Login failed";
+
       })
       // Logout cases
       .addCase(logoutUser.pending, (state) => {
@@ -159,7 +151,7 @@ const authSlice = createSlice({
       })
       .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Logout failed";
+        state.error = action.payload?.split("Error:")[1] || "Logout failed";
       })
       // Check auth cases
       .addCase(checkAuth.pending, (state) => {
