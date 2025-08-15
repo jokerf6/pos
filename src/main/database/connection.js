@@ -3,6 +3,7 @@ const { open } = require('sqlite');
 const log = require('electron-log');
 const path = require('path');
 let database = null;
+const { app } = require('electron');
 
 // كود SQL لإنشاء الجداول وإدراج البيانات
 const schemaSQL = `
@@ -218,7 +219,8 @@ UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM user_permissions) WHERE na
 
 async function initDatabase() {
   try {
-    const dbPath = path.join(__dirname, 'casher.db');
+
+    const dbPath = path.join(app.getPath('userData'), 'casher.db');
     log.info(`Database path: ${dbPath}`);
 
     // افتح الاتصال مع تفعيل التصحيح

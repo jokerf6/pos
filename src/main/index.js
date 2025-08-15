@@ -6,7 +6,7 @@ const { setupIPC } = require("./ipc/handlers/index.js");
 const path = require("path");
 const { fileURLToPath } = require("url");
 const log = require("electron-log");
-const isDev = true;
+const isDev = false;
 // Fix for ES modules
 // const __filename = __filename || fileURLToPath(require.main.filename);
 // const __dirname = __dirname || path.dirname(__filename);

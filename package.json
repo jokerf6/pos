@@ -30,7 +30,7 @@
     "build": "npm run build:renderer && npm run build:main",
     "build:renderer": "cd src/renderer && npm run start",
     "clean": "rimraf dist",
-    "build:main": "electron-builder",
+    "build:main": "electron-builder --win --ia32 --x64=false",
     "prebuild:win": "taskkill /f /im \"Casher Desktop.exe\" 2>nul & rmdir /s /q dist 2>nul & exit 0",
     "build:win": "electron-builder --win --ia32",
     "build:win:smart": "node scripts/build-windows.cjs",
@@ -47,7 +47,8 @@
     "lint:fix": "eslint src/ --ext .js,.jsx,.ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "type-check": "tsc --noEmit",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "postinstall": "cd src/renderer && npm install"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.11",
@@ -67,10 +68,10 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@tanstack/react-table": "^8.21.3",
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^12.2.0",
     "builder-util-runtime": "^9.3.1",
     "class-variance-authority": "^0.7.1",
     "conf": "^14.0.0",
+    "date-fns": "^4.1.0",
     "debug": "^4.4.1",
     "dotenv": "^16.3.1",
     "electron-is-dev": "^3.0.1",
@@ -102,7 +103,7 @@
     "react-icons": "^5.5.0",
     "semver": "^7.7.2",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
+    "sqlite3": "^5.0.2",
     "tailwind-variants": "^1.0.0",
     "tailwindcss": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
@@ -141,21 +142,22 @@
       "buildResources": "build",
       "output": "dist"
     },
-    "npmRebuild": true,
+    "npmRebuild": false,
     "nodeGypRebuild": false,
-    "asar": false,
+    "asar": true,
     "asarUnpack": [
-      "node_modules/bcryptjs/**/*",
-      "node_modules/mysql2/**/*",
-      "node_modules/fs-extra/**/*",
-      "node_modules/jsonwebtoken/**/*"
+      "node_modules/**"
     ],
     "files": [
-      "src/main/**/*",
-      "src/renderer/build/**/*",
-      "src/shared/**/*",
-      "package.json",
-      "node_modules/**/*"
+      "**/*",
+      "node_modules/**"
+    ],
+
+    "extraResources": [
+      {
+        "from": "src/main/database/casher.db",
+        "to": "casher.db"
+      }
     ],
     "mac": {
       "category": "public.app-category.business",
@@ -167,7 +169,7 @@
         {
           "target": "nsis",
           "arch": [
-            "x64"
+            "ia32"
           ]
         }
       ],
