@@ -1,3 +1,4 @@
+require('dotenv').config(); 
 const log = require("electron-log");
 const { getDatabase } = require("../../database/connection.js");
 const { startOfDay, endOfDay } = require("date-fns");
@@ -431,12 +432,12 @@ const options = {
 const data2 = [
  {
         type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
-        value: 'فابريكا السلطان',
+        value: process.env.COMPANY_NAME,
         style: {fontWeight: "700", textAlign: 'center', fontSize: "24px"}
     },
    {
     type: 'text',
-    value: '01092758520',
+        value: process.env.COMPANY_PHONE,
     style: {
         fontWeight: '700',
         textAlign: 'center',
@@ -614,7 +615,7 @@ data2.push(       {
     },
       {
         type: 'text',                                       // 'text' | 'barCode' | 'qrCode' | 'image' | 'table
-        value: 'أكتوبر الحي الحادي عشر المجاورة السابعه عماره عشرين',
+          value: process.env.COMPANY_ADDRESS,
         style: {fontWeight: "700", textAlign: 'center', fontSize: "14px"}
     },
     {

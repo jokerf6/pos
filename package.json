@@ -30,7 +30,8 @@
     "build": "npm run build:renderer && npm run build:main",
     "build:renderer": "cd src/renderer && npm run start",
     "clean": "rimraf dist",
-    "build:main": "electron-builder --win --ia32 --x64=false",
+    "build:main": "electron-builder",
+    "build:main:32": "electron-builder --win --ia32 --x64=false",
     "prebuild:win": "taskkill /f /im \"Casher Desktop.exe\" 2>nul & rmdir /s /q dist 2>nul & exit 0",
     "build:win": "electron-builder --win --ia32",
     "build:win:smart": "node scripts/build-windows.cjs",
@@ -169,7 +170,7 @@
         {
           "target": "nsis",
           "arch": [
-            "ia32"
+            "x64"
           ]
         }
       ],

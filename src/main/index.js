@@ -1,3 +1,4 @@
+require('dotenv').config(); 
 const { app, BrowserWindow, screen } = require("electron");
 const updater = require("electron-updater");
 const { autoUpdater } = updater;
@@ -6,7 +7,7 @@ const { setupIPC } = require("./ipc/handlers/index.js");
 const path = require("path");
 const { fileURLToPath } = require("url");
 const log = require("electron-log");
-const isDev = false;
+const isDev =process.env.DEV;
 // Fix for ES modules
 // const __filename = __filename || fileURLToPath(require.main.filename);
 // const __dirname = __dirname || path.dirname(__filename);
