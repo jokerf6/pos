@@ -37,14 +37,14 @@ async function createInvoice(event, data) {
   try {
     const db = getDatabase();
 
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
     );
     if (rows.length === 0) {
       throw new Error("برجاء فتح يومية جديدة");
     }
 
-    const [invoice] = await db.execute(
+    const invoice = await db.run(
       "INSERT INTO invoices (customerName, customerPhone, paymentType,discount,total,totalAfterDiscount,dailyId) VALUES (?,?, ?, ?,?,?,?)",
       [
         customerName,
@@ -58,31 +58,31 @@ async function createInvoice(event, data) {
     );
     for (let i = 0; i < products.length; i += 1) {
       if (paymentType !== "مرتجع"){
-        await db.execute(
+        await db.run(
           "UPDATE items set quantity = quantity - ? WHERE id = ?",
           [products[i].quantity, products[i].id]
         );
-         const [find] = await db.execute(
+         const find = await db.all(
         "SELECT * FROM items WHERE id = ? LIMIT 1",
         [products[i].id]
       ); 
-      await db.execute("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "sale", find[0].quantity, find[0].price, new Date()]);
+      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "sale", find[0].quantity, find[0].price, new Date()]);
     }
       else {
-        await db.execute(
+        await db.run(
           "UPDATE items set quantity = quantity + ? WHERE id = ?",
           [products[i].quantity, products[i].id]
         );
-           const [find] = await db.execute(
+           const find = await db.all(
         "SELECT * FROM items WHERE id = ? LIMIT 1",
         [products[i].id]
       ); 
-      await db.execute("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "return", find[0].quantity, find[0].price, new Date()]);
+      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "return", find[0].quantity, find[0].price, new Date()]);
       }
-      await db.execute(
+      await db.run(
         "INSERT INTO invoiceItems (invoiceId,itemId,pricePerUnit,quantity,discount,price, totalPriceAfterDiscount) VALUES (?, ?, ?,?,?,?,?)",
         [
-          invoice.insertId,
+          invoice.lastID,
           products[i].id,
           products[i].price,
           products[i].quantity,
@@ -116,7 +116,7 @@ async function beforeInvoice(event, data) {
     if(data && data.all) {
      all = data.all;
     }
-    const [daily] = await db.execute(
+    const daily = await db.all(
       "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
     );
 
@@ -160,12 +160,12 @@ async function beforeInvoice(event, data) {
     const whereString = whereClauses.join(" AND ");
     console.log("whereString", whereString, values);
 
-    const [rows] = await db.execute(
+    const rows = await db.all(
       `SELECT * FROM invoices ${whereString.length > 0 ? "WHERE" : ""} ${whereString} ORDER BY id DESC LIMIT 1`,
       values
     );
 
-    const [firstRows] = await db.execute(
+    const firstRows = await db.all(
       `SELECT * FROM invoices ${whereString.length > 0 ? "WHERE" : ""} ${whereString} ORDER BY id ASC LIMIT 1`,
       values
     );
@@ -178,7 +178,7 @@ async function beforeInvoice(event, data) {
       };
     }
 
-    const [items] = await db.execute(
+    const items = await db.all(
       `SELECT 
         invoiceItems.*, 
         items.name AS name 
@@ -205,7 +205,7 @@ async function afterInvoice(event, data) {
   try {
     const db = getDatabase();
 
-    const [daily] = await db.execute(
+    const daily = await db.all(
       "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
     );
 
@@ -248,11 +248,11 @@ async function afterInvoice(event, data) {
 
     const whereString = whereClauses.join(" AND ");
 
-    const [rows] = await db.execute(
+    const rows = await db.all(
       `SELECT * FROM invoices WHERE ${whereString} ORDER BY id ASC LIMIT 1`,
       values
     );
-        const [lastRows] = await db.execute(
+        const lastRows = await db.all(
       `SELECT * FROM invoices WHERE ${whereString} ORDER BY id DESC LIMIT 1`,
       values
     );
@@ -266,7 +266,7 @@ async function afterInvoice(event, data) {
       };
     }
 
-    const [items] = await db.execute(
+    const items = await db.all(
       `SELECT 
         invoiceItems.*, 
         items.name AS name 
@@ -310,7 +310,7 @@ async function getAllInvoices(event, data) {
     const whereSQL =
       whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
-    const [rows] = await db.execute(
+    const rows = await db.all(
       `
       SELECT 
         i.id AS invoice_id,
@@ -328,7 +328,7 @@ async function getAllInvoices(event, data) {
       [...params, limit, page]
     );
 
-    const [totalResult] = await db.execute(
+    const totalResult = await db.all(
       `
       SELECT COUNT(*) as total
       FROM invoices i
@@ -357,7 +357,7 @@ async function updateInvoice(event, data) {
     const db = getDatabase();
 
     // Update invoice header
-    await db.execute(
+    await db.run(
       `UPDATE invoices SET 
     paymentType = ?
    WHERE id = ?`,
@@ -453,7 +453,7 @@ const data2 = [
 
 ]
 
-const [rows] = await db.execute(
+const rows = await db.all(
   `SELECT d.*, u.username
    FROM daily d
    JOIN users u ON u.id = d.userId
@@ -461,7 +461,7 @@ const [rows] = await db.execute(
    LIMIT 1`
 );
 const username = rows[0].username;
-const [rows2] = await db.execute(
+const rows2 = await db.all(
   `SELECT id 
    FROM invoices 
    ORDER BY id DESC 
@@ -501,7 +501,7 @@ data2.push(    {
     },)
 const tableBody = await Promise.all(
   products.map(async (p) => {
-    const [find] = await db.execute(
+    const find = await db.all(
       "SELECT * FROM items WHERE id = ? LIMIT 1",
       [p.id]
     );

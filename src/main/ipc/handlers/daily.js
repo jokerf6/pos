@@ -7,7 +7,7 @@ async function openDaily(event, openPrice = 0) {
   const userId = store.get("user.id");
   try {
     const db = getDatabase();
-    const [data] = await db.execute(
+    const data = await db.all(
       "SELECT * FROM daily where closed_at IS NULL Limit 1"
     );
     if (data.length > 0) {
@@ -16,7 +16,7 @@ async function openDaily(event, openPrice = 0) {
         message: "هناك يوم مفتوح بالفعل",
       };
     }
-    await db.execute("INSERT INTO daily (userId, openPrice) VALUES (?, ?)", [
+    await db.run("INSERT INTO daily (userId, openPrice) VALUES (?, ?)", [
       userId,
       openPrice,
     ]);
@@ -35,7 +35,7 @@ async function closeDaily(event, closePrice = 0) {
   const userId = store.get("user.id");
   try {
     const db = getDatabase();
-    const [data] = await db.execute(
+    const data = await db.all(
       "SELECT * FROM daily where closed_at IS NULL Limit 1"
     );
     if (data.length === 0) {
@@ -46,7 +46,7 @@ async function closeDaily(event, closePrice = 0) {
     }
     const closedAt = formatDateForMySQL(); // e.g. "2025-07-17 10:15:05"
 
-    await db.execute(
+    await db.run(
       "UPDATE daily SET closed_at = ?,closePrice=? WHERE id = ?",
       [closedAt, closePrice, data[0].id]
     );
@@ -63,7 +63,7 @@ async function getDaily(event) {
   try {
     const db = getDatabase();
 
-    const [dailyRows] = await db.execute(
+    const dailyRows = await db.all(
       "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
     );
 
@@ -76,22 +76,22 @@ async function getDaily(event) {
     const daily = dailyRows[0];
     const dailyId = daily.id;
 
-    const [[{ total_sales }]] = await db.execute(
+    const { total_sales } = await db.get(
       "SELECT COALESCE(SUM(totalAfterDiscount), 0) AS total_sales FROM invoices WHERE dailyId = ? AND paymentType = 'خالص'",
       [dailyId]
     );
 
-    const [[{ total_returns }]] = await db.execute(
+    const { total_returns } = await db.get(
       "SELECT COALESCE(SUM(totalAfterDiscount), 0) AS total_returns FROM invoices WHERE dailyId = ? AND paymentType = 'مرتجع'",
       [dailyId]
     );
 
-    const [[{ count_sales }]] = await db.execute(
+    const { count_sales } = await db.get(
       "SELECT COUNT(*) AS count_sales FROM invoices WHERE dailyId = ? AND paymentType = 'خالص'",
       [dailyId]
     );
 
-    const [[{ total_products_sold }]] = await db.execute(
+    const { total_products_sold } = await db.get(
       `SELECT COALESCE(SUM(ii.quantity), 0) AS total_products_sold
        FROM invoiceItems ii
        JOIN invoices i ON ii.invoiceId = i.id
@@ -99,14 +99,14 @@ async function getDaily(event) {
       [dailyId]
     );
 
-    const [[{ total_expenses }]] = await db.execute(
+    const { total_expenses } = await db.get(
       "SELECT COALESCE(SUM(price), 0) AS total_expenses FROM credit WHERE daily_id = ?",
       [dailyId]
     );
 
     const average_invoice = count_sales > 0 ? total_sales / count_sales : 0;
 
-    const [[yesterday]] = await db.execute(
+    const yesterday = await db.all(
       "SELECT id FROM daily WHERE closed_at IS NOT NULL ORDER BY closed_at DESC LIMIT 1"
     );
 
@@ -118,17 +118,17 @@ async function getDaily(event) {
     };
 
     if (yesterday) {
-      const [[{ total_sales: y_sales }]] = await db.execute(
+      const { total_sales: y_sales } = await db.all(
         "SELECT COALESCE(SUM(totalAfterDiscount), 0) AS total_sales FROM invoices WHERE dailyId = ? AND paymentType = 'خالص'",
         [yesterday.id]
       );
 
-      const [[{ count_sales: y_count }]] = await db.execute(
+      const { count_sales: y_count } = await db.all(
         "SELECT COUNT(*) AS count_sales FROM invoices WHERE dailyId = ? AND paymentType = 'خالص'",
         [yesterday.id]
       );
 
-      const [[{ total_products_sold: y_products }]] = await db.execute(
+      const { total_products_sold: y_products } = await db.all(
         `SELECT COALESCE(SUM(ii.quantity), 0) AS total_products_sold
          FROM invoiceItems ii
          JOIN invoices i ON ii.invoiceId = i.id
@@ -163,9 +163,9 @@ async function getDaily(event) {
       average_invoice: +parseFloat(+average_invoice).toFixed(2),
 
       average_invoice_change: calcChange(+average_invoice, +yesterdayStats.average_invoice),
-      count_sales_change: calcChange(+count_sales, +yesterdayStats.count_sales),
-      total_products_sold_change: calcChange(+total_products_sold, +yesterdayStats.total_products_sold),
-      total_sales_change: calcChange(+total_sales, +yesterdayStats.total_sales),
+      count_sales_change: calcChange(+count_sales, +yesterdayStats?.count_sales || 0),
+      total_products_sold_change: calcChange(+total_products_sold, +yesterdayStats?.total_products_sold || 0),
+      total_sales_change: calcChange(+total_sales, +yesterdayStats?.total_sales || 0),
     };
 
     console.log("Daily data:", result);

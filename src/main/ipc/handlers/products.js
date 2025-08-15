@@ -35,7 +35,7 @@ async function createProduct(event, data) {
   try {
     const db = getDatabase();
     if (generated_code) {
-      const [rows] = await db.execute(
+      const rows = await db.all(
         "SELECT * FROM items WHERE barcode = ? LIMIT 1",
         [generated_code]
       );
@@ -43,7 +43,7 @@ async function createProduct(event, data) {
         throw new Error("الباركود موجود بالفعل");
       }
 
-      await db.execute(
+      await db.run(
         "INSERT INTO items (name, barcode, description,quantity, price,buy_price,category_id) VALUES (?, ?, ?,?,?,?,?)",
         [
           name,
@@ -55,13 +55,13 @@ async function createProduct(event, data) {
           category_id,
         ]
       );
-      const [find] = await db.execute(
+      const find = await db.all(
         "SELECT * FROM items WHERE barcode = ? LIMIT 1",
         [generated_code]
-      ); 
-      await db.execute("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "purchase", quantity, price,  new Date()]);
+      );
+      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "purchase", quantity, price,  new Date()]);
     } else {
-      const [rows] = await db.execute(
+      const rows = await db.all(
         "SELECT * FROM items WHERE barcode = ? LIMIT 1",
         [barcode]
       );
@@ -69,17 +69,17 @@ async function createProduct(event, data) {
         throw new Error("الباركود غير موجود");
       }
 
-      await db.execute(
+      await db.run(
         `UPDATE items 
          SET name = ?, description = ?, quantity = ?, price = ?, buy_price = ?, category_id = ?
          WHERE barcode = ?`,
         [name, description, quantity, price, buy_price, category_id, barcode]
       );
-      const [find] = await db.execute(
+      const find = await db.all(
         "SELECT * FROM items WHERE barcode = ? LIMIT 1",
         [barcode]
-      ); 
-      await db.execute("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "purchase", quantity, price,  new Date()]);
+      );
+      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "purchase", quantity, price,  new Date()]);
     }
     return {
       success: true,
@@ -100,11 +100,11 @@ async function getAll(
     const offset = (page - 1) * limit;
 
     // Find user in database
-    const [products] = await db.execute(
+    const products = await db.all(
       "SELECT * FROM items ORDER BY id DESC LIMIT ? OFFSET ?",
       [limit, offset]
     );
-    const [rows] = await db.execute("SELECT COUNT(*) as total FROM items");
+    const rows = await db.all("SELECT COUNT(*) as total FROM items");
     return {
       success: true,
       products,
@@ -120,7 +120,7 @@ async function getByName(name) {
   try {
     const db = getDatabase();
 
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM items WHERE name LIKE ? OR barcode LIKE ?",
       [`%${name}%`, `%${name}%`]
     );
@@ -137,7 +137,7 @@ async function getByName(name) {
 async function generateBarCode(event) {
   const db = getDatabase();
 
-  const [lastProduct] = await db.execute(
+  const lastProduct = await db.all(
     "SELECT * FROM items ORDER BY id DESC LIMIT 1"
   );
   if (lastProduct.length === 0) {
@@ -160,7 +160,7 @@ async function getBybarcode(event, data) {
   try {
     const db = getDatabase();
 
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM items WHERE barcode LIKE ? LIMIT 1",
       [`%${name}%`]
     );
@@ -179,7 +179,7 @@ async function findById(event, { id }) {
   try {
     const db = getDatabase();
     // Find user in database
-    const [rows] = await db.execute("SELECT * FROM items WHERE id = ?", [id]);
+    const rows = await db.all("SELECT * FROM items WHERE id = ?", [id]);
     if (rows.length === 0) {
       return {
         success: false,
@@ -255,14 +255,14 @@ async function search(
     const whereSQL = whereClauses.length > 0 ? whereClauses.join(" AND ") : "1=1";
 
     // جلب البيانات
-    const [rows] = await db.execute(
+    const rows = await db.all(
       `SELECT * FROM items WHERE ${whereSQL} ORDER BY id DESC LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
     console.log("search products:", rows, limit, offset);
 
     // حساب الإجمالي
-    const [search] = await db.execute(
+    const search = await db.all(
       `SELECT COUNT(*) as total FROM items WHERE ${whereSQL}`,
       params
     );
@@ -289,7 +289,7 @@ async function update(event, data) {
   try {
     const db = getDatabase();
 
-    await db.execute(
+    await db.run(
       "UPDATE items SET name = ?, quantity = ?, price = ?, buy_price=? WHERE barcode = ?",
       [name, quantity, price, buy_price, id]
     );
@@ -312,13 +312,13 @@ async function deleteProduct(event, id) {
 
   try {
     const db = getDatabase();
-    const [rows] = await db.execute("SELECT * FROM items WHERE id LIKE ?", [
+    const rows = await db.all("SELECT * FROM items WHERE id LIKE ?", [
       `%${id}%`,
     ]);
     if (rows.length === 0) {
       throw new Error("منتج غير موجود");
     }
-    await db.execute("DELETE FROM items WHERE id LIKE ?", [`%${id}%`]);
+    await db.run("DELETE FROM items WHERE id LIKE ?", [`%${id}%`]);
 
     return {
       success: true,

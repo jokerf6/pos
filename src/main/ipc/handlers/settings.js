@@ -4,7 +4,7 @@ const { getDatabase } = require("../../database/connection.js");
 async function getByDomain(event, domain) {
   try {
     const db = getDatabase();
-    const [data] = await db.execute(
+    const data = await db.all(
       "SELECT * FROM settings WHERE `domain` = ?",
       [domain]
     );
@@ -22,7 +22,7 @@ async function getByDomain(event, domain) {
 async function getByKey(event, key) {
   try {
     const db = getDatabase();
-    const [data] = await db.execute(
+    const data = await db.all(
       "SELECT * FROM settings WHERE `key` = ? LIMIT 1",
       [key]
     );
@@ -40,7 +40,7 @@ async function getByKey(event, key) {
 async function getAll(event) {
   try {
     const db = getDatabase();
-    const [data] = await db.execute("SELECT * FROM settings");
+    const data = await db.all("SELECT * FROM settings");
     return {
       success: true,
       message: "Setting fetched successfully",
@@ -62,7 +62,7 @@ async function updateSettings(event, data) {
     const promises = data.map(({ key, value }) => {
       if (!key || value === undefined) return null;
 
-      return db.execute("UPDATE settings SET value = ? WHERE `key` = ?", [
+      return db.run("UPDATE settings SET value = ? WHERE `key` = ?", [
         value,
         key,
       ]);

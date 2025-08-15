@@ -17,7 +17,7 @@ async function createUser(event, credentials) {
     const db = getDatabase();
 
     // Check if username already exists
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM users WHERE username = ?",
       [username]
     );
@@ -26,6 +26,7 @@ async function createUser(event, credentials) {
     }
 
     // Start transaction
+    await db.run("BEGIN TRANSACTION");
 
     try {
       // Hash password
@@ -33,12 +34,12 @@ async function createUser(event, credentials) {
       const passwordHash = await bcrypt.hash(password, saltRounds);
       
       // Create user (without role)
-      const [result] = await db.execute(
+      const result = await db.run(
         "INSERT INTO users (username, password_hash, active, created_at) VALUES (?, ?, 1, CURRENT_TIMESTAMP)",
         [username, passwordHash]
       );
 
-      const userId = result.insertId;
+      const userId = result.lastID;
 
       // Add permissions if provided
       if (permissions && permissions.length > 0) {
@@ -46,7 +47,7 @@ async function createUser(event, credentials) {
         const placeholders = values.map(() => '(?, ?, ?)').join(', ');
         const flatValues = values.flat();
 
-        await db.execute(`
+        await db.run(`
           INSERT INTO user_permissions (user_id, permission_id, granted_by)
           VALUES ${placeholders}
         `, flatValues);
@@ -56,7 +57,7 @@ async function createUser(event, credentials) {
       }
 
       // Commit transaction
-      await db.execute('COMMIT');
+      await db.run('COMMIT');
 
       return {
         success: true,
@@ -65,7 +66,7 @@ async function createUser(event, credentials) {
       };
     } catch (error) {
       // Rollback transaction
-      await db.execute('ROLLBACK');
+      await db.run('ROLLBACK');
       throw error;
     }
   } catch (error) {
@@ -83,7 +84,7 @@ async function getAll(
     const offset = (page - 1) * limit;
 
     // Get users with their permissions count
-    const [users] = await db.execute(`
+    const users = await db.all(`
       SELECT u.id, u.username, u.active, u.created_at, u.last_login,
              COUNT(up.permission_id) as permissions_count
       FROM users u
@@ -93,8 +94,8 @@ async function getAll(
       LIMIT ? OFFSET ?
     `, [limit, offset]);
 
-    const [rows] = await db.execute("SELECT COUNT(*) as total FROM users");
-    
+    const rows = await db.all("SELECT COUNT(*) as total FROM users");
+
     return {
       success: true,
       users,
@@ -110,7 +111,7 @@ async function getByName(name) {
   try {
     const db = getDatabase();
 
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM users WHERE username LIKE ?",
       [`%${name}%`]
     );
@@ -137,7 +138,7 @@ async function getById(event,  id ) {
     const db = getDatabase();
     
     // Get user basic info
-    const [users] = await db.execute("SELECT * FROM users WHERE id = ?", [id]);
+    const users = await db.all("SELECT * FROM users WHERE id = ?", [id]);
     if (users.length === 0) {
       return {
         success: false,
@@ -148,7 +149,7 @@ async function getById(event,  id ) {
     const user = users[0];
 
     // Get user permissions
-    const [permissions] = await db.execute(`
+    const permissions = await db.all(`
       SELECT p.id, p.name, p.display_name, p.description, p.category,
              up.granted_at, up.granted_by
       FROM permissions p
@@ -181,11 +182,11 @@ async function search(
     const offset = (page - 1) * limit;
 
     // Find user in database
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM users WHERE username LIKE ? LIMIT ? OFFSET ?",
       [`%${name}%`, limit, offset]
     );
-    const [search] = await db.execute(
+    const search = await db.all(
       "SELECT COUNT(*) as total FROM users WHERE username LIKE ?",
       [`%${name}%`]
     );
@@ -213,7 +214,7 @@ async function update(event, user) {
     const db = getDatabase();
 
     // Check if username already exists for another user
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM users WHERE username = ? AND id != ?",
       [username, id]
     );
@@ -229,12 +230,12 @@ async function update(event, user) {
         // Hash new password
         const saltRounds = 12;
         const passwordHash = await bcrypt.hash(password, saltRounds);
-        await db.execute(
+        await db.run(
           "UPDATE users SET username = ?, password_hash = ? WHERE id = ?",
           [username, passwordHash, id]
         );
       } else {
-        await db.execute(
+        await db.run(
           "UPDATE users SET username = ? WHERE id = ?",
           [username, id]
         );
@@ -242,7 +243,7 @@ async function update(event, user) {
 
       // Update permissions
       // Remove all existing permissions
-      await db.execute(
+      await db.run(
         "DELETE FROM user_permissions WHERE user_id = ?",
         [id]
       );
@@ -253,7 +254,7 @@ async function update(event, user) {
         const placeholders = values.map(() => '(?, ?, ?)').join(', ');
         const flatValues = values.flat();
 
-        await db.execute(`
+        await db.run(`
           INSERT INTO user_permissions (user_id, permission_id, granted_by)
           VALUES ${placeholders}
         `, flatValues);
@@ -284,7 +285,7 @@ async function deleteUser(event, id) {
     const db = getDatabase();
     
     // Check if user exists
-    const [rows] = await db.execute("SELECT * FROM users WHERE id = ?", [id]);
+    const rows = await db.all("SELECT * FROM users WHERE id = ?", [id]);
     if (rows.length === 0) {
       throw new Error("مستخدم غير موجود");
     }
@@ -293,10 +294,10 @@ async function deleteUser(event, id) {
 
     try {
       // Delete user permissions first (due to foreign key constraint)
-      await db.execute("DELETE FROM user_permissions WHERE user_id = ?", [id]);
-      
+      await db.run("DELETE FROM user_permissions WHERE user_id = ?", [id]);
+
       // Delete user
-      await db.execute("DELETE FROM users WHERE id = ?", [id]);
+      await db.run("DELETE FROM users WHERE id = ?", [id]);
 
       // Commit transaction
 

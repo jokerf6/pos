@@ -231,7 +231,7 @@ const ProductStatistics = () => {
   }, [filters]);
 
   // الترقيم
-  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredData?.length / PAGE_SIZE);
   const startIndex = (page - 1) * PAGE_SIZE;
   const paginatedData = filteredData.slice(startIndex, startIndex + PAGE_SIZE);
 
@@ -403,7 +403,7 @@ const ProductStatistics = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactionState.transaction.transactions.length > 0 ? (
+              {transactionState.transaction.transactions?.length > 0 ? (
                 transactionState.transaction.transactions.map((row: any) => (
                   <TableRow
                     key={row.id}
@@ -505,16 +505,16 @@ const ProductStatistics = () => {
         <div className="flex justify-between items-center">
           <div className="text-sm text-gray-600">
             عرض{" "}
-            {(transactionState.transaction.pagination.currentPage - 1) *
-              transactionState.transaction.pagination.itemsPerPage +
+            {(transactionState.transaction?.pagination?.currentPage - 1) *
+              transactionState.transaction?.pagination?.itemsPerPage +
               1}{" "}
             إلى{" "}
             {Math.min(
-              transactionState.transaction.pagination.currentPage *
-                transactionState.transaction.pagination.itemsPerPage,
-              transactionState.transaction.pagination.totalItems
+              transactionState.transaction?.pagination?.currentPage *
+                transactionState.transaction?.pagination?.itemsPerPage,
+              transactionState.transaction?.pagination?.totalItems
             )}{" "}
-            من {transactionState.transaction.pagination.totalItems} حركة
+            من {transactionState.transaction?.pagination?.totalItems} حركة
           </div>
           <div className="flex items-center gap-3">
             <Button

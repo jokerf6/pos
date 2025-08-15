@@ -1,317 +1,265 @@
-const mysql = require("mysql2/promise");
-const { dirname, join } = require("path");
-const fs = require("fs").promises;
-const { fileURLToPath } = require("url");
-const log = require("electron-log");
-
-// const __filename = __filename || fileURLToPath(require.main.filename);
-// const __dirname = __dirname || dirname(__filename);
-
+const sqlite3 = require('sqlite3');
+const { open } = require('sqlite');
+const log = require('electron-log');
+const path = require('path');
 let database = null;
-let connectionPool = null;
 
-// Database configuration
-const dbConfig = {
-  host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 3307,
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "fahd200",
-  database: process.env.DB_NAME || "casher",
-  charset: "utf8mb4",
-  timezone: "+00:00",
-};
+// كود SQL لإنشاء الجداول وإدراج البيانات
+const schemaSQL = `
+-- Table structure for table 'categories'
+CREATE TABLE IF NOT EXISTS categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  image TEXT,
+  name TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
-/**
- * Initialize database connection
- */
+-- Table structure for table 'users'
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  role TEXT CHECK(role IN ('admin','manager','cashier')) DEFAULT 'cashier',
+  active INTEGER DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_login TIMESTAMP
+);
+
+-- Table structure for table 'daily'
+CREATE TABLE IF NOT EXISTS daily (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date DATE DEFAULT (date('now')),
+  note TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  userId INTEGER NOT NULL,
+  closed_at DATETIME,
+  opened_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  openPrice INTEGER,
+  closePrice INTEGER,
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Table structure for table 'credit'
+CREATE TABLE IF NOT EXISTS credit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  reason TEXT NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  reciever TEXT,
+  daily_id INTEGER,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (daily_id) REFERENCES daily(id) ON DELETE SET NULL
+);
+
+-- Table structure for table 'items'
+CREATE TABLE IF NOT EXISTS items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  barcode TEXT,
+  price DECIMAL(10,2) NOT NULL,
+  stock INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  description TEXT,
+  quantity INTEGER,
+  buy_price REAL,
+  category_id INTEGER,
+  FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+-- Table structure for table 'invoices'
+CREATE TABLE IF NOT EXISTS invoices (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  customerName TEXT,
+  customerPhone TEXT,
+  paymentType TEXT CHECK(paymentType IN ('خالص','أجل','مرتجع')) NOT NULL,
+  discount DECIMAL(10,2) DEFAULT 0.00,
+  total DECIMAL(10,2) NOT NULL,
+  totalAfterDiscount DECIMAL(10,2) NOT NULL,
+  dailyId INTEGER,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (dailyId) REFERENCES daily(id) ON DELETE SET NULL
+);
+
+-- Table structure for table 'invoiceItems'
+CREATE TABLE IF NOT EXISTS invoiceItems (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  invoiceId INTEGER NOT NULL,
+  itemId INTEGER NOT NULL,
+  pricePerUnit DECIMAL(10,2) NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  discount DECIMAL(10,2) DEFAULT 0.00,
+  price DECIMAL(10,2) NOT NULL,
+  totalPriceAfterDiscount DECIMAL(10,2) NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (invoiceId) REFERENCES invoices(id) ON DELETE CASCADE,
+  FOREIGN KEY (itemId) REFERENCES items(id) ON DELETE CASCADE
+);
+
+-- Table structure for table 'permissions'
+CREATE TABLE IF NOT EXISTS permissions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  display_name TEXT NOT NULL,
+  description TEXT,
+  category TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table structure for table 'settings'
+CREATE TABLE IF NOT EXISTS settings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  domain TEXT NOT NULL,
+  key TEXT NOT NULL,
+  value TEXT NOT NULL,
+  name TEXT,
+  type TEXT CHECK(type IN ('string','number','boolean'))
+);
+
+-- Table structure for table 'transactions'
+CREATE TABLE IF NOT EXISTS transactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  item_id INTEGER NOT NULL,
+  transaction_type TEXT CHECK(transaction_type IN ('purchase','return','sale')) NOT NULL,
+  quantity INTEGER NOT NULL,
+  unit_price DECIMAL(10,2) NOT NULL,
+  total_value DECIMAL(10,2) AS (quantity * unit_price),
+  transaction_date DATE NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (item_id) REFERENCES items(id)
+);
+
+-- Table structure for table 'user_permissions'
+CREATE TABLE IF NOT EXISTS user_permissions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  permission_id INTEGER NOT NULL,
+  granted_by INTEGER,
+  granted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE,
+  FOREIGN KEY (granted_by) REFERENCES users(id) ON DELETE SET NULL,
+  UNIQUE (user_id, permission_id)
+);
+
+-- Insert initial data for users
+INSERT INTO users (id, username, password_hash, role, active, created_at, updated_at, last_login) VALUES
+(1, 'admin', '$2a$12$OKIaDMekpEnHqqEgu2lB9efGPWsLeYYtOjifZlUeTngvg9yN6G/VW', 'admin', 1, '2025-07-07 13:11:52', '2025-08-13 17:08:38', '2025-08-13 17:08:38');
+
+-- Insert initial data for permissions
+INSERT INTO permissions (id, name, display_name, description, category, created_at, updated_at) VALUES
+(1, 'sales.create', 'إنشاء مبيعات', 'إمكانية إنشاء فواتير مبيعات جديدة', 'sales', '2025-08-06 14:22:02', '2025-08-06 20:47:10'),
+(2, 'sales.view', 'عرض المبيعات', 'إمكانية عرض فواتير المبيعات', 'sales', '2025-08-06 14:22:02', '2025-08-06 20:47:15'),
+(6, 'inventory.view', 'عرض المخزون', 'إمكانية عرض المنتجات والمخزون', 'products', '2025-08-06 14:22:02', '2025-08-06 20:47:29'),
+(7, 'inventory.create', 'إضافة منتجات', 'إمكانية إضافة منتجات جديدة', 'products', '2025-08-06 14:22:02', '2025-08-06 20:47:33'),
+(8, 'inventory.edit', 'تعديل المنتجات', 'إمكانية تعديل بيانات المنتجات', 'products', '2025-08-06 14:22:02', '2025-08-06 20:47:35'),
+(9, 'inventory.delete', 'حذف المنتجات', 'إمكانية حذف المنتجات', 'products', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
+(15, 'users.view', 'عرض المستخدمين', 'إمكانية عرض قائمة المستخدمين', 'users', '2025-08-06 14:22:02', '2025-08-06 20:47:42'),
+(16, 'users.create', 'إضافة مستخدمين', 'إمكانية إضافة مستخدمين جدد', 'users', '2025-08-06 14:22:02', '2025-08-06 20:47:49'),
+(17, 'users.edit', 'تعديل المستخدمين', 'إمكانية تعديل بيانات المستخدمين', 'users', '2025-08-06 14:22:02', '2025-08-06 20:47:50'),
+(18, 'users.delete', 'حذف المستخدمين', 'إمكانية حذف المستخدمين', 'users', '2025-08-06 14:22:02', '2025-08-06 20:47:52'),
+(19, 'users.permissions', 'إدارة الصلاحيات', 'إمكانية تعديل صلاحيات المستخدمين', 'users', '2025-08-06 14:22:02', '2025-08-06 20:47:54'),
+(23, 'cashier.open', 'فتح الكاشير', 'إمكانية فتح جلسة الكاشير', 'system', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
+(24, 'cashier.close', 'إغلاق الكاشير', 'إمكانية إغلاق جلسة الكاشير', 'system', '2025-08-06 14:22:02', '2025-08-06 20:48:04'),
+(26, 'category.view', 'عرض الاقسام', 'إمكانية عرض كل الاقسام', 'category', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
+(27, 'category.create', 'إضافة قسم', 'إمكانية إضافة قسم الي الاقسام', 'category', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
+(28, 'category.delete', 'حذف قسم', 'إمكانية حذق قسم من الاقسام', 'category', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
+(30, 'credit.view', 'عرض المصروفات', 'إمكانية عرض كل المصروفات', 'credit', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
+(31, 'credit.create', 'عمل مصروف', 'إمكانية عمل مصروف', 'credit', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
+(32, 'credit.delete', 'حذف مصروف', 'إمكانية حذف مصروف من المصروفات', 'credit', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
+(33, 'settings.view', 'عرض الاعادات', 'إمكانيه عرض الاعدادات والتعديل عليها', 'settings', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
+(34, 'transaction.view', 'عرض الاحصائيات', 'إمكانيه عرض الاحصائيات', 'transaction', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
+(35, 'inventory.statistics', 'احصائيات المنتجات', 'إمكانية عرض احصائيات المنتجات', 'products', '2025-08-06 14:22:02', '2025-08-06 20:47:38');
+
+-- Insert initial data for settings
+INSERT INTO settings (id, domain, key, value, name, type) VALUES
+(1, 'products', 'warning', '3', 'تحذير بنفاذ الكمية بعد', 'number'),
+(2, 'daily', 'open', 'true', 'فتح اليومية بمبلغ مالي', 'boolean'),
+(3, 'daily', 'closeWithSchudledInvoice', 'false', 'غلف اليومية بوجود فواتير أجل', 'boolean');
+
+-- Insert initial data for user_permissions
+INSERT INTO user_permissions (id, user_id, permission_id, granted_by, granted_at) VALUES
+(33, 1, 27, 1, '2025-08-13 17:08:31'),
+(34, 1, 28, 1, '2025-08-13 17:08:31'),
+(35, 1, 26, 1, '2025-08-13 17:08:31'),
+(36, 1, 32, 1, '2025-08-13 17:08:31'),
+(37, 1, 30, 1, '2025-08-13 17:08:31'),
+(38, 1, 31, 1, '2025-08-13 17:08:31'),
+(39, 1, 7, 1, '2025-08-13 17:08:31'),
+(40, 1, 35, 1, '2025-08-13 17:08:31'),
+(41, 1, 8, 1, '2025-08-13 17:08:31'),
+(42, 1, 9, 1, '2025-08-13 17:08:31'),
+(43, 1, 6, 1, '2025-08-13 17:08:31'),
+(44, 1, 1, 1, '2025-08-13 17:08:31'),
+(45, 1, 2, 1, '2025-08-13 17:08:31'),
+(46, 1, 33, 1, '2025-08-13 17:08:31'),
+(47, 1, 24, 1, '2025-08-13 17:08:31'),
+(48, 1, 23, 1, '2025-08-13 17:08:31'),
+(49, 1, 34, 1, '2025-08-13 17:08:31'),
+(50, 1, 19, 1, '2025-08-13 17:08:31'),
+(51, 1, 16, 1, '2025-08-13 17:08:31'),
+(52, 1, 17, 1, '2025-08-13 17:08:31'),
+(53, 1, 18, 1, '2025-08-13 17:08:31'),
+(54, 1, 15, 1, '2025-08-13 17:08:31');
+
+-- Update sequences
+UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM categories) WHERE name = 'categories';
+UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM credit) WHERE name = 'credit';
+UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM daily) WHERE name = 'daily';
+UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM items) WHERE name = 'items';
+UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM invoices) WHERE name = 'invoices';
+UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM invoiceItems) WHERE name = 'invoiceItems';
+UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM permissions) WHERE name = 'permissions';
+UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM settings) WHERE name = 'settings';
+UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM transactions) WHERE name = 'transactions';
+UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM user_permissions) WHERE name = 'user_permissions';
+`;
+
 async function initDatabase() {
   try {
-    log.info("Initializing database connection...");
+    const dbPath = path.join(__dirname, 'casher.db');
+    log.info(`Database path: ${dbPath}`);
 
-    // Create connection pool
-    connectionPool = mysql.createPool(dbConfig);
+    // افتح الاتصال مع تفعيل التصحيح
+    database = await open({
+      filename: dbPath,
+      driver: sqlite3.Database,
+      verbose: true
+    });
 
-    // Test connection
-    const connection = await connectionPool.getConnection();
-    await connection.ping();
-    connection.release();
+    // تفعيل المفاتيح الخارجية
+    await database.exec('PRAGMA foreign_keys = ON');
 
-    log.info("Database connection established successfully");
-
-    // Run migrations
-   // await runMigrations();
-
-    // Set global database reference
-    database = connectionPool;
+    // التحقق مما إذا كانت الجداول موجودة بالفعل
+    const tables = await database.all("SELECT name FROM sqlite_master WHERE type='table'");
+    
+    if (tables.length === 0) {
+      // الجداول غير موجودة، قم بإنشائها
+      log.info("Creating database schema for the first time...");
+      await createSchema();
+      // await insertInitialData();
+    } else {
+      log.info("Database already initialized, skipping schema creation");
+    }
 
     return database;
   } catch (error) {
-    log.error("Database initialization failed:", error.message);
-
-    
-
+    log.error("Database initialization failed:", {
+      message: error.message,
+      stack: error.stack
+    });
     throw error;
   }
 }
 
-/**
- * Create database if it doesn't exist
- */
-async function createDatabase() {
-  try {
-    log.info("Creating database...");
+async function createSchema() {
+ 
 
-    const tempConfig = { ...dbConfig };
-    delete tempConfig.database;
-
-    const tempConnection = await mysql.createConnection(tempConfig);
-
-    await tempConnection.execute(
-      `CREATE DATABASE IF NOT EXISTS \`${dbConfig.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
-    );
-    await tempConnection.end();
-
-    log.info("Database created successfully");
-  } catch (error) {
-    log.error("Database creation failed:", error.message);
-    throw error;
-  }
-}
-
-/**
- * Run database migrations
- */
-/*
-async function runMigrations() {
-  try {
-    log.info("Running database migrations...");
-
-    // Create migrations table if it doesn't exist
-    await connectionPool.execute(`
-      CREATE TABLE IF NOT EXISTS migrations (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        filename VARCHAR(255) NOT NULL UNIQUE,
-        executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Get list of executed migrations
-    const [executedMigrations] = await connectionPool.execute(
-      "SELECT filename FROM migrations ORDER BY id"
-    );
-
-    const executedFiles = executedMigrations.map((row) => row.filename);
-
-    // Read migration files
-    const migrationsDir = join(__dirname, "migrations");
-
-    try {
-      const migrationFiles = await fs.readdir(migrationsDir);
-      const sqlFiles = migrationFiles
-        .filter((file) => file.endsWith(".sql"))
-        .sort();
-
-      // Execute pending migrations
-      for (const file of sqlFiles) {
-        if (!executedFiles.includes(file)) {
-          await executeMigration(file);
-        }
-      }
-    } catch (dirError) {
-      if (dirError.code === "ENOENT") {
-        log.warn("Migrations directory not found, creating initial schema...");
-        await createInitialSchema();
-      } else {
-        throw dirError;
-      }
-    }
-
-    log.info("Database migrations completed");
-  } catch (error) {
-    log.error("Migration failed:", error.message);
-    throw error;
-  }
-}
-
-/**
- * Execute a single migration file
- */
-/*
-async function executeMigration(filename) {
-  try {
-    log.info("Executing migration:", filename);
-
-    const migrationPath = join(__dirname, "migrations", filename);
-    const migrationSQL = await fs.readFile(migrationPath, "utf8");
-
-    // Split SQL statements (simple approach)
-    const statements = migrationSQL
-      .split(";")
-      .map((stmt) => stmt.trim())
-      .filter((stmt) => stmt.length > 0);
-
-    // Execute each statement
-    for (const statement of statements) {
-      await connectionPool.execute(statement);
-    }
-
-    // Record migration as executed
-    await connectionPool.execute(
-      "INSERT INTO migrations (filename) VALUES (?)",
-      [filename]
-    );
-
-    log.info("Migration executed successfully:", filename);
-  } catch (error) {
-    log.error("Migration execution failed:", filename, error.message);
-    throw error;
-  }
-}
-
-/**
- * Create initial database schema
- */
-/*
-async function createInitialSchema() {
-  try {
-    log.info("Creating initial database schema...");
-
-    // Users table
-    await connectionPool.execute(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) NOT NULL UNIQUE,
-        password_hash VARCHAR(255) NOT NULL,
-        email VARCHAR(100) NOT NULL UNIQUE,
-        role ENUM('admin', 'manager', 'cashier') DEFAULT 'cashier',
-        active BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        last_login TIMESTAMP NULL,
-        INDEX idx_username (username),
-        INDEX idx_email (email),
-        INDEX idx_role (role)
-      ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
-    `);
-
-    // Products table
-    await connectionPool.execute(`
-      CREATE TABLE IF NOT EXISTS products (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        description TEXT,
-        barcode VARCHAR(100) UNIQUE,
-        price DECIMAL(10, 2) NOT NULL,
-        cost DECIMAL(10, 2) DEFAULT 0,
-        stock_quantity INT DEFAULT 0,
-        min_stock_level INT DEFAULT 0,
-        category VARCHAR(100),
-        active BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_name (name),
-        INDEX idx_barcode (barcode),
-        INDEX idx_category (category),
-        INDEX idx_active (active)
-      ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
-    `);
-
-    // Transactions table
-    await connectionPool.execute(`
-      CREATE TABLE IF NOT EXISTS transactions (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        transaction_number VARCHAR(50) NOT NULL UNIQUE,
-        user_id INT NOT NULL,
-        total_amount DECIMAL(10, 2) NOT NULL,
-        tax_amount DECIMAL(10, 2) DEFAULT 0,
-        discount_amount DECIMAL(10, 2) DEFAULT 0,
-        payment_method ENUM('cash', 'card', 'digital') DEFAULT 'cash',
-        status ENUM('pending', 'completed', 'cancelled', 'refunded') DEFAULT 'completed',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id),
-        INDEX idx_transaction_number (transaction_number),
-        INDEX idx_user_id (user_id),
-        INDEX idx_status (status),
-        INDEX idx_created_at (created_at)
-      ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
-    `);
-
-    // Transaction items table
-    await connectionPool.execute(`
-      CREATE TABLE IF NOT EXISTS transaction_items (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        transaction_id INT NOT NULL,
-        product_id INT NOT NULL,
-        quantity INT NOT NULL,
-        unit_price DECIMAL(10, 2) NOT NULL,
-        total_price DECIMAL(10, 2) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
-        FOREIGN KEY (product_id) REFERENCES products(id),
-        INDEX idx_transaction_id (transaction_id),
-        INDEX idx_product_id (product_id)
-      ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
-    `);
-
-    // Settings table
-    await connectionPool.execute(`
-      CREATE TABLE IF NOT EXISTS settings (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        key_name VARCHAR(100) NOT NULL UNIQUE,
-        value TEXT,
-        description TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_key_name (key_name)
-      ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
-    `);
-
-    // Insert default admin user
-    const bcrypt = await import("bcryptjs");
-    const defaultPassword = await bcrypt.default.hash("admin123", 12);
-
-    await connectionPool.execute(
-      `
-      INSERT IGNORE INTO users (username, password_hash, email, role) 
-      VALUES ('admin', ?, 'admin@casher.local', 'admin')
-    `,
-      [defaultPassword]
-    );
-
-    // Insert default settings
-    const defaultSettings = [
-      ["store_name", "Casher Store", "Name of the store"],
-      ["currency", "USD", "Default currency"],
-      ["tax_rate", "0.10", "Default tax rate (10%)"],
-      [
-        "receipt_footer",
-        "Thank you for your business!",
-        "Footer text for receipts",
-      ],
-    ];
-
-    for (const [key, value, description] of defaultSettings) {
-      await connectionPool.execute(
-        `
-        INSERT IGNORE INTO settings (key_name, value, description) 
-        VALUES (?, ?, ?)
-      `,
-        [key, value, description]
-      );
-    }
-
-    log.info("Initial database schema created successfully");
-  } catch (error) {
-    log.error("Initial schema creation failed:", error.message);
-    throw error;
-  }
+    await database.exec(schemaSQL);
 }
 
 
-/**
- * Get database connection
- */
 function getDatabase() {
   if (!database) {
     throw new Error("Database not initialized. Call initDatabase() first.");
@@ -319,26 +267,17 @@ function getDatabase() {
   return database;
 }
 
-/**
- * Close database connection
- */
 async function closeDatabase() {
-  if (connectionPool) {
-    await connectionPool.end();
+  if (database) {
+    await database.close();
     database = null;
-    connectionPool = null;
-    log.info("Database connection closed");
+    log.info("SQLite database connection closed");
   }
 }
 
-/**
- * Health check
- */
 async function healthCheck() {
   try {
-    const connection = await connectionPool.getConnection();
-    await connection.ping();
-    connection.release();
+    await database.get(`SELECT 1`);
     return { status: "healthy", timestamp: new Date() };
   } catch (error) {
     log.error("Database health check failed:", error.message);

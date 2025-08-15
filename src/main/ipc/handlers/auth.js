@@ -30,20 +30,22 @@ async function login(event, credentials) {
     const db = getDatabase();
 
     // Find user in database
-    const [users] = await db.execute(
-      "SELECT id, username, password_hash, role, created_at FROM users WHERE username = ? AND active = 1",
-      [username]
-    );
-
-    if (users.length === 0) {
+  const user = await db.get(
+  "SELECT id, username, password_hash, role, created_at FROM users WHERE username = ? AND active = 1",
+  [username]
+);
+    if (!user) {
       log.warn("Login failed: User not found:", username);
       throw new Error("Invalid username or password");
     }
 
-    const user = users[0];
-
     const store = new Store();
-    store.set("user.id", user.id);
+    if (user.id !== undefined && user.id !== null) {
+      store.set("user.id", user.id);
+    } else {
+      // 如果 user.id 是 undefined/null，使用 delete 清除值
+      store.delete("user.id");
+    }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
@@ -53,16 +55,13 @@ async function login(event, credentials) {
       throw new Error("Invalid username or password");
     }
 
-const [permissionsRows] = await db.execute(
-  `SELECT p.name 
-   FROM user_permissions up 
-   JOIN permissions p ON up.permission_id = p.id 
-   WHERE up.user_id = ?`,
-  [user.id]
-);
-
-// استخرج قائمة الصلاحيات كـ string[]
-const permissions = permissionsRows.map((row) => row.name);
+const permissionsRows = await db.all(`
+  SELECT p.name 
+  FROM user_permissions up 
+  JOIN permissions p ON up.permission_id = p.id 
+  WHERE up.user_id = ?
+`,[user.id]);
+const permissions = permissionsRows? permissionsRows?.map((row) => row.name):[];
 
     // Generate JWT token
     const token = jwt.sign(
@@ -88,7 +87,7 @@ const permissions = permissionsRows.map((row) => row.name);
     };
 
     // Update last login time
-    await db.execute("UPDATE users SET last_login = NOW() WHERE id = ?", [
+    await db.run("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?", [
       user.id,
     ]);
 

@@ -5,13 +5,15 @@ const fs = require("fs");
 async function createCategory(event, data) {
   const { name, image } = data;
   let savedImagePath = null;
-
+if (!name) {
+  throw new Error("برجاء إدخال اسم القسم");
+}
+  const dirname = path.join(__dirname, `../../public/uploads/${name}`);
   if (image) {
-    const uploadsPath = path
-      .join(dirname, "../../", "public", "uploads", name)
+    const uploadsPath = dirname
       .split("file:")[1]; // or a custom static folder
-    console.log("uploadsPath------>", uploadsPath);
-    if (!fs.existsSync(uploadsPath)) {
+   
+      if (!fs.existsSync(uploadsPath)) {
       fs.mkdirSync(uploadsPath, { recursive: true });
     }
 
@@ -20,24 +22,17 @@ async function createCategory(event, data) {
 
     savedImagePath = `${filePath}`; // You can use this path in frontend
   }
-  // Validate input
-  if (!name) {
-    throw new Error("برجاء إدخال اسم القسم");
-  }
-
   try {
     const db = getDatabase();
 
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM categories WHERE name LIKE ?",
       [`%${name}%`]
     );
     if (rows.length > 0) {
       throw new Error("اسم القسم موجود بالفعل");
     }
-    console.log("name", name);
-    console.log("image", image);
-    await db.execute("INSERT INTO categories (name, image) VALUES (?, ?)", [
+    await db.run("INSERT INTO categories (name, image) VALUES (?, ?)", [
       name,
       savedImagePath || null,
     ]);
@@ -57,7 +52,7 @@ async function getAll(event) {
     const db = getDatabase();
 
     // Find user in database
-    const [data] = await db.execute("SELECT * FROM categories");
+    const data = await db.all("SELECT * FROM categories");
     return {
       success: true,
       data,
@@ -72,7 +67,7 @@ async function getByName(name) {
   try {
     const db = getDatabase();
 
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM categories WHERE username LIKE ?",
       [`%${name}%`]
     );
@@ -92,7 +87,7 @@ async function findById(event, id) {
   try {
     const db = getDatabase();
     // Find user in database
-    const [rows] = await db.execute("SELECT * FROM categories WHERE id = ?", [
+    const rows = await db.all("SELECT * FROM categories WHERE id = ?", [
       id,
     ]);
     if (rows.length === 0) {
@@ -116,7 +111,7 @@ async function search(event, name) {
     const db = getDatabase();
 
     // Find user in database
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM categories WHERE name LIKE ?",
       [`%${name}%`]
     );
@@ -141,7 +136,7 @@ async function update(event, user) {
   try {
     const db = getDatabase();
 
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM categories WHERE username LIKE ?",
       [`%${name}%`]
     );
@@ -149,7 +144,7 @@ async function update(event, user) {
       throw new Error("اسم القسم موجود بالفعل");
     }
 
-    await db.execute("UPDATE categories SET name = ?,  WHERE id = ?", [
+    await db.run("UPDATE categories SET name = ?,  WHERE id = ?", [
       name,
       id,
     ]);
@@ -172,14 +167,14 @@ async function deleteCategory(event, id) {
 
   try {
     const db = getDatabase();
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM categories WHERE id LIKE ?",
       [`%${id}%`]
     );
     if (rows.length === 0) {
       throw new Error("قسم غير موجود");
     }
-    await db.execute("DELETE FROM categories WHERE id LIKE ?", [`%${id}%`]);
+    await db.run("DELETE FROM categories WHERE id LIKE ?", [`%${id}%`]);
 
     return {
       success: true,

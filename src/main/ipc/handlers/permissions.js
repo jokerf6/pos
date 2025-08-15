@@ -8,7 +8,7 @@ async function getAllPermissions(event) {
   try {
     const db = getDatabase();
     
-    const [permissions] = await db.execute(`
+    const permissions = await db.all(`
       SELECT id, name, display_name, description, category 
       FROM permissions 
       ORDER BY category, display_name
@@ -30,8 +30,8 @@ async function getAllPermissions(event) {
 async function getPermissionsByCategory(event) {
   try {
     const db = getDatabase();
-    
-    const [permissions] = await db.execute(`
+
+    const permissions = await db.all(`
       SELECT id, name, display_name, description, category 
       FROM permissions 
       ORDER BY category, display_name
@@ -62,8 +62,8 @@ async function getPermissionsByCategory(event) {
 async function getUserPermissions(event, { userId }) {
   try {
     const db = getDatabase();
-    
-    const [permissions] = await db.execute(`
+
+    const permissions = await db.all(`
       SELECT p.id, p.name, p.display_name, p.description, p.category,
              up.granted_at, up.granted_by
       FROM permissions p
@@ -90,7 +90,7 @@ async function grantPermission(event, { userId, permissionId, grantedBy }) {
     const db = getDatabase();
     
     // Check if permission already exists
-    const [existing] = await db.execute(`
+    const existing = await db.all(`
       SELECT id FROM user_permissions 
       WHERE user_id = ? AND permission_id = ?
     `, [userId, permissionId]);
@@ -103,7 +103,7 @@ async function grantPermission(event, { userId, permissionId, grantedBy }) {
     }
 
     // Grant permission
-    await db.execute(`
+    await db.run(`
       INSERT INTO user_permissions (user_id, permission_id, granted_by)
       VALUES (?, ?, ?)
     `, [userId, permissionId, grantedBy]);
@@ -127,8 +127,8 @@ async function grantPermission(event, { userId, permissionId, grantedBy }) {
 async function revokePermission(event, { userId, permissionId }) {
   try {
     const db = getDatabase();
-    
-    const [result] = await db.execute(`
+
+    const result = await db.run(`
       DELETE FROM user_permissions 
       WHERE user_id = ? AND permission_id = ?
     `, [userId, permissionId]);
@@ -161,11 +161,11 @@ async function updateUserPermissions(event, { userId, permissionIds, grantedBy }
     const db = getDatabase();
     
     // Start transaction
-    await db.execute('START TRANSACTION');
+    await db.run('START TRANSACTION');
 
     try {
       // Remove all existing permissions for user
-      await db.execute(`
+      await db.run(`
         DELETE FROM user_permissions WHERE user_id = ?
       `, [userId]);
 
@@ -175,7 +175,7 @@ async function updateUserPermissions(event, { userId, permissionIds, grantedBy }
         const placeholders = values.map(() => '(?, ?, ?)').join(', ');
         const flatValues = values.flat();
 
-        await db.execute(`
+        await db.run(`
           INSERT INTO user_permissions (user_id, permission_id, granted_by)
           VALUES ${placeholders}
         `, flatValues);
@@ -183,7 +183,7 @@ async function updateUserPermissions(event, { userId, permissionIds, grantedBy }
 
    
       // Commit transaction
-      await db.execute('COMMIT');
+      await db.run('COMMIT');
 
       return {
         success: true,
@@ -191,7 +191,7 @@ async function updateUserPermissions(event, { userId, permissionIds, grantedBy }
       };
     } catch (error) {
       // Rollback transaction
-      await db.execute('ROLLBACK');
+      await db.run('ROLLBACK');
       throw error;
     }
   } catch (error) {
@@ -207,7 +207,7 @@ async function hasPermission(event, { userId, permissionName }) {
   try {
     const db = getDatabase();
     
-    const [result] = await db.execute(`
+    const result = await db.all(`
       SELECT COUNT(*) as count
       FROM user_permissions up
       INNER JOIN permissions p ON up.permission_id = p.id
@@ -230,9 +230,8 @@ async function hasPermission(event, { userId, permissionName }) {
 async function getUsersWithPermission(event, { permissionName }) {
   try {
     const db = getDatabase();
-    
-    const [users] = await db.execute(`
-      SELECT u.id, u.username, up.granted_at, up.granted_by
+    const users = await db.all(`
+      SELECT u.id, u.username, u.granted_at, up.granted_by
       FROM users u
       INNER JOIN user_permissions up ON u.id = up.user_id
       INNER JOIN permissions p ON up.permission_id = p.id

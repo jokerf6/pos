@@ -19,7 +19,7 @@ async function createCredit(event, data) {
 
   try {
     const db = getDatabase();
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
     );
     console.log(rows);
@@ -27,7 +27,7 @@ async function createCredit(event, data) {
       throw new Error("برجاء فتح يومية جديدة");
     }
 
-    await db.execute(
+    await db.run(
       "INSERT INTO credit (reciever, reason, price,daily_id) VALUES (?, ?, ?,?)",
       [x, reason, price, rows[0].id]
     );
@@ -65,13 +65,13 @@ try {
     const selectParams = [...whereParams, limit, offset];
 
     // run select (with pagination)
-    const [dataRows] = await db.execute(
+    const dataRows = await db.all(
       `SELECT * FROM credit ${whereString} ORDER BY id DESC LIMIT ? OFFSET ?`,
       selectParams
     );
 
     // run count (only where params)
-    const [countRows] = await db.execute(
+    const countRows = await db.all(
       `SELECT COUNT(*) as total FROM credit ${whereString}`,
       whereParams
     );
@@ -94,7 +94,7 @@ async function getCreditByDaily(
     const db = getDatabase();
 
     // جلب الـ daily المفتوح
-    const [rows] = await db.execute(
+    const rows = await db.all(
       "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
     );
     if (rows.length === 0) {
@@ -116,14 +116,14 @@ async function getCreditByDaily(
       params.push(`%${name}%`);
     }
 
-    // جلب البيانات مع الباجيناشن
-    const [data] = await db.execute(
+    // جلب البيانات مع الباجي ناشن
+    const data = await db.all(
       `SELECT * FROM credit ${whereClause} LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
 
     // جلب العدد الكلي
-    const [countRows] = await db.execute(
+    const countRows = await db.all(
       `SELECT COUNT(*) as total FROM credit ${whereClause}`,
       params
     );
@@ -148,13 +148,13 @@ async function deleteCredit(event, id) {
 
   try {
     const db = getDatabase();
-    const [rows] = await db.execute("SELECT * FROM credit WHERE id LIKE ?", [
+    const rows = await db.all("SELECT * FROM credit WHERE id LIKE ?", [
       `%${id}%`,
     ]);
     if (rows.length === 0) {
       throw new Error("منتج غير موجود");
     }
-    await db.execute("DELETE FROM credit WHERE id LIKE ?", [`%${id}%`]);
+    await db.run("DELETE FROM credit WHERE id LIKE ?", [`%${id}%`]);
 
     return {
       success: true,

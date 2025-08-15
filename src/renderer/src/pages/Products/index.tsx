@@ -54,7 +54,7 @@ function ProductsPage() {
           columns={columns}
           data={formattedProducts}
           dataTotal={total}
-          onDelete={handleDelete}
+          // onDelete={handleDelete}
           onEdit={handelEdit}
           onInfo={handelInfo}
         />

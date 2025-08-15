@@ -8,8 +8,8 @@ async function getProductTransactions(event, data) {
     const db = getDatabase();
     
     // Get product details
-    const [productRows] = await db.execute(
-      "SELECT * FROM items WHERE id = ?", 
+    const productRows = await db.all(
+      "SELECT * FROM items WHERE id = ?",
       [productId]
     );
     
@@ -21,7 +21,7 @@ async function getProductTransactions(event, data) {
     }
 
     // Get total count of transactions
-    const [countRows] = await db.execute(
+    const countRows = await db.all(
       "SELECT COUNT(*) as total FROM transactions WHERE item_id = ?",
       [productId]
     );
@@ -29,15 +29,15 @@ async function getProductTransactions(event, data) {
 
     // Get paginated transactions
     const offset = (page - 1) * limit;
-    const [transactionRows] = await db.execute(
+    const transactionRows = await db.all(
       `SELECT 
         t.id,
         t.transaction_type,
         t.quantity,
         t.unit_price,
         t.total_value,
-        DATE_FORMAT(t.transaction_date, '%d/%m/%Y') AS date_ar,
-        t.transaction_date AS date,
+    strftime('%d/%m/%Y', t.transaction_date / 1000, 'unixepoch') AS date_ar,
+          t.transaction_date AS date,
         CASE 
           WHEN t.transaction_type = 'purchase' THEN 'مشتريات'
           WHEN t.transaction_type = 'sale' THEN 'مبيعات'
@@ -56,7 +56,7 @@ async function getProductTransactions(event, data) {
     );
 
     // Calculate statistics (for all transactions, not just current page)
-    const [allTransactions] = await db.execute(
+    const allTransactions = await db.all(
       `SELECT transaction_type, quantity, total_value 
        FROM transactions WHERE item_id = ?`,
       [productId]
@@ -73,7 +73,8 @@ async function getProductTransactions(event, data) {
       totalValue: allTransactions
         .reduce((sum, t) => sum + +t.total_value, 0)
     };
-
+   console.log("transaction");
+   console.log(page);
     return {
       success: true,
       product: {

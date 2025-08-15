@@ -504,7 +504,7 @@ const DataTable = <T extends Record<string, any>>({
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>}
-                    {(user.role === "admin" ||
+                    {/* {(user.role === "admin" ||
                           user?.permissions?.includes("inventory.delete")) &&    <Button
                           variant="ghost"
                           size="sm"
@@ -512,7 +512,7 @@ const DataTable = <T extends Record<string, any>>({
                           onClick={() => onDelete?.(row)}
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>}
+                        </Button>} */}
                       </div>
                     </TableCell>}
                   </TableRow>

@@ -6,7 +6,7 @@ const { setupIPC } = require("./ipc/handlers/index.js");
 const path = require("path");
 const { fileURLToPath } = require("url");
 const log = require("electron-log");
-const isDev = false;
+const isDev = true;
 // Fix for ES modules
 // const __filename = __filename || fileURLToPath(require.main.filename);
 // const __dirname = __dirname || path.dirname(__filename);
@@ -25,7 +25,7 @@ function createWindow() {
   const { width, height } = primaryDisplay.workAreaSize;
 
   // Create the browser window
-  const mainWindow = new BrowserWindow({
+   mainWindow = new BrowserWindow({
     width: Math.min(1200, width * 0.8),
     height: Math.min(800, height * 0.8),
     minWidth: 800,
@@ -85,7 +85,10 @@ function createWindow() {
     log.warn("Blocked attempt to open external URL:", url);
     return { action: "deny" };
   });
-
+mainWindow.webContents.on("did-fail-load", (event, errorCode, errorDescription) => {
+  console.error("Failed to load:", errorDescription);
+  mainWindow.webContents.openDevTools();
+});
   // Handle navigation
   mainWindow.webContents.on("will-navigate", (event, url) => {
     if (url !== startUrl) {

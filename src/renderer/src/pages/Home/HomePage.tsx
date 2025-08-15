@@ -131,14 +131,14 @@ export default function HomePage() {
         },
         {
           title: "عدد الفواتير",
-          value: daily?.data?.count_sales.toString(),
+          value: daily?.data?.count_sales || 0,
           change: `${+daily?.data?.count_sales_change || 0}% من السابق`,
           icon: <Receipt size={24} />,
           color: "blue",
         },
         {
           title: "المنتجات المباعة",
-          value: daily?.data?.total_products_sold.toString(),
+          value: daily?.data?.total_products_sold || 0,
           change: `${+daily?.data?.total_products_sold_change || 0}% من السابق`,
           icon: <Package size={24} />,
           color: "purple",
