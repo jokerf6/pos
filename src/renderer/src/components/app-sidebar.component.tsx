@@ -13,7 +13,8 @@ import {
   DollarSign, 
   Wallet, 
   Boxes, 
-  MoveRight
+  MoveRight,
+  BarChart3
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -109,7 +110,13 @@ const items = [
     icon: CreditCard,
     permissions: ["credit.view","credit.create"], // Show if user has financial reports permission
   },
-
+{
+    title: "التقارير",
+    url: "/reports",
+    group: [],
+    icon: BarChart3,
+    permissions: ["reports.view"], // Requires reports.view permission
+  },
   {
     title: "الاعدادات",
     url: "/settings",

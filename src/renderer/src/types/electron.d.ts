@@ -131,6 +131,19 @@ interface ElectronAPI {
     maximize: () => Promise<void>;
     close: () => Promise<void>;
   };
+
+  reports: {
+    dailySales: () => Promise<any>;
+    cashierPerformance: (data) => Promise<any>;
+    monthlySales: () => Promise<any>;
+    productPerformance: (data) => Promise<any>;
+    inventory: () => Promise<any>;
+    getFinancialSummaryReport: (data) => Promise<any>;
+  };
+
+  pdf: {
+    generateReport: (reportType: string, reportData: any) => Promise<any>;
+  };
 }
 declare global {
   interface Window {

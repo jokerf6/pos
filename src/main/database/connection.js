@@ -217,10 +217,15 @@ UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM settings) WHERE name = 'se
 UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM transactions) WHERE name = 'transactions';
 UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM user_permissions) WHERE name = 'user_permissions';
 `;
-
+const updateSql =`
+ALTER TABLE invoices ADD COLUMN userId INTEGER REFERENCES users(id);
+UPDATE invoices 
+SET userId = (
+  SELECT userId FROM daily WHERE daily.id = invoices.dailyId
+);
+`
 async function initDatabase() {
   try {
-
     const dbPath = path.join(app.getPath('userData'), 'casher.db');
     log.info(`Database path: ${dbPath}`);
 
@@ -246,6 +251,22 @@ async function initDatabase() {
       log.info("Database already initialized, skipping schema creation");
     }
 
+    // التأكد من وجود العمود userId في invoices
+    const columnCheck = await database.all(`PRAGMA table_info(invoices)`);
+    const hasUserId = columnCheck.some(col => col.name === 'userId');
+    if (!hasUserId) {
+      log.info("Adding userId column to invoices...");
+      await database.exec(`
+        ALTER TABLE invoices ADD COLUMN userId INTEGER REFERENCES users(id);
+      `);
+      await database.exec(`
+        UPDATE invoices 
+        SET userId = (
+          SELECT userId FROM daily WHERE daily.id = invoices.dailyId
+        );
+      `);
+    }
+
     return database;
   } catch (error) {
     log.error("Database initialization failed:", {
@@ -255,7 +276,6 @@ async function initDatabase() {
     throw error;
   }
 }
-
 async function createSchema() {
  
 

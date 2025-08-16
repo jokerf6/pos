@@ -22,6 +22,8 @@ import SettingsPage from "./pages/Settings/index"; // ✅
 import { RootState, AppDispatch } from "./store";
 import CreateCreditPage from "pages/Credit/CreateCreditPage";
 import ProductStatistics from "pages/Products/prosuctStatisticsPage";
+import ReportsPage from "./pages/Reports/index"; // ✅
+
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -53,6 +55,18 @@ const App: React.FC = () => {
           isAuthenticated ? (
             <Layout>
               <HomePage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+       <Route
+        path="/reports"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <ReportsPage />
             </Layout>
           ) : (
             <Navigate to="/login" />

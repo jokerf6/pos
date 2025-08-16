@@ -82,6 +82,19 @@ const validChannels = {
   "system:minimize": true,
   "system:maximize": true,
   "system:close": true,
+
+  // Report channels
+  "reports:daily-sales": true,
+  "reports:monthly-sales": true,
+  "reports:product-performance": true,
+  "reports:cashier-performance": true,
+  "reports:inventory": true,
+  "reports:financial-summary": true,
+
+
+  // pdf channels
+  "pdf:generate-report": true
+
 };
 
 const safeInvoke = async (channel, ...args) => {
@@ -191,6 +204,20 @@ contextBridge.exposeInMainWorld("electronAPI", {
     maximize: () => safeInvoke("system:maximize"),
     close: () => safeInvoke("system:close"),
   },
+
+  reports:{
+    dailySales: () => safeInvoke("reports:daily-sales"),
+    cashierPerformance: (data) => safeInvoke("reports:cashier-performance",data),
+    monthlySales: () => safeInvoke("reports:monthly-sales"),
+    productPerformance: (data) => safeInvoke("reports:product-performance",data),
+    inventory: () => safeInvoke("reports:inventory"),
+    getFinancialSummaryReport: (data) => safeInvoke("reports:financial-summary",data),
+  },
+
+  pdf: {
+    generateReport: (reportType, reportData) => safeInvoke("pdf:generate-report", reportType, reportData),
+  },
+
   on: (channel, callback) => {
     if (!validChannels[channel]) {
       log.error("Invalid IPC channel for listener:", channel);

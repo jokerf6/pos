@@ -12,6 +12,7 @@ import creditReducer from "./slices/creditSlice"; // Importing credit slice
 import invoiceReducer from "./slices/invoice"; // Importing invoice slice
 import settingsReducer from "./slices/settingsSlice"; // Importing invoice slice
 import  getTransaction  from "./slices/transactionSlice"; // Importing transaction slice
+import reportReducer from "./slices/reportSlice"; // Importing report slice
 
 const store = configureStore({
   reducer: {
@@ -27,6 +28,7 @@ const store = configureStore({
     settings: settingsReducer,
     imageModal: imageModalSlice,
     transaction: getTransaction, // Importing transaction slice
+    reports: reportReducer, // Importing report slice
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

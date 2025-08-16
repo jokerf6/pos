@@ -12,7 +12,8 @@ const creditH = require("./credit.js"); // Import credit handlers
 const invoiceH = require("./invoice.js"); // Import credit handlers
 const settingsHandlers = require("./settings.js"); // Import settings handlers
 const transH = require("./transaction.js"); // Import transaction handlers
-
+const reportsH = require ("./reports.js"); // Import reports handlers
+const pdfExportH = require ("./pdf-export.js");
 // Error handling wrapper
 const handleError = (handler) => {
   return async (event, ...args) => {
@@ -158,16 +159,18 @@ function setupIPC() {
 
     // Transaction handlers
   ipcMain.handle("transactions:get-product-transactions", secureHandler(transH.getProductTransactions));
-  // Settings handlers
-  // ipcMain.handle('settings:get', secureHandler(settingsHandlers.get));
-  // ipcMain.handle('settings:update', secureHandler(settingsHandlers.update));
 
-  // System handlers
-  // ipcMain.handle('system:getVersion', secureHandler(systemHandlers.getVersion));
-  // ipcMain.handle('system:restart', secureHandler(systemHandlers.restart));
-  // ipcMain.handle('system:minimize', secureHandler(systemHandlers.minimize));
-  // ipcMain.handle('system:maximize', secureHandler(systemHandlers.maximize));
-  // ipcMain.handle('system:close', secureHandler(systemHandlers.close));
+
+   // Reports handlers
+  ipcMain.handle("reports:daily-sales", secureHandler(reportsH.getDailySalesReport));
+  ipcMain.handle("reports:monthly-sales", secureHandler(reportsH.getMonthlySalesReport));
+  ipcMain.handle("reports:product-performance", secureHandler(reportsH.getProductPerformanceReport));
+  ipcMain.handle("reports:cashier-performance", secureHandler(reportsH.getCashierPerformanceReport));
+  ipcMain.handle("reports:inventory", secureHandler(reportsH.getInventoryReport));
+  ipcMain.handle("reports:financial-summary", secureHandler(reportsH.getFinancialSummaryReport));
+
+  // PDF Export handlers
+  ipcMain.handle("pdf:generate-report", secureHandler(pdfExportH.generatePDFReport));
 
   log.info("IPC handlers setup complete");
 
