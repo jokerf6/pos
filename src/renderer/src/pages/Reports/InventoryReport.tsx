@@ -27,24 +27,33 @@ const InventoryReport: React.FC<InventoryReportProps> = ({
   onExportPDF,
   isExporting
 }) => {
+  const PAGE_SIZE = 10;
   const [searchTerm, setSearchTerm] = useState('');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const { inventory: reportData, loading, error } = useSelector(
     (state: RootState) => state.reports
   );
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+
   const dispatch = useDispatch<AppDispatch>();
   useEffect(() => {
-    dispatch(inventory());
-  }, [dispatch]);
-
+    dispatch(inventory({page}));
+  }, [dispatch,page]);
+  const handlePage = async (newPage: number) => {
+    setPage(newPage);
+    // The useEffect will handle the API call when page changes
+  };
   useEffect(() => {
     if (reportData?.products) {
       const filtered = reportData.products.filter((product: any) => {
         const matchesSearch = product.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()));
-        
+        console.log("report data", reportData.count)
+          setTotal(reportData.count[0].total_count || 0);    
         return matchesSearch;
       });
       setFilteredProducts(filtered);
@@ -292,7 +301,54 @@ const InventoryReport: React.FC<InventoryReportProps> = ({
           )}
         </CardContent>
       </Card>
-
+      {/* Pagination */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            عرض {Math.min((page - 1) * PAGE_SIZE + 1, total)} إلى {Math.min(page * PAGE_SIZE, total)} من {total.toLocaleString('ar-EG')} منتج
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => handlePage(page - 1)}
+              className="border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              السابق
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={page === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePage(pageNum)}
+                    className={`w-8 h-8 p-0 ${
+                      page === pageNum 
+                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        : 'border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === totalPages}
+              onClick={() => handlePage(page + 1)}
+              className="border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              التالي
+            </Button>
+          </div>
+        </div>
+      </div>
       {/* Stock Alerts */}
       {(summary.low_stock_count > 0 || summary.out_of_stock_count > 0) && (
         <Card className="border-yellow-200 bg-yellow-50">

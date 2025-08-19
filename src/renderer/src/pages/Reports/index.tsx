@@ -52,13 +52,7 @@ const ReportsPage: React.FC = () => {
       icon: BarChart3,
       color: 'text-blue-600'
     },
-    {
-      id: 'monthly-sales',
-      title: 'تقرير المبيعات الشهري',
-      description: 'تحليل المبيعات الشهرية والاتجاهات',
-      icon: TrendingUp,
-      color: 'text-green-600'
-    },
+  
     {
       id: 'product-performance',
       title: 'تقرير أداء المنتجات',
@@ -94,11 +88,15 @@ const ReportsPage: React.FC = () => {
   const handleExportPDF = async (reportType: any, reportData: any) => {
     setIsExporting(true);
     try {
-      const result = await dispatch(exportReportPDF(reportType, reportData));
-      
+      const result = await dispatch(exportReportPDF({reportType, reportData}));
       if (result.meta.requestStatus === 'fulfilled') {
-        if (result.payload && (result.payload instanceof ArrayBuffer || Array.isArray(result.payload))) {
-          const blob = new Blob([new Uint8Array(result.payload)], { type: 'application/pdf' });
+           if ('payload' in result && result.payload && (result as any).payload.data) {
+                  console.log('Export result:', result);
+
+  const blob = new Blob(
+    [new Uint8Array((result as any).payload.data)],
+    { type: 'application/pdf' }
+  );
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
@@ -109,9 +107,7 @@ const ReportsPage: React.FC = () => {
           URL.revokeObjectURL(url);
           
           toast.success('تم تصدير التقرير بنجاح');
-        } else {
-          toast.error('بيانات التقرير غير صالحة للتصدير');
-        }
+           }
       } else {
         toast.error('فشل في تصدير التقرير');
       }
@@ -132,7 +128,7 @@ const ReportsPage: React.FC = () => {
   );
 
   return (
-    <div className="container mx-auto p-6 space-y-6" dir="rtl">
+    <div className="container mx-auto p-6 space-y-5" dir="rtl">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">التقارير</h1>
@@ -145,8 +141,8 @@ const ReportsPage: React.FC = () => {
 
       <Separator />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 gap-2 h-auto p-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
+        <TabsList className="grid w-full grid-cols-5 gap-2 h-auto p-2">
           {reportTypes.map((report) => {
             const Icon = report.icon;
             return (
@@ -194,7 +190,7 @@ const ReportsPage: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-
+{/* 
         <TabsContent dir='rtl' value="monthly-sales" className="space-y-6">
           <Card>
             <CardHeader>
@@ -224,7 +220,7 @@ const ReportsPage: React.FC = () => {
               />
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent dir='rtl' value="product-performance" className="space-y-6">
           <Card>

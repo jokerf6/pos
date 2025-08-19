@@ -30,16 +30,28 @@ const ProductPerformanceReport: React.FC<ProductPerformanceReportProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
-
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+   const PAGE_SIZE = 10;
 
     const { productPerformance: reportData, loading, error } = useSelector(
     (state: RootState) => state.reports
   );
+  const handlePage = async (newPage: number) => {
+    setPage(newPage);
+    // The useEffect will handle the API call when page changes
+  };
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]); // Reset page when search or filters change
+
   const dispatch = useDispatch<AppDispatch>();
   useEffect(() => {
     console.log("Fetching product performance report for date range:", dateRange);
-    dispatch(productPerformance(dateRange));
-  }, [dispatch, dateRange]);
+    dispatch(productPerformance({...dateRange, page}));
+  }, [dispatch, dateRange, page]);
 
 
  
@@ -50,6 +62,7 @@ const ProductPerformanceReport: React.FC<ProductPerformanceReportProps> = ({
         (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       setFilteredProducts(filtered);
+      setTotal(reportData.total || 0);
     }
   }, [reportData, searchTerm]);
 
@@ -158,7 +171,7 @@ const ProductPerformanceReport: React.FC<ProductPerformanceReportProps> = ({
               <div>
                 <p className="text-sm font-medium text-gray-600">المنتجات النشطة</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {activeProducts} / {products.length}
+                  {reportData.active} / {total}
                 </p>
               </div>
               <Package className="h-8 w-8 text-purple-600" />
@@ -206,7 +219,8 @@ const ProductPerformanceReport: React.FC<ProductPerformanceReportProps> = ({
               </thead>
               <tbody>
                 {products.map((product, index) => {
-                  const stockStatus = getStockStatus(product.current_stock, 0);
+                  console.log("Rendering product:", product);
+                  const stockStatus = getStockStatus(product.current_stock, reportData.limit);
                   return (
                     <tr key={index} className="border-b hover:bg-gray-50">
                       <td className="p-3">
@@ -256,6 +270,54 @@ const ProductPerformanceReport: React.FC<ProductPerformanceReportProps> = ({
         </CardContent>
       </Card>
 
+   {/* Pagination */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            عرض {Math.min((page - 1) * PAGE_SIZE + 1, total)} إلى {Math.min(page * PAGE_SIZE, total)} من {total.toLocaleString('ar-EG')} منتج
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => handlePage(page - 1)}
+              className="border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              السابق
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={page === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePage(pageNum)}
+                    className={`w-8 h-8 p-0 ${
+                      page === pageNum 
+                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        : 'border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === totalPages}
+              onClick={() => handlePage(page + 1)}
+              className="border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              التالي
+            </Button>
+          </div>
+        </div>
+      </div>
       {/* Export Button */}
       <div className="flex justify-end">
         <Button

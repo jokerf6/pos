@@ -14,12 +14,12 @@ interface ReportState {
 
 export const exportReportPDF = createAsyncThunk<
   any[],
-  { reportType: any; reportData: any },
+  any,
   { rejectValue: string }
->("pdf/generate-report", async ({ reportType, reportData }, { rejectWithValue }) => {
+>("pdf/generate-report", async (data, { rejectWithValue }) => {
   try {
     if (window.electronAPI) {
-      const result = await window.electronAPI.pdf.generateReport(reportType, reportData);
+      const result = await window.electronAPI.pdf.generateReport(data);
       return result;
     } else {
       return [];
@@ -32,7 +32,7 @@ export const exportReportPDF = createAsyncThunk<
 // Get all settings
 export const cashierPerformance = createAsyncThunk<
   any,
-  { from: Date; to: Date },
+  { from: Date; to: Date,page:number },
   { rejectValue: string }
 >("reports/cashier-performance", async (data, { rejectWithValue }) => {
   try {
@@ -83,7 +83,7 @@ export const monthlySales = createAsyncThunk<
 
 export const productPerformance = createAsyncThunk<
   any,
-  { from: Date; to: Date },
+  { from: Date; to: Date, page:any },
   { rejectValue: string }
 >("reports/product-performance", async (data, { rejectWithValue }) => {
   try {
@@ -98,12 +98,12 @@ export const productPerformance = createAsyncThunk<
   }
 });
 
-export const inventory = createAsyncThunk<any, void, { rejectValue: string }>(
+export const inventory = createAsyncThunk<any, any, { rejectValue: string }>(
   "reports/inventory",
-  async (_, { rejectWithValue }) => {
+  async (data, { rejectWithValue }) => {
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.reports.inventory();
+        const result = await window.electronAPI.reports.inventory(data);
         return result;
       } else {
         return [];

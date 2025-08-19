@@ -210,12 +210,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
     cashierPerformance: (data) => safeInvoke("reports:cashier-performance",data),
     monthlySales: () => safeInvoke("reports:monthly-sales"),
     productPerformance: (data) => safeInvoke("reports:product-performance",data),
-    inventory: () => safeInvoke("reports:inventory"),
+    inventory: (data) => safeInvoke("reports:inventory",data),
     getFinancialSummaryReport: (data) => safeInvoke("reports:financial-summary",data),
   },
 
   pdf: {
-    generateReport: (reportType, reportData) => safeInvoke("pdf:generate-report", reportType, reportData),
+    generateReport: (data) => safeInvoke("pdf:generate-report", data),
   },
 
   on: (channel, callback) => {

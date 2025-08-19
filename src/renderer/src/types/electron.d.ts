@@ -137,12 +137,12 @@ interface ElectronAPI {
     cashierPerformance: (data) => Promise<any>;
     monthlySales: () => Promise<any>;
     productPerformance: (data) => Promise<any>;
-    inventory: () => Promise<any>;
+    inventory: (data) =>(data)=> Promise<any>;
     getFinancialSummaryReport: (data) => Promise<any>;
   };
 
   pdf: {
-    generateReport: (reportType: string, reportData: any) => Promise<any>;
+    generateReport: (data) => Promise<any>;
   };
 }
 declare global {

@@ -22,8 +22,16 @@ async function getDailySalesReport(event, date) {
     const reportDate = date ? new Date(date) : new Date();
     const startDate = startOfDay(reportDate);
     const endDate = endOfDay(reportDate);
+    const start = toSqliteDate(startDate ? new Date(startDate) : startOfDay(reportDate));
+const end = toSqliteDate(endDate ? new Date(endDate) : endOfDay(reportDate));
+
 
     // Get daily summary
+    const all= await db.all(
+      `SELECT * FROM invoices 
+      WHERE createdAt BETWEEN ? AND ? 
+      AND paymentType != 'مرتجع' -- Exclude returns`,[start, end]
+    )
     const summaryRows = await db.all(
       `
       SELECT 
@@ -39,8 +47,11 @@ async function getDailySalesReport(event, date) {
       WHERE createdAt BETWEEN ? AND ? 
       AND paymentType != 'مرتجع' -- Exclude returns
     `,
-      [startDate, endDate]
+      [start, end]
     );
+
+    console.log("Daily Summary Rows:", summaryRows);
+    console.log("Daily All Rows:", all);
 
     // Get hourly breakdown - using strftime for SQLite
     const hourlyRows = await db.all(
@@ -55,7 +66,7 @@ async function getDailySalesReport(event, date) {
       GROUP BY strftime('%H', createdAt)
       ORDER BY hour
     `,
-      [startDate, endDate]
+      [start, end]
     );
 
     // Get top products
@@ -76,7 +87,7 @@ async function getDailySalesReport(event, date) {
       ORDER BY total_sales DESC
       LIMIT 10
     `,
-      [startDate, endDate]
+      [start, end]
     );
 
     // Get cashier performance (using daily table since invoices don't have user_id)
@@ -96,7 +107,7 @@ async function getDailySalesReport(event, date) {
       GROUP BY u.id, u.username
       ORDER BY total_sales DESC
     `,
-      [startDate, endDate, startDate, endDate]
+      [start, end, start, end]
     );
 
     // Get payment method breakdown
@@ -111,7 +122,7 @@ async function getDailySalesReport(event, date) {
       AND paymentType != 'مرتجع'
       GROUP BY paymentType
     `,
-      [startDate, endDate]
+      [start, end]
     );
 
     return {
@@ -262,12 +273,11 @@ async function getMonthlySalesReport(event, year, month) {
  */
 async function getProductPerformanceReport(
   event,
-  { from: startDate, to: endDate },
-  limit = 50
+  { from: startDate, to: endDate,page = 1, limit=10 }={page:1,limit:10},
 ) {
-  console.log("fuck", startDate,endDate);
   try {
     const db = getDatabase();
+            const offset = (page - 1) * limit;
 const start = toSqliteDate(startDate ? new Date(startDate) : startOfMonth(new Date()));
 const end = toSqliteDate(endDate ? new Date(endDate) : endOfMonth(new Date()));
 
@@ -295,17 +305,60 @@ LEFT JOIN invoices inv ON ii.invoiceId = inv.id
     AND inv.createdAt BETWEEN ? AND ?
 GROUP BY i.id, i.name, i.barcode, c.name, i.price, i.buy_price, i.stock
 ORDER BY total_revenue DESC
-LIMIT ?
+LIMIT ? OFFSET ?
     `,
-      [start, end, limit]
+      [start, end, limit, offset]
     );
+    const settings = await db.get(`
+  SELECT 
+    *
+  FROM settings
+  WHERE key = 'warning'
+  LIMIT 1
+`);
+const totalRows = await db.get(
+  `
+  SELECT COUNT(*) AS total
+  FROM (
+    SELECT i.id
+    FROM items i
+    LEFT JOIN categories c ON i.category_id = c.id
+    LEFT JOIN invoiceItems ii ON i.id = ii.itemId
+    LEFT JOIN invoices inv ON ii.invoiceId = inv.id 
+      AND inv.paymentType != 'مرتجع'
+      AND inv.createdAt BETWEEN ? AND ?
+    GROUP BY i.id
+  ) AS subquery
+  `,
+  [start, end]
+);
 
+const activeRows = await db.get(
+  `
+  SELECT COUNT(*) AS total
+  FROM (
+    SELECT i.id
+    FROM items i
+    LEFT JOIN categories c ON i.category_id = c.id
+    LEFT JOIN invoiceItems ii ON i.id = ii.itemId
+    LEFT JOIN invoices inv ON ii.invoiceId = inv.id 
+      AND inv.paymentType != 'مرتجع'
+      AND inv.createdAt BETWEEN ? AND ?
+    WHERE i.quantity > 0
+    GROUP BY i.id
+  ) AS subquery
+  `,
+  [start, end]
+);
     return {
       success: true,
       data: {
         startDate: format(start, "yyyy-MM-dd"),
         endDate: format(end, "yyyy-MM-dd"),
         products: productRows,
+        total: totalRows.total || 0,
+        limit: settings.value || 0,
+        active: activeRows.total || 0
       },
     };
   } catch (error) {
@@ -317,9 +370,10 @@ LIMIT ?
 /**
  * Get cashier performance report
  */
-async function getCashierPerformanceReport(event, {from:startDate, to:endDate}) {
+async function getCashierPerformanceReport(event, {from:startDate, to:endDate,page = 1, limit=10}={page:1,limit:10}) {
   try {
     const db = getDatabase();
+        const offset = (page - 1) * limit;
 const start = toSqliteDate(startDate ? new Date(startDate) : startOfMonth(new Date()));
 const end = toSqliteDate(endDate ? new Date(endDate) : endOfMonth(new Date()));
     const all = await db.all(
@@ -344,17 +398,31 @@ LEFT JOIN invoices i ON i.userId = u.id
   AND i.paymentType IN ('خالص','أجل')
 WHERE u.role IN ('cashier', 'manager', 'admin')
 GROUP BY u.id, u.username, u.role
-ORDER BY total_sales DESC;
+ORDER BY total_sales DESC
+LIMIT ? OFFSET ?
     `,
-      [start, end]
+      [start, end, limit, offset]
     );
   console.log(cashierRows);
+const totalRows = await db.get(
+  `
+  SELECT COUNT(DISTINCT u.id) AS total
+  FROM users u
+  LEFT JOIN invoices i ON i.userId = u.id
+    AND i.createdAt BETWEEN ? AND ?
+    AND i.paymentType IN ('خالص','أجل')
+  WHERE u.role IN ('cashier', 'manager', 'admin')
+  `,
+  [start, end]
+);
+
     return {
       success: true,
       data: {
         startDate: format(start, "yyyy-MM-dd"),
         endDate: format(end, "yyyy-MM-dd"),
         cashiers: cashierRows,
+        total: totalRows.total || 0,
       },
     };
   } catch (error) {
@@ -366,9 +434,14 @@ ORDER BY total_sales DESC;
 /**
  * Get inventory report
  */
-async function getInventoryReport(event, lowStockOnly = false) {
+async function getInventoryReport(event,
+  
+    { page=1, limit = 10 ,lowStockOnly = false} = {lowStockOnly : false, page: 1, limit: 10 }
+
+  ) {
   try {
     const db = getDatabase();
+    const offset = (page - 1) * limit;
 
 const settings = await db.get(`
   SELECT 
@@ -378,38 +451,49 @@ const settings = await db.get(`
   LIMIT 1
 `);
 
-    let query = `
-SELECT 
-  i.id,
-  i.name AS product_name,
-  i.barcode,
-  i.price,
-  i.buy_price,
-  i.quantity AS stock_quantity,
-  (i.quantity * i.buy_price) AS inventory_value,
-  CASE 
-    WHEN i.quantity = 0 THEN 'نفد'
-    WHEN i.quantity <= ${+settings.value} THEN 'منخفض'
-    ELSE 'متوفر'
-  END AS stock_status,
-  c.name AS category_name,
-  i.created_at
-FROM items i
-LEFT JOIN categories c ON i.category_id = c.id
-ORDER BY i.quantity ASC, i.name ASC;
-`;
+      let query = `
+  SELECT 
+    i.id,
+    i.name AS product_name,
+    i.barcode,
+    i.price,
+    i.buy_price,
+    i.quantity AS stock_quantity,
+    (i.quantity * i.buy_price) AS inventory_value,
+    CASE 
+      WHEN i.quantity = 0 THEN 'نفد'
+      WHEN i.quantity <= ${+settings.value} THEN 'منخفض'
+      ELSE 'متوفر'
+    END AS stock_status,
+    c.name AS category_name,
+    i.created_at
+  FROM items i
+  LEFT JOIN categories c ON i.category_id = c.id
+  `;
 
 
-if (lowStockOnly) {
-  query += ` WHERE i.quantity <= ${+settings.value}`; // نفس الفكرة للحد الأدنى
-}
+  if (lowStockOnly) {
+    query += ` WHERE i.quantity <= ${+settings.value}`; // نفس الفكرة للحد الأدنى
+  }
 
 
-query += ` ORDER BY i.quantity ASC, i.name ASC`;
+  query += ` ORDER BY i.quantity ASC, i.name ASC`;
+  query += ` LIMIT ${limit} OFFSET ${offset}`;
 
     const inventoryRows = await db.all(query);
 
-    console.log("inventoryRows", inventoryRows);
+let countQuery = `
+  SELECT 
+    COUNT(*) AS total_count
+  FROM items i
+  LEFT JOIN categories c ON i.category_id = c.id
+`;
+
+if (lowStockOnly) {
+  query += ` WHERE i.quantity <= ${+settings.value}`;
+}
+    const count = await db.all(countQuery);
+
 const summaryRows = await db.all(`
   SELECT 
     COUNT(*) as total_products,
@@ -423,6 +507,7 @@ const summaryRows = await db.all(`
       data: {
         summary: summaryRows[0] || {},
         products: inventoryRows,
+        count,
         lowStockOnly,
       },
     };

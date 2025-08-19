@@ -5,30 +5,46 @@ const { ar } =require( "date-fns/locale");
 const path =require( "path");
 const { fileURLToPath } =require( "url");
 const fs =require( "fs");
+const { BrowserWindow } = require("electron");
 
 
 /**
  * Generate PDF report from HTML template
  */
-async function generatePDFReport(event, reportData, reportType, options = {}) {
+
+
+
+async function generatePDFWithElectron(htmlContent, options = {}) {
+  const win = new BrowserWindow({ show: false });
+  await win.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(htmlContent)}`);
+  
+  const pdfBuffer = await win.webContents.printToPDF({
+    marginsType: 0,
+    pageSize: 'A4',
+    printBackground: true,
+    ...options
+  });
+
+  await win.close();
+  return pdfBuffer;
+}
+
+async function generatePDFReport(event, data) {
+  console.log("PDF report", data);
+  const {reportData, reportType, options = {}} = data;
   let browser = null;
   
   try {
     log.info("Starting PDF generation for report type:", reportType);
     
     // Launch browser
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    
-    const page = await browser.newPage();
+ 
     
     // Generate HTML content based on report type
     const htmlContent = await generateReportHTML(reportData, reportType);
-    
+ 
+
     // Set content and wait for load
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
     
     // Generate PDF
     const pdfOptions = {
@@ -43,7 +59,7 @@ async function generatePDFReport(event, reportData, reportType, options = {}) {
       ...options
     };
     
-    const pdfBuffer = await page.pdf(pdfOptions);
+    const pdfBuffer = await generatePDFWithElectron(htmlContent, pdfOptions);
     
     log.info("PDF generated successfully");
     
@@ -68,7 +84,7 @@ async function generatePDFReport(event, reportData, reportType, options = {}) {
  */
 function generateFilename(reportType, reportData) {
   const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm-ss');
-  
+  console.log("hereerere");
   switch (reportType) {
     case 'daily-sales':
       return `تقرير_المبيعات_اليومي_${reportData.date}_${timestamp}.pdf`;
@@ -92,7 +108,7 @@ function generateFilename(reportType, reportData) {
  */
 async function generateReportHTML(reportData, reportType) {
   const baseCSS = await getBaseCSS();
-  
+  console.log("Generating HTML for report type:", reportType);
   switch (reportType) {
     case 'daily-sales':
       return generateDailySalesHTML(reportData, baseCSS);

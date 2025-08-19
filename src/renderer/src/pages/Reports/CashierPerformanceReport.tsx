@@ -1,4 +1,4 @@
-import React, {  useEffect } from 'react';
+import React, {  useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -41,10 +41,23 @@ const CashierPerformanceReport: React.FC<CashierPerformanceReportProps> = ({
   const { cashierPerformance: reportData, loading, error } = useSelector(
     (state: RootState) => state.reports
   );
+  const PAGE_SIZE = 10;
+    const [page, setPage] = useState(1);
+  
+      const handlePage = async (newPage: number) => {
+    setPage(newPage);
+    // The useEffect will handle the API call when page changes
+  };
   const dispatch = useDispatch<AppDispatch>();
   useEffect(() => {
-    dispatch(cashierPerformance({from: dateRange.from, to: dateRange.to}));
-  }, [dispatch, dateRange]);
+    dispatch(cashierPerformance({from: dateRange.from, to: dateRange.to, page}));
+  }, [dispatch, dateRange,page]);
+
+
+  useEffect(() => {
+    setPage(1);
+  }, []); // Reset page when search or filters change
+
 
 
   const formatCurrency = (amount: number) => {
@@ -104,8 +117,10 @@ const CashierPerformanceReport: React.FC<CashierPerformanceReportProps> = ({
   }
 
   const cashiers = reportData.cashiers || [];
+  const total = reportData.total || 0;
   const activeCashiers = cashiers?.filter((c:any) => (c.total_transactions || 0) > 0);
-
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  console.log("total cashiers", total);
   // Calculate summary statistics
   const totalSales = cashiers?.reduce((sum:any, cashier:any) => sum + (cashier.total_sales || 0), 0);
   const totalTransactions = cashiers?.reduce((sum:any, cashier:any) => sum + (cashier.total_transactions || 0), 0);
@@ -314,7 +329,54 @@ const CashierPerformanceReport: React.FC<CashierPerformanceReportProps> = ({
               </tbody>
             </table>
           </div>
-          
+            {/* Pagination */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mt-[20px]">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-gray-600">
+                      عرض {Math.min((page - 1) * PAGE_SIZE + 1, total)} إلى {Math.min(page * PAGE_SIZE, total)} من {total.toLocaleString('ar-EG')} منتج
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === 1}
+                        onClick={() => handlePage(page - 1)}
+                        className="border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        السابق
+                      </Button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          const pageNum = i + 1;
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={page === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handlePage(pageNum)}
+                              className={`w-8 h-8 p-0 ${
+                                page === pageNum 
+                                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                                  : 'border-gray-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === totalPages}
+                        onClick={() => handlePage(page + 1)}
+                        className="border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        التالي
+                      </Button>
+                    </div>
+                  </div>
+                </div>
           {cashiers.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">لا توجد بيانات كاشيرات لهذه الفترة</p>
