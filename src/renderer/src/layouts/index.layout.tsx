@@ -11,6 +11,7 @@ import { hideConfirmModal } from "../store/slices/confirmModalSlice";
 import { Toaster } from "../components/ui/sonner";
 import ConfirmImageModal from "../components/common/image-model.component";
 import { hideImageModal } from "../store/slices/imageModal";
+import { Branches } from "components/common/branches.component";
 
 const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
@@ -58,6 +59,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
         dir="rtl"
       >
         <AppSidebar />
+
       </div>
 
       <div
@@ -66,6 +68,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       >
         <SidebarInset className=" rounded-t-2xl ">
           <MainHeader />
+
           <div className="p-4 h-full">{children}</div>
         </SidebarInset>
       </div>

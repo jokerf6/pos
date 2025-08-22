@@ -32,6 +32,8 @@ const categoryNames: Record<string, string> = {
   category: 'الاقسام',
   credit:"المصروفات",
   settings:"الإعدادات",
+  transaction: "الإحصائيات",
+  branches:"الفروع"
 
 };
 

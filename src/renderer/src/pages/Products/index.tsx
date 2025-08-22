@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getProducts, deleteProduct } from "../../store/slices/productsSlice";
@@ -10,18 +10,17 @@ function ProductsPage() {
   const dispatch = useDispatch();
   const { products, total } = useSelector((state: any) => state.products);
   const navigate = useNavigate();
+const { selectedBranch } = useSelector((state: any) => state.branches);
 
   useEffect(() => {
     dispatch(getProducts({}) as any);
-  }, [dispatch]);
-
-  const formattedProducts =
-    products &&
-    products?.map((item: any) => ({
-      ...item,
-      createdAt: new Date(item.created_at).toISOString().split("T")[0], // Format date to YYYY-MM-DD
-    }));
-
+  }, [dispatch, selectedBranch]);
+const formattedProducts = useMemo(() => {
+  return products?.map((item: any) => ({
+    ...item,
+    createdAt: new Date(item.created_at).toISOString().split("T")[0],
+  }));
+}, [products]);
   const handleDelete = (product: { id: number; name: string }) => {
     dispatch(
       showConfirmModal({
@@ -48,7 +47,7 @@ function ProductsPage() {
 
   }
   return (
-    <div className="flex flex-1 min-h-screen bg-gray-50">
+    <div className="flex flex-col flex-1 min-h-screen bg-gray-50">
       {formattedProducts && (
         <DataTable
           columns={columns}
@@ -59,6 +58,7 @@ function ProductsPage() {
           onInfo={handelInfo}
         />
       )}
+
     </div>
   );
 }

@@ -23,6 +23,9 @@ import { RootState, AppDispatch } from "./store";
 import CreateCreditPage from "pages/Credit/CreateCreditPage";
 import ProductStatistics from "pages/Products/prosuctStatisticsPage";
 import ReportsPage from "./pages/Reports/index"; // ✅
+import BranchesPage from "pages/Branches";
+import CreateBranchPage from "pages/Branches/CreateBranchPage";
+import AddProductBranchPage from "pages/Products/AddProdutBranchPage";
 
 
 const App: React.FC = () => {
@@ -67,6 +70,30 @@ const App: React.FC = () => {
           isAuthenticated ? (
             <Layout>
               <ReportsPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+           <Route
+        path="/branches"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <BranchesPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+               <Route
+        path="/branches/create"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <CreateBranchPage />
             </Layout>
           ) : (
             <Navigate to="/login" />
@@ -175,6 +202,18 @@ const App: React.FC = () => {
           isAuthenticated ? (
             <Layout>
               <EditProductPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+         <Route
+        path="/products/:id/create/branch"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <AddProductBranchPage/>
             </Layout>
           ) : (
             <Navigate to="/login" />

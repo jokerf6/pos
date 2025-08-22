@@ -5,6 +5,7 @@ interface User {
   username: string;
   email: string;
   role: string;
+  branchId: number | null;
 }
 
 interface LoginCredentials {
@@ -84,6 +85,16 @@ interface ElectronAPI {
     search: (data: any) => Promise<any>;
     getByBarcode: (barcode: string) => Promise<any>;
     generateBarCode: (data: any) => Promise<any>;
+    AddQuantityToBranch: (data: any) => Promise<any>;
+  };
+
+  branches: {
+    getAll: (data?: any) => Promise<any>;
+    create: (data: any) => Promise<any>;
+    delete: (id: number) => Promise<any>;
+    search: (data: any) => Promise<any>;
+    switch: (id: number) => Promise<any>;
+    getAllWithoutPagination: () => Promise<any>;
   };
 
   invoice: {

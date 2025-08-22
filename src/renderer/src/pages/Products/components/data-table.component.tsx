@@ -73,6 +73,7 @@ const DataTable = <T extends Record<string, any>>({
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const categories = useSelector((state: any) => state.categories);
+  const { selectedBranch } = useSelector((state: any) => state.branches);
 
   // Main useEffect for fetching products with search and filters
   useEffect(() => {
@@ -95,7 +96,7 @@ const DataTable = <T extends Record<string, any>>({
     };
 
     fetchProducts();
-  }, [search, page, filters, dispatch]);
+  }, [search, page, filters, dispatch, selectedBranch]);
 
   useEffect(() => {
     dispatch(getCategories() as any);
@@ -189,7 +190,6 @@ const DataTable = <T extends Record<string, any>>({
   const filteredData = currentData;
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
-
   const ActiveFilters = () => {
     const activeFilters = [];
     
@@ -478,13 +478,13 @@ const DataTable = <T extends Record<string, any>>({
                         )
                     )}
 
-            {  (user.role === "admin" ||
+            {  ( !selectedBranch &&(( user.role === "admin") ||
                                ( user?.permissions?.includes("inventory.edit") &&
                                 user?.permissions?.includes("inventory.delete")
                               &&
                                user?.permissions?.includes("inventory.statistics")
                               )
-                                )&&     <TableCell className="px-6 py-4 text-center border-l border-gray-100">
+                                ))&&     <TableCell className="px-6 py-4 text-center border-l border-gray-100">
                       <div className="flex justify-center items-center gap-2">
                    {(user.role === "admin" ||
                           user?.permissions?.includes("inventory.statistics")) && <Button
@@ -515,6 +515,16 @@ const DataTable = <T extends Record<string, any>>({
                         </Button>} */}
                       </div>
                     </TableCell>}
+                    {
+                      selectedBranch && (user?.permissions?.includes("inventory.create.branch")) && <TableCell className="px-6 py-4 text-center border-l border-gray-100">
+
+                        <Button
+                        onClick={() => navigate(`/products/${row.barcode}/create/branch`)}
+                        >
+                          إضافة مخزون
+                        </Button>
+                      </TableCell>
+                    }
                   </TableRow>
                 ))
               ) : (

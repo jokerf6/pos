@@ -132,6 +132,25 @@ export const updateProduct = createAsyncThunk(
     }
   }
 );
+export const addQuantityToBranch = createAsyncThunk(
+  "products/addToBranch",
+  async (data: UpdateProductPayload, { rejectWithValue }) => {
+    try {
+      if (window.electronAPI) {
+        const result = await window.electronAPI.products.AddQuantityToBranch(data);
+        return result;
+      } else {
+        return null;
+      }
+    } catch (error: any) {
+      const message = error?.message || error?.error || "Unknown error";
+      return rejectWithValue(message.split("Error: ")[1] || message);
+    }
+  }
+);
+
+
+  
 
 export const ProductById = createAsyncThunk(
   "products/getById",

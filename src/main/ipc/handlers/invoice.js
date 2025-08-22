@@ -7,6 +7,7 @@ const escpos = require('escpos');
 const escposUsb = require('escpos-usb');
 const { PosPrinter } = pkg;
 escpos.USB = escposUsb;
+const Store = require("electron-store");
 
 /**
  * Product handler
@@ -37,16 +38,21 @@ async function createInvoice(event, data) {
 
   try {
     const db = getDatabase();
-
+    const store = new Store();
+    const branchId = store.get("branch.id");
+    if(!branchId){
+      throw new Error("برجاء اختيار الفرع");
+    }
     const rows = await db.all(
-      "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
+      "SELECT * FROM daily WHERE closed_at IS NULL AND branchId = ? LIMIT 1",
+      [branchId]
     );
     if (rows.length === 0) {
       throw new Error("برجاء فتح يومية جديدة");
     }
 
     const invoice = await db.run(
-      "INSERT INTO invoices (customerName, customerPhone, paymentType,discount,total,totalAfterDiscount,dailyId) VALUES (?,?, ?, ?,?,?,?)",
+      "INSERT INTO invoices (customerName, customerPhone, paymentType,discount,total,totalAfterDiscount,dailyId,branchId) VALUES (?,?, ?, ?,?,?,?,?)",
       [
         customerName,
         customerPhone,
@@ -55,6 +61,7 @@ async function createInvoice(event, data) {
         total,
         netTotal,
         rows[0].id,
+        branchId
       ]
     );
     for (let i = 0; i < products.length; i += 1) {
@@ -66,8 +73,8 @@ async function createInvoice(event, data) {
          const find = await db.all(
         "SELECT * FROM items WHERE id = ? LIMIT 1",
         [products[i].id]
-      ); 
-      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "sale", find[0].quantity, find[0].price, new Date()]);
+      );
+      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date, branchId) VALUES (?, ?, ?, ?,?,?)", [find[0].id, "sale", find[0].quantity, find[0].price, new Date(), branchId]);
     }
       else {
         await db.run(
@@ -77,8 +84,8 @@ async function createInvoice(event, data) {
            const find = await db.all(
         "SELECT * FROM items WHERE id = ? LIMIT 1",
         [products[i].id]
-      ); 
-      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "return", find[0].quantity, find[0].price, new Date()]);
+      );
+      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date, branchId) VALUES (?, ?, ?, ?,?,?)", [find[0].id, "return", find[0].quantity, find[0].price, new Date(), branchId]);
       }
       await db.run(
         "INSERT INTO invoiceItems (invoiceId,itemId,pricePerUnit,quantity,discount,price, totalPriceAfterDiscount) VALUES (?, ?, ?,?,?,?,?)",
@@ -113,12 +120,18 @@ async function beforeInvoice(event, data) {
   const { id, filter = {} } = data || {};
   try {
     const db = getDatabase();
+    const store = new Store();
+    const branchId = store.get("branch.id");
     let all = false;
     if(data && data.all) {
      all = data.all;
     }
+    if(!branchId){
+      throw new Error("برجاء اختيار الفرع");
+    }
     const daily = await db.all(
-      "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
+      "SELECT * FROM daily WHERE closed_at IS NULL AND branchId = ? LIMIT 1",
+      [branchId]
     );
 
     if (daily.length === 0) {
@@ -135,8 +148,8 @@ async function beforeInvoice(event, data) {
       to = endOfDay(new Date(to)).toISOString();
     }
     // Build WHERE conditions dynamically
-    const whereClauses = !all? ["dailyId = ?"]:[];
-    const values = !all? [daily[0].id]:[];
+    const whereClauses = !all? ["dailyId = ?"]:["branchId = ?"];
+    const values = !all? [daily[0].id]:[branchId];
 
     if (id && id !== null) {
       whereClauses.push("id < ?");
@@ -294,10 +307,11 @@ async function getAllInvoices(event, data) {
   try {
     const { limit = 10, page = 0 } = data || {};
     const db = getDatabase();
-
+    const store = new Store();
+    const branchId = store.get("branch.id");
     const whereClauses = [];
     const params = [];
-
+    
     if (data.from && data.to) {
       whereClauses.push("DATE(i.created_at) BETWEEN ? AND ?");
       params.push(data.from, data.to);
@@ -306,8 +320,11 @@ async function getAllInvoices(event, data) {
     if (data.type) {
       whereClauses.push("i.paymentType = ?");
       params.push(data.type);
-    }
-
+      }
+     if(branchId) {
+       whereClauses.push("i.branchId = ?");
+       params.push(branchId);
+     }
     const whereSQL =
       whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 

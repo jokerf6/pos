@@ -44,6 +44,7 @@ const validChannels = {
   "products:search": true,
   "products:getByBarcode": true,
   "products:generateBarCode": true,
+  "products:addToBranch": true,
 
   // Invoice channels
   "invoice:create": true,
@@ -93,7 +94,18 @@ const validChannels = {
 
 
   // pdf channels
-  "pdf:generate-report": true
+  "pdf:generate-report": true,
+
+  // Branch channels
+  "branches:getAll": true,
+  "branches:create": true,
+  "branches:delete": true,
+  "branches:search": true,
+  "branches:switch": true,
+  "branches:getAllWithoutPagination": true
+
+
+
 
 };
 
@@ -172,7 +184,18 @@ contextBridge.exposeInMainWorld("electronAPI", {
     search: (query) => safeInvoke("products:search", query),
     getByBarcode: (data) => safeInvoke("products:getByBarcode", data),
     generateBarCode: () => safeInvoke("products:generateBarCode"),
+    AddQuantityToBranch: (data) => safeInvoke("products:addToBranch", data),
   },
+
+   branches: {
+    getAll: (data) => safeInvoke("branches:getAll",data),
+    create: (branch) => safeInvoke("branches:create", branch),
+    delete: (id) => safeInvoke("branches:delete", id),
+    search: (query) => safeInvoke("branches:search", query),
+    switch: (id) => safeInvoke("branches:switch", id),
+    getAllWithoutPagination: () => safeInvoke("branches:getAllWithoutPagination"),
+  },
+
   invoice: {
     create: (data) => safeInvoke("invoice:create", data),
     after: (data) => safeInvoke("invoice:after", data),
@@ -180,6 +203,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getAll: (data) => safeInvoke("invoice:getAll", data),
     update: (data) => safeInvoke("invoice:update", data),
     print: (data) => safeInvoke("invoice:print", data),
+
     
   },
   credit: {

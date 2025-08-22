@@ -15,7 +15,13 @@ CREATE TABLE IF NOT EXISTS categories (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
+CREATE TABLE IF NOT EXISTS branches (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  address TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 -- Table structure for table 'users'
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,9 +29,24 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   role TEXT CHECK(role IN ('admin','manager','cashier')) DEFAULT 'cashier',
   active INTEGER DEFAULT 1,
+  branchId INTEGER,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_login TIMESTAMP
+  last_login TIMESTAMP,
+  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL
+
+);
+
+
+CREATE TABLE IF NOT EXISTS BranchStock (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  branchId INTEGER NOT NULL,
+  productId INTEGER NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 0,
+  updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE CASCADE,
+  FOREIGN KEY (productId) REFERENCES items(id) ON DELETE CASCADE
 );
 
 -- Table structure for table 'daily'
@@ -36,9 +57,11 @@ CREATE TABLE IF NOT EXISTS daily (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   userId INTEGER NOT NULL,
   closed_at DATETIME,
+  branchId INTEGER,
   opened_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   openPrice INTEGER,
   closePrice INTEGER,
+  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL,
   FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -48,8 +71,10 @@ CREATE TABLE IF NOT EXISTS credit (
   reason TEXT NOT NULL,
   price DECIMAL(10,2) NOT NULL,
   reciever TEXT,
+  branchId INTEGER,
   daily_id INTEGER,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL,
   FOREIGN KEY (daily_id) REFERENCES daily(id) ON DELETE SET NULL
 );
 
@@ -78,8 +103,10 @@ CREATE TABLE IF NOT EXISTS invoices (
   total DECIMAL(10,2) NOT NULL,
   totalAfterDiscount DECIMAL(10,2) NOT NULL,
   dailyId INTEGER,
+    branchId INTEGER,
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (dailyId) REFERENCES daily(id) ON DELETE SET NULL
+  FOREIGN KEY (dailyId) REFERENCES daily(id) ON DELETE SET NULL,
+  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL
 );
 
 -- Table structure for table 'invoiceItems'
@@ -124,11 +151,14 @@ CREATE TABLE IF NOT EXISTS transactions (
   item_id INTEGER NOT NULL,
   transaction_type TEXT CHECK(transaction_type IN ('purchase','return','sale')) NOT NULL,
   quantity INTEGER NOT NULL,
+  branchId INTEGER,
   unit_price DECIMAL(10,2) NOT NULL,
   total_value DECIMAL(10,2) AS (quantity * unit_price),
   transaction_date DATE NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (item_id) REFERENCES items(id)
+  FOREIGN KEY (item_id) REFERENCES items(id),
+  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL
+
 );
 
 -- Table structure for table 'user_permissions'
@@ -169,9 +199,17 @@ INSERT INTO permissions (id, name, display_name, description, category, created_
 (30, 'credit.view', 'عرض المصروفات', 'إمكانية عرض كل المصروفات', 'credit', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
 (31, 'credit.create', 'عمل مصروف', 'إمكانية عمل مصروف', 'credit', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
 (32, 'credit.delete', 'حذف مصروف', 'إمكانية حذف مصروف من المصروفات', 'credit', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
-(33, 'settings.view', 'عرض الاعادات', 'إمكانيه عرض الاعدادات والتعديل عليها', 'settings', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
+(33, 'settings.view', 'عرض الاعدادات', 'إمكانيه عرض الاعدادات والتعديل عليها', 'settings', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
 (34, 'transaction.view', 'عرض الاحصائيات', 'إمكانيه عرض الاحصائيات', 'transaction', '2025-08-06 14:22:02', '2025-08-06 20:48:02'),
-(35, 'inventory.statistics', 'احصائيات المنتجات', 'إمكانية عرض احصائيات المنتجات', 'products', '2025-08-06 14:22:02', '2025-08-06 20:47:38');
+(35, 'inventory.statistics', 'احصائيات المنتجات', 'إمكانية عرض احصائيات المنتجات', 'products', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
+(36, 'branches.create', 'إضافة فرع', 'إمكانية إضافة فرع جديد', 'branches', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
+(37, 'branches.view', 'عرض الفروع', 'إمكانية عرض الفروع', 'branches', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
+(38, 'branches.switch', 'تبديل بين الفروع', 'إمكانية التبديل بين الفروع', 'branches', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
+(39, 'branches.delete', 'حذف الفروع', 'إمكانية حذف الفروع', 'branches', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
+(40, 'inventory.create.branch', 'إضافة مخزون للفروع', 'إمكانية إضافة مخزون جديد للفرع', 'branches', '2025-08-06 14:22:02', '2025-08-06 20:47:38');
+
+
+
 
 -- Insert initial data for settings
 INSERT INTO settings (id, domain, key, value, name, type) VALUES
@@ -204,6 +242,7 @@ INSERT INTO user_permissions (id, user_id, permission_id, granted_by, granted_at
 (52, 1, 17, 1, '2025-08-13 17:08:31'),
 (53, 1, 18, 1, '2025-08-13 17:08:31'),
 (54, 1, 15, 1, '2025-08-13 17:08:31');
+
 
 -- Update sequences
 UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM categories) WHERE name = 'categories';

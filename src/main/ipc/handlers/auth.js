@@ -28,18 +28,40 @@ async function login(event, credentials) {
 
   try {
     const db = getDatabase();
+    const store = new Store();
 
     // Find user in database
-  const user = await db.get(
-  "SELECT id, username, password_hash, role, created_at FROM users WHERE username = ? AND active = 1",
+const user = await db.get(
+  `
+  SELECT 
+    u.id, 
+    u.username, 
+    u.password_hash, 
+    u.role, 
+    u.branchId, 
+    u.created_at,
+    COALESCE(GROUP_CONCAT(p.name), '') as permissions
+  FROM users u
+  LEFT JOIN user_permissions up ON u.id = up.user_id
+  LEFT JOIN permissions p ON up.permission_id = p.id
+  WHERE u.username = ? AND u.active = 1
+  GROUP BY u.id
+  `,
   [username]
 );
+
+if (user && user.permissions) {
+  user.permissions = user.permissions.split(",");
+} else {
+  user.permissions = [];
+}
+
+    store.set("branch.id", user.branchId);
     if (!user) {
       log.warn("Login failed: User not found:", username);
       throw new Error("Invalid username or password");
     }
 
-    const store = new Store();
     if (user.id !== undefined && user.id !== null) {
       store.set("user.id", user.id);
     } else {
@@ -69,6 +91,7 @@ const permissions = permissionsRows? permissionsRows?.map((row) => row.name):[];
         userId: user.id,
         username: user.username,
         role: user.role,
+        branchId: user.branchId,
         permissions,
       },
       JWT_SECRET,
@@ -81,6 +104,7 @@ const permissions = permissionsRows? permissionsRows?.map((row) => row.name):[];
       username: user.username,
       role: user.role,
       permissions,
+        branchId: user.branchId,
 
       token: token,
       loginTime: new Date(),
@@ -97,6 +121,7 @@ const permissions = permissionsRows? permissionsRows?.map((row) => row.name):[];
       success: true,
       user: {
         id: user.id,
+        branchId: user.branchId,
         username: user.username,
         role: user.role,
         permissions, // ✅ إرجاع الصلاحيات هنا
@@ -118,7 +143,10 @@ async function logout(event) {
   try {
     if (currentSession) {
       log.info("Logging out user:", currentSession.username);
+            const store = new Store();
+      store.set("branch.id", null);
       currentSession = null;
+
     }
 
     return {

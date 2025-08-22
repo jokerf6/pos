@@ -62,6 +62,7 @@ export default function MainHeader() {
   
   const dispatch = useDispatch<AppDispatch>();
   const { daily } = useSelector((state: RootState) => state.daily) as any;
+  const {selectedBranch} = useSelector((state: RootState) => state.branches);
   
   useEffect(() => {
     const timer = setInterval(() => {
@@ -223,7 +224,7 @@ export default function MainHeader() {
         </div>
         
         {/* Daily Status Section */}
-        <div className="flex items-center gap-4">
+      {selectedBranch &&  <div className="flex items-center gap-4">
           {isDailyOpen ? (
             <div className="flex items-center gap-3 bg-green-50 px-4 py-2 rounded-lg border border-green-200">
               <CheckCircle className="w-5 h-5 text-green-600" />
@@ -267,7 +268,7 @@ export default function MainHeader() {
               </Button>
             )}
           </div>
-        </div>
+        </div>}
         
         {/* User Actions Section */}
         <div className="flex items-center">

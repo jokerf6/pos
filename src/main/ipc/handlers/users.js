@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const log = require("electron-log");
 const { getDatabase } = require("../../database/connection.js");
+const Store = require("electron-store");
 
 /**
  * Create user handler
@@ -12,7 +13,11 @@ async function createUser(event, credentials) {
   if (!username || !password) {
     throw new Error("برجاء إدخال اسم المستخدم وكلمة المرور");
   }
-
+        const store = new Store();
+    const branchId = store.get("branch.id");
+  if(!branchId){
+    throw new Error("برجاء اختيار فرع");
+  }
   try {
     const db = getDatabase();
 
@@ -27,7 +32,7 @@ async function createUser(event, credentials) {
 
     // Start transaction
     await db.run("BEGIN TRANSACTION");
-
+   console.log("branch", branchId)
     try {
       // Hash password
       const saltRounds = 12;
@@ -35,8 +40,8 @@ async function createUser(event, credentials) {
       
       // Create user (without role)
       const result = await db.run(
-        "INSERT INTO users (username, password_hash, active, created_at) VALUES (?, ?, 1, CURRENT_TIMESTAMP)",
-        [username, passwordHash]
+        "INSERT INTO users (username, branchId, password_hash, active, created_at) VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)",
+        [username, branchId, passwordHash]
       );
 
       const userId = result.lastID;
@@ -82,9 +87,33 @@ async function getAll(
   try {
     const db = getDatabase();
     const offset = (page - 1) * limit;
-
+    const store = new Store();
+    const branchId = store.get("branch.id");
     // Get users with their permissions count
-    const users = await db.all(`
+    let users = [];
+    let rows = [{total:0}];
+    if(branchId){
+users = await db.all(`
+  SELECT 
+    u.id, 
+    u.username, 
+    u.active, 
+    u.created_at, 
+    u.last_login,
+    COUNT(up.permission_id) as permissions_count
+  FROM users u
+  LEFT JOIN user_permissions up ON u.id = up.user_id
+  WHERE u.branchId = ?
+  GROUP BY u.id, u.username, u.active, u.created_at, u.last_login
+  ORDER BY u.created_at DESC
+  LIMIT ? OFFSET ?
+`, [branchId, limit, offset]);
+
+  rows = await db.all("SELECT COUNT(*) as total FROM users WHERE branchId = ?", [branchId]);
+  }
+    else{
+      console.log("no branch")
+     users = await db.all(`
       SELECT u.id, u.username, u.active, u.created_at, u.last_login,
              COUNT(up.permission_id) as permissions_count
       FROM users u
@@ -93,8 +122,8 @@ async function getAll(
       ORDER BY u.created_at DESC
       LIMIT ? OFFSET ?
     `, [limit, offset]);
-
-    const rows = await db.all("SELECT COUNT(*) as total FROM users");
+    rows = await db.all("SELECT COUNT(*) as total FROM users");
+    }
 
     return {
       success: true,
@@ -110,11 +139,21 @@ async function getAll(
 async function getByName(name) {
   try {
     const db = getDatabase();
+  const store = new Store();
+    const branchId = store.get("branch.id");
 
-    const rows = await db.all(
-      "SELECT * FROM users WHERE username LIKE ?",
-      [`%${name}%`]
-    );
+    let rows = [];
+    if (branchId) {
+      rows = await db.all(
+        "SELECT * FROM users WHERE username LIKE ? AND branchId = ?",
+        [`%${name}%`, branchId]
+      );
+    } else {
+      rows = await db.all(
+        "SELECT * FROM users WHERE username LIKE ?",
+        [`%${name}%`]
+      );
+    }
 
     if (rows.length === 0) {
       return {
@@ -180,16 +219,30 @@ async function search(
     console.log("searching for users with name:", data);
     const db = getDatabase();
     const offset = (page - 1) * limit;
-
+  const store = new Store();
+    const branchId = store.get("branch.id");
     // Find user in database
-    const rows = await db.all(
-      "SELECT * FROM users WHERE username LIKE ? LIMIT ? OFFSET ?",
-      [`%${name}%`, limit, offset]
-    );
-    const search = await db.all(
-      "SELECT COUNT(*) as total FROM users WHERE username LIKE ?",
-      [`%${name}%`]
-    );
+    let rows = [];
+    let search = [{total:0}];
+    if (branchId) {
+      rows = await db.all(
+        "SELECT * FROM users WHERE username LIKE ? AND branchId = ? LIMIT ? OFFSET ?",
+        [`%${name}%`, branchId, limit, offset]
+      );
+      search = await db.all(
+        "SELECT COUNT(*) as total FROM users WHERE username LIKE ? AND branchId = ?",
+        [`%${name}%`, branchId]
+      );
+    } else {
+      rows = await db.all(
+        "SELECT * FROM users WHERE username LIKE ? LIMIT ? OFFSET ?",
+        [`%${name}%`, limit, offset]
+      );
+      search = await db.all(
+        "SELECT COUNT(*) as total FROM users WHERE username LIKE ?",
+        [`%${name}%`]
+      );
+    }
 
     return {
       success: true,

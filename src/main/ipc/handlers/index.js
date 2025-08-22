@@ -14,6 +14,7 @@ const settingsHandlers = require("./settings.js"); // Import settings handlers
 const transH = require("./transaction.js"); // Import transaction handlers
 const reportsH = require ("./reports.js"); // Import reports handlers
 const pdfExportH = require ("./pdf-export.js");
+const branchesH = require ("./branches.js"); // Import branches handlers
 // Error handling wrapper
 const handleError = (handler) => {
   return async (event, ...args) => {
@@ -114,6 +115,7 @@ function setupIPC() {
   ipcMain.handle("products:update", secureHandler(productsH.update));
   ipcMain.handle("products:delete", secureHandler(productsH.deleteProduct));
   ipcMain.handle("products:search", secureHandler(productsH.search));
+  ipcMain.handle("products:addToBranch", secureHandler(productsH.AddQuantityToBranch));
   ipcMain.handle(
     "products:generateBarCode",
     secureHandler(productsH.generateBarCode)
@@ -148,6 +150,16 @@ function setupIPC() {
   ipcMain.handle("credit:getAll", secureHandler(creditH.getAllCredit));
   ipcMain.handle("credit:getByDaily", secureHandler(creditH.getCreditByDaily));
   ipcMain.handle("credit:delete", secureHandler(creditH.deleteCredit));
+
+
+  // Branches handlers
+  ipcMain.handle("branches:create", secureHandler(branchesH.createBranch));
+  ipcMain.handle("branches:getAll", secureHandler(branchesH.getAll));
+  ipcMain.handle("branches:search", secureHandler(branchesH.search));
+  ipcMain.handle("branches:delete", secureHandler(branchesH.deleteBranch));
+  ipcMain.handle("branches:switch", secureHandler(branchesH.switchBranch));
+  ipcMain.handle("branches:getAllWithoutPagination", secureHandler(branchesH.getAllWithoutPagination));
+
 
   // Invoice handlers
   ipcMain.handle("invoice:create", secureHandler(invoiceH.createInvoice));

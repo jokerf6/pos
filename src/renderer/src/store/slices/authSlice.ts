@@ -1,4 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "store";
+import { clearBranches, switchBranch } from "./branchesSlice";
 
 interface User {
   id: number;
@@ -31,7 +34,7 @@ export const loginUser = createAsyncThunk<
   any,
   LoginCredentials,
   { rejectValue: string }
->("auth/login", async (credentials, { rejectWithValue } ) => {
+>("auth/login", async (credentials, { rejectWithValue,dispatch } ) => {
  if (!window.electronAPI) {
     return rejectWithValue("Electron API غير متاح");
   }
@@ -40,6 +43,10 @@ export const loginUser = createAsyncThunk<
     const result = await window.electronAPI.auth.login(credentials);
     if (!result || !result.success) {
       return rejectWithValue("اسم المستخدم أو كلمة المرور غير صحيحة");
+    }
+    console.log("Login successful->", result);
+     if (result.user.branchId) {
+    await  dispatch(switchBranch(result.user.branchId));
     }
     return result;
   } catch (error: any) {
@@ -51,24 +58,25 @@ export const loginUser = createAsyncThunk<
 });
 
 
-// Async thunk for logout
 export const logoutUser = createAsyncThunk<
   { success: boolean },
   void,
   { rejectValue: string }
->("auth/logout", async (_, { rejectWithValue }) => {
+>("auth/logout", async (_, { rejectWithValue, dispatch }) => {
   try {
     if (window.electronAPI) {
+      dispatch(clearBranches());  
+
       const result = await window.electronAPI.auth.logout();
       return result;
     } else {
-      // Fallback for development
       return { success: true };
     }
   } catch (error: any) {
     return rejectWithValue(error.message);
   }
 });
+
 
 // Async thunk for checking authentication status
 export const checkAuth = createAsyncThunk<
@@ -112,6 +120,9 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    clearUser: (state) => {
+      state.user = null;
+    },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
@@ -129,6 +140,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
+ 
 
         state.error = null;
       })
@@ -179,3 +191,4 @@ const authSlice = createSlice({
 
 export const { clearError, setLoading } = authSlice.actions;
 export default authSlice.reducer;
+
