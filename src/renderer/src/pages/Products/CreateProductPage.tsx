@@ -50,6 +50,7 @@ const CreateProductPage = () => {
     barcode: undefined,
     generated_code: undefined,
     category_id: 0,
+    unit_id: 0,
   });
 
   const resetForm = () => {
@@ -63,6 +64,7 @@ const CreateProductPage = () => {
       barcode: undefined,
       generated_code: undefined,
       category_id: 0,
+      unit_id: 0,
     });
     setCategoryData(null);
     setIsExistingProduct(false);

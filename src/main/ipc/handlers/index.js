@@ -15,6 +15,7 @@ const transH = require("./transaction.js"); // Import transaction handlers
 const reportsH = require ("./reports.js"); // Import reports handlers
 const pdfExportH = require ("./pdf-export.js");
 const branchesH = require ("./branches.js"); // Import branches handlers
+const unitsH = require ("./units.js");
 // Error handling wrapper
 const handleError = (handler) => {
   return async (event, ...args) => {
@@ -160,6 +161,11 @@ function setupIPC() {
   ipcMain.handle("branches:switch", secureHandler(branchesH.switchBranch));
   ipcMain.handle("branches:getAllWithoutPagination", secureHandler(branchesH.getAllWithoutPagination));
 
+  // Units handlers
+  ipcMain.handle("units:getAll", secureHandler(unitsH.getAll));
+  ipcMain.handle("units:create", secureHandler(unitsH.create));
+  ipcMain.handle("units:update", secureHandler(unitsH.update));
+  ipcMain.handle("units:delete", secureHandler(unitsH.delete));
 
   // Invoice handlers
   ipcMain.handle("invoice:create", secureHandler(invoiceH.createInvoice));

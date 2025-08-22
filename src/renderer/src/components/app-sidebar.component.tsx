@@ -78,6 +78,13 @@ const items = [
     permissions: ["inventory.view"], // Show if user has inventory view permission
   },
   {
+    title: "الوحدات",
+    url: "/units",
+    group: [],
+    icon: Boxes,
+    permissions: ["units.view"], // Requires units.view permission
+  },
+  {
     title: "إدارة الفواتير",
     url: "/invoiceManagement",
     group: [

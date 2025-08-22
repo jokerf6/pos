@@ -78,6 +78,13 @@ CREATE TABLE IF NOT EXISTS credit (
   FOREIGN KEY (daily_id) REFERENCES daily(id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS units (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Table structure for table 'items'
 CREATE TABLE IF NOT EXISTS items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -90,7 +97,9 @@ CREATE TABLE IF NOT EXISTS items (
   quantity INTEGER,
   buy_price REAL,
   category_id INTEGER,
-  FOREIGN KEY (category_id) REFERENCES categories(id)
+  unit_id INTEGER,
+  FOREIGN KEY (category_id) REFERENCES categories(id),
+  FOREIGN KEY (unit_id) REFERENCES units(id)
 );
 
 -- Table structure for table 'invoices'
@@ -206,7 +215,11 @@ INSERT INTO permissions (id, name, display_name, description, category, created_
 (37, 'branches.view', 'عرض الفروع', 'إمكانية عرض الفروع', 'branches', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
 (38, 'branches.switch', 'تبديل بين الفروع', 'إمكانية التبديل بين الفروع', 'branches', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
 (39, 'branches.delete', 'حذف الفروع', 'إمكانية حذف الفروع', 'branches', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
-(40, 'inventory.create.branch', 'إضافة مخزون للفروع', 'إمكانية إضافة مخزون جديد للفرع', 'branches', '2025-08-06 14:22:02', '2025-08-06 20:47:38');
+(40, 'inventory.create.branch', 'إضافة مخزون للفروع', 'إمكانية إضافة مخزون جديد للفرع', 'branches', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
+(41, 'units.view', 'عرض الوحدات', 'إمكانية عرض الوحدات', 'units', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
+(42, 'units.create', 'إضافة وحدة', 'إمكانية إضافة وحدة جديدة', 'units', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
+(43, 'units.edit', 'تعديل الوحدات', 'إمكانية تعديل الوحدات', 'units', '2025-08-06 14:22:02', '2025-08-06 20:47:38'),
+(44, 'units.delete', 'حذف الوحدات', 'إمكانية حذف الوحدات', 'units', '2025-08-06 14:22:02', '2025-08-06 20:47:38');
 
 
 
@@ -254,6 +267,7 @@ UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM invoiceItems) WHERE name =
 UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM permissions) WHERE name = 'permissions';
 UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM settings) WHERE name = 'settings';
 UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM transactions) WHERE name = 'transactions';
+UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM units) WHERE name = 'units';
 UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM user_permissions) WHERE name = 'user_permissions';
 `;
 const updateSql =`
