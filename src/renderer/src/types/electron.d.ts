@@ -155,6 +155,13 @@ interface ElectronAPI {
   pdf: {
     generateReport: (data) => Promise<any>;
   };
+  units: {
+    create: (data: any) => Promise<any>;
+    getAll: (data?: any) => Promise<any>;
+    getById: (id: number) => Promise<any>;
+    update: (data: any) => Promise<any>;
+    delete: (id: number) => Promise<any>;
+  };
 }
 declare global {
   interface Window {

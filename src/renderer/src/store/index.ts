@@ -14,6 +14,7 @@ import settingsReducer from "./slices/settingsSlice"; // Importing invoice slice
 import  getTransaction  from "./slices/transactionSlice"; // Importing transaction slice
 import reportReducer from "./slices/reportSlice"; // Importing report slice
 import branchesReducer from "./slices/branchesSlice"; // Importing branches slice
+import unitSlice from "./slices/unitSlice"; // Importing units slice
 
 const store = configureStore({
   reducer: {
@@ -31,6 +32,7 @@ const store = configureStore({
     transaction: getTransaction, // Importing transaction slice
     reports: reportReducer, // Importing report slice
     branches: branchesReducer, // Importing branches slice
+    units: unitSlice, // Importing units slice
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

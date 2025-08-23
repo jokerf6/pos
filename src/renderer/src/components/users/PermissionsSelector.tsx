@@ -33,8 +33,8 @@ const categoryNames: Record<string, string> = {
   credit:"المصروفات",
   settings:"الإعدادات",
   transaction: "الإحصائيات",
-  branches:"الفروع"
-
+  branches:"الفروع",
+  units:"الوحدات"
 };
 
 const PermissionsSelector: React.FC<PermissionsSelectorProps> = ({

@@ -16,12 +16,6 @@ import { useReactToPrint } from "react-to-print";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { showError, showSuccess } from "../../components/ui/sonner";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "../../components/ui/dropdown-menu";
 import Modal from "../../components/common/dynamic-modal.component";
 import { Package, Plus } from "lucide-react";
 
@@ -35,7 +29,9 @@ const CreateProductPage = () => {
   const [isExistingProduct, setIsExistingProduct] = useState(false);
   const [originalQuantity, setOriginalQuantity] = useState(0);
   const printRef = useRef(null);
-
+useEffect(()=>{
+  GenerateBarCode();
+},[])
   useEffect(() => {
     dispatch(getCategories());
   }, [dispatch]);
@@ -52,6 +48,7 @@ const CreateProductPage = () => {
     category_id: 0,
     unit_id: 0,
   });
+
 
   const resetForm = () => {
     setFormData({
@@ -198,23 +195,22 @@ const CreateProductPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // تحضير البيانات للإرسال
     const submitData = { ...formData };
     
-    // إذا كان منتج موجود، اجمع الكمية الموجودة مع الجديدة
     if (isExistingProduct) {
       submitData.quantity = originalQuantity + Number(formData.new_quantity);
     }
     
     const result = await dispatch(createProduct(submitData) as any);
     if (!result.error) {
+
       showSuccess("تم إضافه المنتج بنجاح");
-      
-      // إذا كان منتج جديد مع كود مولد، اعرض خيار الطباعة
+                resetForm();
+             GenerateBarCode();      
       if (!isExistingProduct && formData.generated_code) {
         setOpenPrint(true);
+
       } else {
-        // إعادة تعيين النموذج مباشرة
         resetForm();
       }
     } else {
@@ -243,15 +239,13 @@ const CreateProductPage = () => {
   });
 
   const fields = [
-    { name: "barcode", placeholder: "الباركود" },
+    { name: "barcode", placeholder: "الباركود" , disabled:true,},
     { name: "name", placeholder: "اسم المنتج" },
-    { name: "description", placeholder: "الوصف", type: "area" },
     { name: "category_id", placeholder: "الفئة", type: "select" },
     ...(isExistingProduct ? [
       { name: "quantity", placeholder: "الكمية الموجودة", type: "number", disabled: true },
       { name: "new_quantity", placeholder: "الكمية الجديدة", type: "number" }
     ] : [
-      { name: "quantity", placeholder: "الكمية", type: "number" }
     ]),
     { name: "price", placeholder: "سعر البيع", type: "number" },
     { name: "buy_price", placeholder: "سعر الشراء", type: "number" },
@@ -361,16 +355,7 @@ const CreateProductPage = () => {
                   </div>
                 ) : (
                   <div className="flex flex-row-reverse gap-3">
-                    {field.name === "barcode" && (
-                      <Button
-                        type="button"
-                        onClick={GenerateBarCode}
-                        className="whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-all duration-200"
-                      >
-                        <Plus className="h-4 w-4 ml-1" />
-                        توليد
-                      </Button>
-                    )}
+                    
                     <Input
                       ref={field.name === "barcode" ? searchInputRef : null}
                       id={field.name}

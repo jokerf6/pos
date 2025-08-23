@@ -42,11 +42,13 @@ CREATE TABLE IF NOT EXISTS BranchStock (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   branchId INTEGER NOT NULL,
   productId INTEGER NOT NULL,
+  unitId INTEGER NOT NULL,
   quantity INTEGER NOT NULL DEFAULT 0,
   updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE CASCADE,
-  FOREIGN KEY (productId) REFERENCES items(id) ON DELETE CASCADE
+  FOREIGN KEY (productId) REFERENCES items(id) ON DELETE CASCADE,
+  FOREIGN KEY (unitId) REFERENCES units(id) ON DELETE CASCADE
 );
 
 -- Table structure for table 'daily'
@@ -80,9 +82,11 @@ CREATE TABLE IF NOT EXISTS credit (
 
 CREATE TABLE IF NOT EXISTS units (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  is_default BOOLEAN NOT NULL DEFAULT 0,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP DEFAULT NULL
 );
 
 -- Table structure for table 'items'
@@ -222,7 +226,8 @@ INSERT INTO permissions (id, name, display_name, description, category, created_
 (44, 'units.delete', 'حذف الوحدات', 'إمكانية حذف الوحدات', 'units', '2025-08-06 14:22:02', '2025-08-06 20:47:38');
 
 
-
+INSERT INTO units (id, is_default, name, created_at) VALUES
+(1, 1, 'قطعة', '2025-08-06 14:22:02');
 
 -- Insert initial data for settings
 INSERT INTO settings (id, domain, key, value, name, type) VALUES

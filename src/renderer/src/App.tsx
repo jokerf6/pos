@@ -27,6 +27,7 @@ import BranchesPage from "pages/Branches";
 import CreateBranchPage from "pages/Branches/CreateBranchPage";
 import AddProductBranchPage from "pages/Products/AddProdutBranchPage";
 import UnitsPage from "./pages/Units/index";
+import CreateUnitPage from "pages/Units/CreateUnitPage";
 
 
 const App: React.FC = () => {
@@ -299,6 +300,18 @@ const App: React.FC = () => {
           isAuthenticated ? (
             <Layout>
               <UnitsPage />
+            </Layout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+          <Route
+        path="/units/create"
+        element={
+          isAuthenticated ? (
+            <Layout>
+              <CreateUnitPage />
             </Layout>
           ) : (
             <Navigate to="/login" />

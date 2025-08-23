@@ -102,10 +102,14 @@ const validChannels = {
   "branches:delete": true,
   "branches:search": true,
   "branches:switch": true,
-  "branches:getAllWithoutPagination": true
+  "branches:getAllWithoutPagination": true,
 
 
 
+  "units:getAll": true,
+  "units:create": true,
+  "units:update": true,
+  "units:delete": true
 
 };
 
@@ -240,6 +244,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   pdf: {
     generateReport: (data) => safeInvoke("pdf:generate-report", data),
+  },
+
+  units: {
+    create: (data) => safeInvoke("units:create", data),
+    getAll: () => safeInvoke("units:getAll"),
+    update: (id, data) => safeInvoke("units:update", id, data),
+    delete: (id) => safeInvoke("units:delete", id),
   },
 
   on: (channel, callback) => {

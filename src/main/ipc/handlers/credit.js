@@ -11,16 +11,21 @@ async function createCredit(event, data) {
   if (!reason || !price) {
     throw new Error("برجاء إدخال سبب القرض والمبلغ");
   }
+  const store = new Store();
+  const branchId = store.get("branch.id");
+  if(!branchId){
+    throw new Error("برجاء إختيار فرع");
+  }
   let x = receiver;
   if (!x || x === null) {
     x = "";
   }
-  console.log(x, reason, price);
-
+  
   try {
     const db = getDatabase();
     const rows = await db.all(
-      "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
+      "SELECT * FROM daily WHERE closed_at IS NULL AND branchId = ? LIMIT 1",
+      [branchId]
     );
     console.log(rows);
     if (rows.length === 0) {
@@ -28,8 +33,8 @@ async function createCredit(event, data) {
     }
 
     await db.run(
-      "INSERT INTO credit (reciever, reason, price,daily_id) VALUES (?, ?, ?,?)",
-      [x, reason, price, rows[0].id]
+      "INSERT INTO credit (reciever, reason, price,daily_id, branchId) VALUES (?, ?, ?, ?, ?)",
+      [x, reason, price, rows[0].id, branchId]
     );
     return {
       success: true,
@@ -54,7 +59,14 @@ try {
     // build WHERE and parameters for filtering (without pagination)
     let whereString = "";
     const whereParams = [];
+    const store = new Store();
+    const branchId = store.get("branch.id");
+    if(branchId){
+    whereString += "WHERE branchId = ?";
+      whereParams.push(branchId);
 
+    }
+    
     if (name) {
       // search in reason (text) and price (cast to char so LIKE works on numbers)
       whereString = `WHERE reason LIKE ? OR CAST(price AS CHAR) LIKE ?`;
@@ -93,9 +105,13 @@ async function getCreditByDaily(
   try {
     const db = getDatabase();
 
-    // جلب الـ daily المفتوح
+        const store = new Store();
+    const branchId = store.get("branch.id");
+
+    
     const rows = await db.all(
-      "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
+      "SELECT * FROM daily WHERE closed_at IS NULL AND branchId = ? LIMIT 1",
+      [branchId]
     );
     if (rows.length === 0) {
       return {
@@ -110,6 +126,11 @@ async function getCreditByDaily(
     // تجهيز شروط البحث
     let whereClause = "WHERE daily_id = ?";
     let params = [rows[0].id];
+
+    if (branchId) {
+      whereClause += " AND branchId = ?";
+      params.push(branchId);
+    }
 
     if (name) {
       whereClause += " AND name LIKE ?";
