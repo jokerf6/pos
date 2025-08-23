@@ -1,25 +1,43 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { updateProduct, generateBarCode, ProductByBarcode, addQuantityToBranch } from "../../store/slices/productsSlice";
-import { getCategories, CategoryById } from "../../store/slices/categoriesSlice";
+import {
+  updateProduct,
+  generateBarCode,
+  ProductByBarcode,
+  addQuantityToBranch,
+} from "../../store/slices/productsSlice";
+import {
+  getCategories,
+  CategoryById,
+} from "../../store/slices/categoriesSlice";
 import * as JsBarcode from "jsbarcode";
 import { useReactToPrint } from "react-to-print";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { showError, showSuccess } from "../../components/ui/sonner";
 import Modal from "../../components/common/dynamic-modal.component";
-import { Package, Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft } from "lucide-react";
+import { getAll } from "store/slices/unitSlice";
+import { AppDispatch } from "store";
 
 const AddProductBranchPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+
   const categories = useSelector((state: any) => state.categories);
-  const [categoryData, setCategoryData] = useState<{ id: string; name: string } | null>(null);
+  const { units } = useSelector((state: any) => state.units);
+
+  const [categoryData, setCategoryData] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
   const [barcodeNumber, setBarcodeNumber] = useState(0);
   const [openPrint, setOpenPrint] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
   const printRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -34,25 +52,35 @@ const AddProductBranchPage = () => {
     category_id: 0,
   });
 
-  // تحميل بيانات المنتج والفئات
+  const [unitInputs, setUnitInputs] = useState<
+    { unitId: number; quantity: number }[]
+  >([]);
+
+  /** ====================== Load initial data ====================== */
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        await dispatch(getCategories() as any);
-        
+
+        await Promise.all([dispatch(getCategories() as any), dispatch(getAll({}))]);
+
         if (id) {
-          const result = await dispatch(ProductByBarcode({name:id}) as any) as any;
+          const result = (await dispatch(
+            ProductByBarcode({ name: id }) as any
+          )) as any;
+
           if (!result.error) {
             const productData = result.payload;
-            
+
             if (productData.category_id) {
-              const categoryResult = await dispatch(CategoryById(productData.category_id) as any);
+              const categoryResult = await dispatch(
+                CategoryById(productData.category_id) as any
+              );
               if (!categoryResult.error) {
                 setCategoryData(categoryResult.payload.user);
               }
             }
-            
+
             setFormData({
               name: productData.name || "",
               description: productData.description || "",
@@ -69,7 +97,7 @@ const AddProductBranchPage = () => {
             navigate("/products");
           }
         }
-      } catch (error) {
+      } catch {
         showError("فشل في تحميل البيانات");
         navigate("/products");
       } finally {
@@ -80,6 +108,16 @@ const AddProductBranchPage = () => {
     loadData();
   }, [dispatch, id, navigate]);
 
+  /** ====================== Init default unit inputs ====================== */
+  useEffect(() => {
+    const defaults =
+      units
+        ?.filter((unit: any) => unit.is_default)
+        .map((unit: any) => ({ unitId: unit.id, quantity: 0 })) || [];
+    setUnitInputs(defaults);
+  }, [units]);
+
+  /** ====================== Handlers ====================== */
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target;
@@ -88,15 +126,19 @@ const AddProductBranchPage = () => {
     []
   );
 
-  const handleCategoryChange = (category: { id: string; name: string }) => {
-    setCategoryData(category);
-    setFormData((prev) => ({
-      ...prev,
-      category_id: Number(category.id),
-    }));
-  };
+  const handleUnitInputChange = useCallback(
+    (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+      const { value } = e.target;
+      setUnitInputs((prev) =>
+        prev.map((input, i) =>
+          i === index ? { ...input, quantity: Number(value) } : input
+        )
+      );
+    },
+    []
+  );
 
-  const GenerateBarCode = async () => {
+  const GenerateBarCode = useCallback(async () => {
     try {
       const result = await dispatch(generateBarCode({}) as any);
       if (!result.error) {
@@ -107,70 +149,82 @@ const AddProductBranchPage = () => {
       } else {
         showError(result?.payload || "فشل في توليد الباركود");
       }
-    } catch (error) {
+    } catch {
       showError("حدث خطأ أثناء توليد الباركود");
     }
-  };
+  }, [dispatch]);
 
+  /** ====================== Auto-generate barcode on page open ====================== */
+  useEffect(() => {
+    GenerateBarCode();
+  }, [GenerateBarCode]);
+
+  /** ====================== Submit form ====================== */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setIsLoading(true);
+
       const updatedData = {
         ...formData,
-        quantity: formData.quantity + Number(formData.new_quantity)
+        quantity: formData.quantity + Number(formData.new_quantity),
       };
-      console.log("Submitting updated data:", updatedData);
-      
-      const result = await dispatch(addQuantityToBranch({
-        id: Number(id),
-        ...updatedData
-      }) as any);
-      
+
+      const result = await dispatch(
+        addQuantityToBranch({
+          id: Number(id),
+          ...updatedData,
+        }) as any
+      );
+
       if (!result.error) {
         showSuccess("تم تحديث المنتج بنجاح");
         navigate("/products");
       } else {
         showError(result?.payload || "فشل في تحديث المنتج");
       }
-    } catch (error) {
+    } catch {
       showError("حدث خطأ أثناء تحديث المنتج");
     } finally {
       setIsLoading(false);
     }
   };
 
+  /** ====================== Barcode render effect ====================== */
   useEffect(() => {
     if ((formData.generated_code || formData.barcode) && barcodeNumber > 0) {
       for (let i = 0; i < barcodeNumber; i++) {
         const svg = document.getElementById(`barcode-${i}`);
         if (svg) {
-          JsBarcode.default(svg, (formData.generated_code || formData.barcode) as string, {
-            format: "CODE128",
-            width: 2,
-            height: 60,
-            displayValue: true,
-          });
+          JsBarcode.default(
+            svg,
+            (formData.generated_code || formData.barcode) as string,
+            {
+              format: "CODE128",
+              width: 2,
+              height: 60,
+              displayValue: true,
+            }
+          );
         }
       }
     }
   }, [formData.generated_code, formData.barcode, barcodeNumber]);
 
-  const handelPrint = useReactToPrint({
-    contentRef: printRef,
-  });
+  const handelPrint = useReactToPrint({ contentRef: printRef });
 
+  /** ====================== Fields Config ====================== */
   const fields = [
     { name: "barcode", placeholder: "الباركود", disabled: true },
     { name: "name", placeholder: "اسم المنتج", disabled: true },
-    { name: "description", placeholder: "الوصف", type: "textarea", disabled: true },
     { name: "quantity", placeholder: "الكمية الحالية", type: "number", disabled: true },
     { name: "new_quantity", placeholder: "الكمية المضافة", type: "number" },
     { name: "price", placeholder: "سعر البيع", type: "number", disabled: true },
     { name: "buy_price", placeholder: "سعر الشراء", type: "number", disabled: true },
   ];
 
+  /** ====================== Loader ====================== */
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -179,8 +233,10 @@ const AddProductBranchPage = () => {
     );
   }
 
+  /** ====================== JSX ====================== */
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6" dir="rtl">
+      {/* Print Modal */}
       <Modal
         open={openPrint}
         onClose={() => setOpenPrint(false)}
@@ -204,6 +260,7 @@ const AddProductBranchPage = () => {
         </div>
       </Modal>
 
+      {/* Header */}
       <div className="flex items-center justify-between">
         <Button variant="outline" onClick={() => navigate("/products")}>
           <ArrowLeft className="h-4 w-4 ml-1" />
@@ -212,11 +269,14 @@ const AddProductBranchPage = () => {
         <h2 className="text-2xl font-bold">اضافة مخزون للمنتج</h2>
       </div>
 
+      {/* Form */}
       <div className="bg-white p-6 rounded-lg shadow">
         <form onSubmit={handleSubmit} className="space-y-4">
           {fields.map((field) => (
             <div key={field.name} className="space-y-2">
-              <label className="block text-sm font-medium">{field.placeholder}</label>
+              <label className="block text-sm font-medium">
+                {field.placeholder}
+              </label>
               <Input
                 name={field.name}
                 type={field.type || "text"}
@@ -228,33 +288,53 @@ const AddProductBranchPage = () => {
             </div>
           ))}
 
+          {/* Category */}
           <div className="space-y-2">
             <label className="block text-sm font-medium">الفئة</label>
-            <span>{categories?.categories?.map((category: any) => (
+            <span>
+              {categories?.categories?.map((category: any) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
-              ))}</span>
+              ))}
+            </span>
           </div>
 
+          {/* Stock Summary */}
           <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
             <p className="text-blue-800 text-sm">
               <strong>الكمية الحالية:</strong> {formData.quantity}
             </p>
             {formData.new_quantity > 0 && (
               <p className="text-blue-800 text-sm mt-1">
-                <strong>إجمالي الكمية بعد التحديث:</strong> {formData.quantity + Number(formData.new_quantity)}
+                <strong>إجمالي الكمية بعد التحديث:</strong>{" "}
+                {formData.quantity + Number(formData.new_quantity)}
               </p>
             )}
           </div>
 
+          {/* Actions */}
           <div className="flex justify-between pt-4">
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <span className="flex items-center">
-                  <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin h-4 w-4 mr-2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   جاري الحفظ...
                 </span>
@@ -265,13 +345,42 @@ const AddProductBranchPage = () => {
                 </>
               )}
             </Button>
-            <Button type="button" variant="outline" onClick={() => navigate("/products")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/products")}
+            >
               إلغاء
             </Button>
           </div>
         </form>
+
+        {/* Units */}
+        <hr className="mt-[40px] mb-[20px]" />
+        <div className="flex flex-col gap-4">
+          <h1 className="text-2xl font-bold">الوحدات</h1>
+          <div>
+            {unitInputs.map((input, index) => (
+              <div
+                key={index}
+                className="flex flex-col-reverse items-start gap-2 space-x-2"
+              >
+                <Input
+                  type="number"
+                  min={0}
+                  value={input.quantity}
+                  onChange={(e) => handleUnitInputChange(index, e)}
+                />
+                <span>
+                  {units.find((unit: any) => unit.id === input.unitId)?.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
+      {/* Print Section */}
       <div className="hidden">
         <div ref={printRef}>
           {Array.from({ length: barcodeNumber }).map((_, idx) => (
