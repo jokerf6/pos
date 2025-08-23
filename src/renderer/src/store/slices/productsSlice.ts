@@ -17,7 +17,6 @@ interface Product {
 
 interface ProductPayload {
   name: string;
-  description: string;
   quantity: number;
   price: number;
   buy_price: number;
@@ -190,10 +189,11 @@ export const ProductByBarcode = createAsyncThunk(
 
 export const deleteProduct = createAsyncThunk(
   "products/delete",
-  async (id: number, { rejectWithValue }) => {
+  async (id: number, { rejectWithValue,dispatch }) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.products.delete(id);
+        
         return result;
       } else {
         return null;
@@ -276,6 +276,8 @@ const productsSlice = createSlice({
       })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.loading = false;
+        state.products = state.products.filter(product => product.id !== action.payload.id);
+        
       })
       .addCase(deleteProduct.rejected, (state, action) => {
         state.loading = false;

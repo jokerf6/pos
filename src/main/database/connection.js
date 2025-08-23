@@ -42,13 +42,11 @@ CREATE TABLE IF NOT EXISTS BranchStock (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   branchId INTEGER NOT NULL,
   productId INTEGER NOT NULL,
-  unitId INTEGER NOT NULL,
   quantity INTEGER NOT NULL DEFAULT 0,
   updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE CASCADE,
-  FOREIGN KEY (productId) REFERENCES items(id) ON DELETE CASCADE,
-  FOREIGN KEY (unitId) REFERENCES units(id) ON DELETE CASCADE
+  FOREIGN KEY (productId) REFERENCES items(id) ON DELETE CASCADE
 );
 
 -- Table structure for table 'daily'
@@ -101,10 +99,11 @@ CREATE TABLE IF NOT EXISTS items (
   quantity INTEGER,
   buy_price REAL,
   category_id INTEGER,
-  unit_id INTEGER,
+  unitId INTEGER,
+  deleted_at TIMESTAMP DEFAULT NULL,
   FOREIGN KEY (category_id) REFERENCES categories(id),
-  FOREIGN KEY (unit_id) REFERENCES units(id)
-);
+  FOREIGN KEY (unitId) REFERENCES units(id)
+  );
 
 -- Table structure for table 'invoices'
 CREATE TABLE IF NOT EXISTS invoices (
@@ -259,7 +258,18 @@ INSERT INTO user_permissions (id, user_id, permission_id, granted_by, granted_at
 (51, 1, 16, 1, '2025-08-13 17:08:31'),
 (52, 1, 17, 1, '2025-08-13 17:08:31'),
 (53, 1, 18, 1, '2025-08-13 17:08:31'),
-(54, 1, 15, 1, '2025-08-13 17:08:31');
+(54, 1, 15, 1, '2025-08-13 17:08:31'),
+(54, 1, 36, 1, '2025-08-13 17:08:31'),
+(55, 1, 37, 1, '2025-08-13 17:08:31'),
+(56, 1, 38, 1, '2025-08-13 17:08:31'),
+(57, 1, 39, 1, '2025-08-13 17:08:31'),
+(58, 1, 40, 1, '2025-08-13 17:08:31'),
+(59, 1, 41, 1, '2025-08-13 17:08:31'),
+(60, 1, 42, 1, '2025-08-13 17:08:31'),
+(61, 1, 43, 1, '2025-08-13 17:08:31'),
+(62, 1, 44, 1, '2025-08-13 17:08:31'),
+
+
 
 
 -- Update sequences

@@ -10,6 +10,10 @@ const columns: ColumnDef<any>[] = [
     header: "الاسم",
   },
   {
+    accessorKey: "unitName",
+    header: "الوحدات",
+  },
+  {
     accessorKey: "quantity",
     header: "الكميه",
   },
@@ -17,9 +21,6 @@ const columns: ColumnDef<any>[] = [
     accessorKey: "price",
     header: "السعر",
   },
-  {
-    accessorKey: "buy_price",
-    header: "التكلفه",
-  },
+  
 ];
 export default columns;

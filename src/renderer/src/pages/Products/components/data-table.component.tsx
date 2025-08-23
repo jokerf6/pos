@@ -74,13 +74,14 @@ const DataTable = <T extends Record<string, any>>({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const categories = useSelector((state: any) => state.categories);
   const { selectedBranch } = useSelector((state: any) => state.branches);
-
+  const {products} = useSelector((state: any) => state.products);
   // Main useEffect for fetching products with search and filters
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const result = await dispatch(searchProducts({ name: search, page, filters }) as any);
         if (!result.error) {
+          console.log("fetched2");
           const formattedProducts = result?.payload?.products?.map((item: T) => ({
             ...item,
             createdAt: new Date(item.created_at).toISOString().split("T")[0],
@@ -96,7 +97,7 @@ const DataTable = <T extends Record<string, any>>({
     };
 
     fetchProducts();
-  }, [search, page, filters, dispatch, selectedBranch]);
+  }, [search, page, filters, dispatch, selectedBranch, products]);
 
   useEffect(() => {
     dispatch(getCategories() as any);

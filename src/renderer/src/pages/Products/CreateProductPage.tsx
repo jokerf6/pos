@@ -17,38 +17,46 @@ import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { showError, showSuccess } from "../../components/ui/sonner";
 import Modal from "../../components/common/dynamic-modal.component";
-import { Package, Plus } from "lucide-react";
+import { Package } from "lucide-react";
+import { useSelector } from "react-redux";
+import { getAll } from "store/slices/unitSlice";
 
 const CreateProductPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const categories = useAppSelector((state) => state.categories);
+
+  // مؤقتاً - لحد ما تجيب الـ units من الـ API
+ const {units} = useSelector((state:any) => state.units);
   const [categoryData, setCategoryData] = useState<{ id: number; name: string } | null>(null);
   const [barcodeNumber, setBarcodeNumber] = useState(0);
   const [openPrint, setOpenPrint] = useState(false);
   const [isExistingProduct, setIsExistingProduct] = useState(false);
   const [originalQuantity, setOriginalQuantity] = useState(0);
   const printRef = useRef(null);
-useEffect(()=>{
-  GenerateBarCode();
-},[])
+
+  useEffect(() => {
+
+    GenerateBarCode();
+  }, []);
+
   useEffect(() => {
     dispatch(getCategories());
+    dispatch(getAll({}));
   }, [dispatch]);
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     quantity: 1,
-    new_quantity: 0, // الكمية الجديدة
+    new_quantity: 0,
     price: 0,
     buy_price: 0,
     barcode: undefined,
     generated_code: undefined,
     category_id: 0,
-    unit_id: 0,
+    unitId: 0,
   });
-
 
   const resetForm = () => {
     setFormData({
@@ -61,7 +69,7 @@ useEffect(()=>{
       barcode: undefined,
       generated_code: undefined,
       category_id: 0,
-      unit_id: 0,
+      unitId: 0,
     });
     setCategoryData(null);
     setIsExistingProduct(false);
@@ -77,7 +85,7 @@ useEffect(()=>{
       const result = await dispatch(ProductByBarcode({ name }));
       if (!result.payload.error) {
         const data = result.payload || {};
-        
+
         if (!data || !data.id) {
           // منتج جديد
           setIsExistingProduct(false);
@@ -97,12 +105,11 @@ useEffect(()=>{
           // منتج موجود
           setIsExistingProduct(true);
           setOriginalQuantity(data.quantity || 0);
-          
+
           if (data.category_id) {
             const categoryResult = await dispatch(
               CategoryById(data.category_id) as any
             );
-            console.log("categoryResult", categoryResult);
             if (!categoryResult.error) {
               setCategoryData(categoryResult.payload.user);
             } else {
@@ -111,13 +118,13 @@ useEffect(()=>{
           } else {
             setCategoryData(null);
           }
-          
+
           setFormData((prev) => ({
             ...prev,
             name: data.name || "",
             description: data.description || "",
-            quantity: data.quantity || 0, // الكمية الموجودة (disabled)
-            new_quantity: 0, // الكمية الجديدة (يدخلها المستخدم)
+            quantity: data.quantity || 0,
+            new_quantity: 0,
             price: data.price || 0,
             buy_price: data.buy_price || 0,
             category_id: data.category_id || 0,
@@ -141,12 +148,11 @@ useEffect(()=>{
     },
     []
   );
-  
+
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log(e.key);
       if (e.key === "/" || (e.ctrlKey && e.key.toLowerCase() === "k")) {
         e.preventDefault();
         searchInputRef.current?.focus();
@@ -161,7 +167,6 @@ useEffect(()=>{
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log(e.key);
       if (e.key === "+") {
         e.preventDefault();
         GenerateBarCode();
@@ -180,36 +185,31 @@ useEffect(()=>{
 
   const GenerateBarCode = async () => {
     const result = await dispatch(generateBarCode({}) as any);
-    console.log("generateBarCode result", result);
     const data = result?.payload || null;
-    console.log("generateBarCode data", data);
     setFormData((prev) => ({
       ...prev,
       generated_code: data || undefined,
     }));
-    // عند توليد كود جديد، يكون منتج جديد
     setIsExistingProduct(false);
     setOriginalQuantity(0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const submitData = { ...formData };
-    
+
     if (isExistingProduct) {
       submitData.quantity = originalQuantity + Number(formData.new_quantity);
     }
-    
+
     const result = await dispatch(createProduct(submitData) as any);
     if (!result.error) {
-
       showSuccess("تم إضافه المنتج بنجاح");
-                resetForm();
-             GenerateBarCode();      
+      resetForm();
+      GenerateBarCode();
       if (!isExistingProduct && formData.generated_code) {
         setOpenPrint(true);
-
       } else {
         resetForm();
       }
@@ -242,10 +242,12 @@ useEffect(()=>{
     { name: "barcode", placeholder: "الباركود" , disabled:true,},
     { name: "name", placeholder: "اسم المنتج" },
     { name: "category_id", placeholder: "الفئة", type: "select" },
+    { name: "unitId", placeholder: "الوحدة", type: "select" },  
     ...(isExistingProduct ? [
       { name: "quantity", placeholder: "الكمية الموجودة", type: "number", disabled: true },
       { name: "new_quantity", placeholder: "الكمية الجديدة", type: "number" }
     ] : [
+      // { name: "new_quantity", placeholder: "الكمية", type: "number" },
     ]),
     { name: "price", placeholder: "سعر البيع", type: "number" },
     { name: "buy_price", placeholder: "سعر الشراء", type: "number" },
@@ -254,6 +256,7 @@ useEffect(()=>{
   return (
     <div className="min-h-screen bg-gray-50 py-8" dir="rtl">
       <div className="max-w-2xl mx-auto px-6">
+        {/* Modal */}
         <Modal
           open={openPrint}
           onClose={() => {
@@ -289,7 +292,7 @@ useEffect(()=>{
           </div>
         </Modal>
 
-        {/* Header Section */}
+        {/* Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-green-100 rounded-lg">
@@ -302,21 +305,11 @@ useEffect(()=>{
           <p className="text-gray-600">
             {isExistingProduct 
               ? "قم بتعديل بيانات المنتج أو إضافة كمية جديدة" 
-              : "قم بملء البيانات التالية لإضافة منتج جديد إلى المخزون"
-            }
+              : "قم بملء البيانات التالية لإضافة منتج جديد إلى المخزون"}
           </p>
-          
-          {isExistingProduct && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800 text-sm">
-                <strong>منتج موجود:</strong> الكمية الحالية {originalQuantity} - 
-                سيتم إضافة الكمية الجديدة إلى الكمية الموجودة
-              </p>
-            </div>
-          )}
         </div>
 
-        {/* Form Section */}
+        {/* Form */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {fields.map((field) => (
@@ -326,61 +319,76 @@ useEffect(()=>{
                   {field.disabled && <span className="text-gray-500 text-xs"> (للعرض فقط)</span>}
                 </label>
 
-                {field.type === "select" ? (
-                  <div className="space-y-1">
-                    <select
-                      name="category_id"
-                      id="category_id"
-                      value={formData.category_id}
-                      onChange={(e) => {
-                        const selectedId = e.target.value;
-                        const selectedCategory = categories?.categories?.find(
-                          (cat) => cat.id === Number(selectedId)
-                        );
-                        setCategoryData(selectedCategory || null);
-                        setFormData((prev) => ({
-                          ...prev,
-                          category_id: Number(selectedId),
-                        }));
-                      }}
-                      className="w-full border border-gray-300 p-3 rounded-lg bg-white text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                    >
-                      <option value="">اختر الفئة</option>
-                      {categories?.categories?.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                {field.type === "select" && field.name === "category_id" ? (
+                  <select
+                    name="category_id"
+                    id="category_id"
+                    value={formData.category_id}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const selectedCategory = categories?.categories?.find(
+                        (cat) => cat.id === Number(selectedId)
+                      );
+                      setCategoryData(selectedCategory || null);
+                      setFormData((prev) => ({
+                        ...prev,
+                        category_id: Number(selectedId),
+                      }));
+                    }}
+                    className="w-full border border-gray-300 p-3 rounded-lg bg-white text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                  >
+                    <option value="">اختر الفئة</option>
+                    {categories?.categories?.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : field.type === "select" && field.name === "unitId" ? (
+                  <select
+                    name="unitId"
+                    id="unitId"
+                    value={formData.unitId}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      setFormData((prev) => ({
+                        ...prev,
+                        unitId: Number(selectedId),
+                      }));
+                    }}
+                    className="w-full border border-gray-300 p-3 rounded-lg bg-white text-right focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                  >
+                    <option value="">اختر الوحدة</option>
+                    {units.map((unit:any) => (
+                      <option key={unit.id} value={unit.id}>
+                        {unit.name}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
-                  <div className="flex flex-row-reverse gap-3">
-                    
-                    <Input
-                      ref={field.name === "barcode" ? searchInputRef : null}
-                      id={field.name}
-                      name={field.name}
-                      type={field.type || "text"}
-                      min={field.type === "number" ? 0 : undefined}
-                      disabled={field.disabled}
-                      value={
-                        field.name === "barcode"
-                          ? formData.barcode || formData.generated_code
-                          : (formData as any)[field.name]
-                      }
-                      onChange={handleChange}
-                      className={`flex-1 border border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
-                        field.disabled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
-                      }`}
-                    />
-                  </div>
+                  <Input
+                    ref={field.name === "barcode" ? searchInputRef : null}
+                    id={field.name}
+                    name={field.name}
+                    type={field.type || "text"}
+                    min={field.type === "number" ? 0 : undefined}
+                    disabled={field.disabled}
+                    value={
+                      field.name === "barcode"
+                        ? formData.barcode || formData.generated_code
+                        : (formData as any)[field.name]
+                    }
+                    onChange={handleChange}
+                    className={`flex-1 border border-gray-300 p-3 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                      field.disabled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
+                    }`}
+                  />
                 )}
               </div>
             ))}
 
-            {/* عرض المجموع الإجمالي للكمية إذا كان منتج موجود */}
-            {isExistingProduct && (
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            {/* مجموع الكمية */}
+              {/* <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="text-sm text-gray-600">
                   <p><strong>الكمية الحالية:</strong> {originalQuantity}</p>
                   <p><strong>الكمية الجديدة:</strong> {formData.new_quantity}</p>
@@ -388,8 +396,7 @@ useEffect(()=>{
                     <strong>إجمالي الكمية:</strong> {originalQuantity + Number(formData.new_quantity)}
                   </p>
                 </div>
-              </div>
-            )}
+              </div> */}
 
             <div className="flex gap-4 pt-6 border-t border-gray-200">
               <Button 
@@ -411,16 +418,12 @@ useEffect(()=>{
           </form>
         </div>
 
+        {/* Hidden print */}
         <div className="hidden">
           <div ref={printRef}>
             {Array.from({ length: barcodeNumber }).map((_, idx) => (
-              <div
-                key={idx}
-                className="mb-4 flex flex-col items-center text-center"
-              >
-                <h1 className="font-bold">
-                  {process.env.REACT_APP_COMPANY_NAME}
-                </h1>
+              <div key={idx} className="mb-4 flex flex-col items-center text-center">
+                <h1 className="font-bold">{process.env.REACT_APP_COMPANY_NAME}</h1>
                 <h2>{formData.name || "اسم المنتج"}</h2>
                 <div className="flex items-center justify-center gap-2">
                   <span

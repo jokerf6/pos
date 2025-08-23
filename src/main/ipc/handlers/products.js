@@ -14,6 +14,7 @@ async function createProduct(event, data) {
     buy_price,
     category_id,
     barcode,
+    unitId,
     generated_code,
   } = data;
 
@@ -24,10 +25,11 @@ async function createProduct(event, data) {
     !price ||
     !buy_price ||
     !category_id ||
+    !unitId ||
     (!barcode && !generated_code)
   ) {
     throw new Error(
-      "برجاء إدخال اسم المنتج والكمية والسعر وسعر الشراءوالفئة والباركود"
+      "برجاء إدخال اسم المنتج والكمية والسعر و الوحدات وسعر الشراءوالفئة والباركود"
     );
   }
   const quantity = 0;
@@ -43,7 +45,7 @@ async function createProduct(event, data) {
       }
 
       await db.run(
-        "INSERT INTO items (name, barcode, description,quantity, price,buy_price,category_id) VALUES (?, ?, ?,?,?,?,?)",
+        "INSERT INTO items (name, barcode, description, quantity, price,buy_price,category_id, unitId) VALUES (?, ?, ?,?,?,?,?,?)",
         [
           name,
           generated_code,
@@ -52,6 +54,7 @@ async function createProduct(event, data) {
           price,
           buy_price,
           category_id,
+          unitId,
         ]
       );
       const find = await db.all(
@@ -70,15 +73,15 @@ async function createProduct(event, data) {
 
       await db.run(
         `UPDATE items 
-         SET name = ?, description = ?, quantity = ?, price = ?, buy_price = ?, category_id = ?
+         SET name = ?, description = ?, quantity = ?, price = ?, buy_price = ?, category_id = ?, unitId = ?
          WHERE barcode = ?`,
-        [name, description, quantity, price, buy_price, category_id, barcode]
+        [name, description, quantity, price, buy_price, category_id, unitId, barcode]
       );
       const find = await db.all(
         "SELECT * FROM items WHERE barcode = ? LIMIT 1",
         [barcode]
       );
-      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "purchase", quantity, price,  new Date()]);
+      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?, ?)", [find[0].id, "purchase", quantity, price,  new Date()]);
     }
     return {
       success: true,
@@ -108,13 +111,18 @@ async function getAll(
   i.price,
   i.buy_price,
   i.category_id,
+  i.unitId,
   COALESCE(bs.quantity, 0) AS quantity,
   i.created_at,
-  i.description
+  i.description,
+  u.name AS unitName
 FROM items i
 LEFT JOIN BranchStock bs 
   ON i.id = bs.productId AND bs.branchId = ?
-ORDER BY i.id DESC
+LEFT JOIN units u
+  ON i.unitId = u.id
+WHERE i.deleted_at IS NULL
+  ORDER BY i.id DESC
 LIMIT ? OFFSET ?;`,
       [branchId, limit, offset]
     ) : await db.all(
@@ -123,14 +131,19 @@ LIMIT ? OFFSET ?;`,
   i.name,
   i.barcode,
   i.price,
+  i.unitId,
   i.buy_price,
   i.category_id,
   COALESCE(SUM(bs.quantity), 0) AS quantity,
   i.created_at,
+  u.name AS unitName,
   i.description
 FROM items i
 LEFT JOIN BranchStock bs 
   ON i.id = bs.productId
+LEFT JOIN units u 
+  ON i.unitId = u.id
+WHERE i.deleted_at IS NULL
 GROUP BY i.id
 ORDER BY i.id DESC
 LIMIT ? OFFSET ?;`,
@@ -165,14 +178,18 @@ if (branchId) {
       i.barcode,
       i.price,
       i.buy_price,
+      i.unitId,
       i.category_id,
       COALESCE(bs.quantity, 0) AS quantity,
       i.created_at,
+      u.name AS unitName,
       i.description
     FROM items i
     LEFT JOIN BranchStock bs 
       ON i.id = bs.productId AND bs.branchId = ?
-    WHERE i.name LIKE ? OR i.barcode LIKE ?
+    LEFT JOIN units u
+      ON i.unitId = u.id
+    WHERE (i.name LIKE ? OR i.barcode LIKE ?) AND i.deleted_at IS NULL
     ORDER BY i.id DESC
     LIMIT ? OFFSET ?
     `,
@@ -189,13 +206,17 @@ if (branchId) {
       i.price,
       i.buy_price,
       i.category_id,
+      u.name AS unitName
+      i.unitId,
       COALESCE(SUM(bs.quantity), 0) AS quantity,
       i.created_at,
       i.description
     FROM items i
     LEFT JOIN BranchStock bs 
       ON i.id = bs.productId
-    WHERE i.name LIKE ? OR i.barcode LIKE ?
+    LEFT JOIN units u
+      ON i.unitId = u.id
+    WHERE (i.name LIKE ? OR i.barcode LIKE ?) AND i.deleted_at IS NULL
     GROUP BY i.id
     ORDER BY i.id DESC
     LIMIT ? OFFSET ?
@@ -251,15 +272,19 @@ if (branchId) {
       i.name,
       i.barcode,
       i.price,
+      i.unitId,
       i.buy_price,
       i.category_id,
       COALESCE(bs.quantity, 0) AS quantity,
+      u.name AS unitName,
       i.created_at,
       i.description
     FROM items i
     LEFT JOIN BranchStock bs 
       ON i.id = bs.productId AND bs.branchId = ?
-    WHERE i.barcode LIKE ?
+    LEFT JOIN units u
+      ON i.unitId = u.id
+    WHERE i.barcode LIKE ? AND i.deleted_at IS NULL
     ORDER BY i.id DESC
     LIMIT 1
     `,
@@ -274,15 +299,19 @@ if (branchId) {
       i.name,
       i.barcode,
       i.price,
+      i.unitId,
       i.buy_price,
       i.category_id,
       COALESCE(SUM(bs.quantity), 0) AS quantity,
       i.created_at,
-      i.description
+      i.description,
+      u.name AS unitName
     FROM items i
     LEFT JOIN BranchStock bs 
       ON i.id = bs.productId
-    WHERE i.barcode LIKE ?
+    LEFT JOIN units u
+      ON i.unitId = u.id
+    WHERE i.barcode LIKE ? AND i.deleted_at IS NULL
     GROUP BY i.id
     ORDER BY i.id DESC
     LIMIT 1
@@ -318,15 +347,19 @@ if (branchId) {
       i.name,
       i.barcode,
       i.price,
+      i.unitId,
       i.buy_price,
       i.category_id,
       COALESCE(bs.quantity, 0) AS quantity,
       i.created_at,
-      i.description
+      i.description,
+      u.name AS unitName
     FROM items i
     LEFT JOIN BranchStock bs 
       ON i.id = bs.productId AND bs.branchId = ?
-    WHERE i.id = ?
+    LEFT JOIN units u
+      ON i.unitId = u.id
+    WHERE i.id = ? AND i.deleted_at IS NULL
     LIMIT 1
     `,
     [branchId, id]
@@ -340,15 +373,19 @@ if (branchId) {
       i.name,
       i.barcode,
       i.price,
+      i.unitId,
       i.buy_price,
       i.category_id,
       COALESCE(SUM(bs.quantity), 0) AS quantity,
       i.created_at,
-      i.description
+      i.description,
+      u.name AS unitName
     FROM items i
     LEFT JOIN BranchStock bs 
       ON i.id = bs.productId
-    WHERE i.id = ?
+    LEFT JOIN units u
+      ON i.unitId = u.id
+    WHERE i.id = ? AND i.deleted_at IS NULL
     GROUP BY i.id
     LIMIT 1
     `,
@@ -393,6 +430,7 @@ async function search(
     const params = [];
 
     // البحث بالاسم أو الباركود
+    whereClauses.push("i.deleted_at IS NULL");
     if (name) {
       whereClauses.push("(i.name LIKE ? OR i.barcode LIKE ?)");
       params.push(`%${name}%`, `%${name}%`);
@@ -424,14 +462,18 @@ async function search(
           i.name,
           i.barcode,
           i.price,
+          i.unitId,
           i.buy_price,
           i.category_id,
           COALESCE(bs.quantity, 0) AS quantity,
           i.created_at,
-          i.description
+          i.description,
+          u.name AS unitName
         FROM items i
         LEFT JOIN BranchStock bs 
           ON i.id = bs.productId AND bs.branchId = ?
+        LEFT JOIN units u
+          ON i.unitId = u.id
       `;
       params.unshift(branchId); // أول param هو branchId
     } else {
@@ -442,14 +484,18 @@ async function search(
           i.name,
           i.barcode,
           i.price,
+          i.unitId,
           i.buy_price,
           i.category_id,
           COALESCE(SUM(bs.quantity), 0) AS quantity,
           i.created_at,
-          i.description
+          i.description,
+          u.name AS unitName
         FROM items i
         LEFT JOIN BranchStock bs 
           ON i.id = bs.productId
+        LEFT JOIN units u
+          ON i.unitId = u.id
       `;
     }
 
@@ -576,8 +622,12 @@ async function deleteProduct(event, id) {
     if (rows.length === 0) {
       throw new Error("منتج غير موجود");
     }
-    await db.run("DELETE FROM items WHERE id LIKE ?", [`%${id}%`]);
 
+
+    await db.run(
+      "UPDATE items SET name = ?, deleted_at = ? WHERE id = ?",
+      [`${rows[0].name}_deleted_${rows[0].id}`, new Date(), id]
+    );
     return {
       success: true,
       message: "Product deleted successfully",

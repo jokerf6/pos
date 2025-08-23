@@ -24,7 +24,6 @@ const EditProductPage = () => {
 
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
     quantity: 0,
     new_quantity: 0,
     price: 0,
@@ -55,7 +54,6 @@ const EditProductPage = () => {
             
             setFormData({
               name: productData.name || "",
-              description: productData.description || "",
               quantity: productData.quantity || 0,
               new_quantity: 0,
               price: productData.price || 0,
@@ -164,9 +162,6 @@ const EditProductPage = () => {
   const fields = [
     { name: "barcode", placeholder: "الباركود", disabled: true },
     { name: "name", placeholder: "اسم المنتج" },
-    { name: "description", placeholder: "الوصف", type: "textarea" },
-    { name: "quantity", placeholder: "الكمية الحالية", type: "number", disabled: true },
-    { name: "new_quantity", placeholder: "الكمية المضافة", type: "number" },
     { name: "price", placeholder: "سعر البيع", type: "number" },
     { name: "buy_price", placeholder: "سعر الشراء", type: "number" },
   ];

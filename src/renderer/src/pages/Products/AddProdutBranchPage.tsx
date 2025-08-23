@@ -47,6 +47,7 @@ const AddProductBranchPage = () => {
     new_quantity: 0,
     price: 0,
     buy_price: 0,
+    unitId: 0,
     barcode: undefined as string | undefined,
     generated_code: undefined as string | undefined,
     category_id: 0,
@@ -88,6 +89,7 @@ const AddProductBranchPage = () => {
               new_quantity: 0,
               price: productData.price || 0,
               buy_price: productData.buy_price || 0,
+              unitId: productData.unitId || 0,
               barcode: productData.barcode || undefined,
               generated_code: undefined,
               category_id: productData.category_id || 0,
@@ -112,7 +114,7 @@ const AddProductBranchPage = () => {
   useEffect(() => {
     const defaults =
       units
-        ?.filter((unit: any) => unit.is_default)
+ 
         .map((unit: any) => ({ unitId: unit.id, quantity: 0 })) || [];
     setUnitInputs(defaults);
   }, [units]);
@@ -218,9 +220,10 @@ const AddProductBranchPage = () => {
   const fields = [
     { name: "barcode", placeholder: "الباركود", disabled: true },
     { name: "name", placeholder: "اسم المنتج", disabled: true },
-    { name: "quantity", placeholder: "الكمية الحالية", type: "number", disabled: true },
-    { name: "new_quantity", placeholder: "الكمية المضافة", type: "number" },
     { name: "price", placeholder: "سعر البيع", type: "number", disabled: true },
+     { name: "quantity", placeholder: "الكمية الحالية", type: "number", disabled: true },
+    { name: "new_quantity", placeholder: "الكمية المضافة", type: "number" },
+ 
     { name: "buy_price", placeholder: "سعر الشراء", type: "number", disabled: true },
   ];
 
@@ -300,6 +303,20 @@ const AddProductBranchPage = () => {
             </span>
           </div>
 
+          {/* Unit */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">الوحدة</label>
+            <span>
+              {
+                units?.filter((unit: any) => unit.id === formData.unitId).map((unit: any) => (
+                  <option key={unit.id} value={unit.id}>
+                    {unit.name}
+                  </option>
+                ))
+              }
+            </span>
+          </div>
+
           {/* Stock Summary */}
           <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
             <p className="text-blue-800 text-sm">
@@ -312,7 +329,8 @@ const AddProductBranchPage = () => {
               </p>
             )}
           </div>
-
+   {/* Units */}
+     
           {/* Actions */}
           <div className="flex justify-between pt-4">
             <Button type="submit" disabled={isLoading}>
@@ -355,29 +373,7 @@ const AddProductBranchPage = () => {
           </div>
         </form>
 
-        {/* Units */}
-        <hr className="mt-[40px] mb-[20px]" />
-        <div className="flex flex-col gap-4">
-          <h1 className="text-2xl font-bold">الوحدات</h1>
-          <div>
-            {unitInputs.map((input, index) => (
-              <div
-                key={index}
-                className="flex flex-col-reverse items-start gap-2 space-x-2"
-              >
-                <Input
-                  type="number"
-                  min={0}
-                  value={input.quantity}
-                  onChange={(e) => handleUnitInputChange(index, e)}
-                />
-                <span>
-                  {units.find((unit: any) => unit.id === input.unitId)?.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+     
       </div>
 
       {/* Print Section */}
