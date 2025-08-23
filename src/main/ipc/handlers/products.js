@@ -13,10 +13,10 @@ async function createProduct(event, data) {
     price,
     buy_price,
     category_id,
+    unit_id,
     barcode,
     generated_code,
   } = data;
-
 
   // Validate input
   if (
@@ -30,9 +30,22 @@ async function createProduct(event, data) {
       "برجاء إدخال اسم المنتج والكمية والسعر وسعر الشراءوالفئة والباركود"
     );
   }
+
   const quantity = 0;
+  // Use default unit if not provided
+  const productUnitId = unit_id || 1;
+
   try {
     const db = getDatabase();
+    
+    // Validate unit exists
+    if (unit_id) {
+      const unitExists = await db.get("SELECT id FROM units WHERE id = ? AND deleted_at IS NULL", [unit_id]);
+      if (!unitExists) {
+        throw new Error("الوحدة المحددة غير موجودة");
+      }
+    }
+
     if (generated_code) {
       const rows = await db.all(
         "SELECT * FROM items WHERE barcode = ? LIMIT 1",
@@ -43,7 +56,7 @@ async function createProduct(event, data) {
       }
 
       await db.run(
-        "INSERT INTO items (name, barcode, description,quantity, price,buy_price,category_id) VALUES (?, ?, ?,?,?,?,?)",
+        "INSERT INTO items (name, barcode, description, quantity, price, buy_price, category_id, unit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [
           name,
           generated_code,
@@ -52,13 +65,14 @@ async function createProduct(event, data) {
           price,
           buy_price,
           category_id,
+          productUnitId,
         ]
       );
       const find = await db.all(
         "SELECT * FROM items WHERE barcode = ? LIMIT 1",
         [generated_code]
       );
-      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "purchase", quantity, price,  new Date()]);
+      await db.run("INSERT INTO transactions (item_id, transaction_type, quantity, unit_price, transaction_date) VALUES (?, ?, ?, ?, ?)", [find[0].id, "purchase", quantity, price, new Date()]);
     } else {
       const rows = await db.all(
         "SELECT * FROM items WHERE barcode = ? LIMIT 1",
@@ -70,15 +84,15 @@ async function createProduct(event, data) {
 
       await db.run(
         `UPDATE items 
-         SET name = ?, description = ?, quantity = ?, price = ?, buy_price = ?, category_id = ?
+         SET name = ?, description = ?, quantity = ?, price = ?, buy_price = ?, category_id = ?, unit_id = ?
          WHERE barcode = ?`,
-        [name, description, quantity, price, buy_price, category_id, barcode]
+        [name, description, quantity, price, buy_price, category_id, productUnitId, barcode]
       );
       const find = await db.all(
         "SELECT * FROM items WHERE barcode = ? LIMIT 1",
         [barcode]
       );
-      await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "purchase", quantity, price,  new Date()]);
+      await db.run("INSERT INTO transactions (item_id, transaction_type, quantity, unit_price, transaction_date) VALUES (?, ?, ?, ?, ?)", [find[0].id, "purchase", quantity, price, new Date()]);
     }
     return {
       success: true,
@@ -108,12 +122,17 @@ async function getAll(
   i.price,
   i.buy_price,
   i.category_id,
+  i.unit_id,
+  u.name as unit_name,
+  u.abbreviation as unit_abbreviation,
   COALESCE(bs.quantity, 0) AS quantity,
   i.created_at,
   i.description
 FROM items i
 LEFT JOIN BranchStock bs 
   ON i.id = bs.productId AND bs.branchId = ?
+LEFT JOIN units u
+  ON i.unit_id = u.id
 ORDER BY i.id DESC
 LIMIT ? OFFSET ?;`,
       [branchId, limit, offset]
@@ -125,12 +144,17 @@ LIMIT ? OFFSET ?;`,
   i.price,
   i.buy_price,
   i.category_id,
+  i.unit_id,
+  u.name as unit_name,
+  u.abbreviation as unit_abbreviation,
   COALESCE(SUM(bs.quantity), 0) AS quantity,
   i.created_at,
   i.description
 FROM items i
 LEFT JOIN BranchStock bs 
   ON i.id = bs.productId
+LEFT JOIN units u
+  ON i.unit_id = u.id
 GROUP BY i.id
 ORDER BY i.id DESC
 LIMIT ? OFFSET ?;`,
