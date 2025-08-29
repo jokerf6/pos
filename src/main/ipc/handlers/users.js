@@ -23,7 +23,7 @@ async function createUser(event, credentials) {
 
     // Check if username already exists
     const rows = await db.all(
-      "SELECT * FROM users WHERE username = ?",
+      "SELECT * FROM users WHERE username = ? AND deleted_at IS NULL",
       [username]
     );
     if (rows.length > 0) {
@@ -103,13 +103,13 @@ users = await db.all(`
     COUNT(up.permission_id) as permissions_count
   FROM users u
   LEFT JOIN user_permissions up ON u.id = up.user_id
-  WHERE u.branchId = ?
+  WHERE u.branchId = ? AND u.deleted_at IS NULL
   GROUP BY u.id, u.username, u.active, u.created_at, u.last_login
   ORDER BY u.created_at DESC
   LIMIT ? OFFSET ?
 `, [branchId, limit, offset]);
 
-  rows = await db.all("SELECT COUNT(*) as total FROM users WHERE branchId = ?", [branchId]);
+  rows = await db.all("SELECT COUNT(*) as total FROM users WHERE branchId = ? AND deleted_at IS NULL", [branchId]);
   }
     else{
       console.log("no branch")
@@ -118,11 +118,12 @@ users = await db.all(`
              COUNT(up.permission_id) as permissions_count
       FROM users u
       LEFT JOIN user_permissions up ON u.id = up.user_id
+      WHERE u.deleted_at IS NULL
       GROUP BY u.id, u.username, u.active, u.created_at, u.last_login
       ORDER BY u.created_at DESC
       LIMIT ? OFFSET ?
     `, [limit, offset]);
-    rows = await db.all("SELECT COUNT(*) as total FROM users");
+    rows = await db.all("SELECT COUNT(*) as total FROM users WHERE deleted_at IS NULL");
     }
 
     return {
@@ -145,12 +146,12 @@ async function getByName(name) {
     let rows = [];
     if (branchId) {
       rows = await db.all(
-        "SELECT * FROM users WHERE username LIKE ? AND branchId = ?",
+        "SELECT * FROM users WHERE username LIKE ? AND branchId = ? AND deleted_at IS NULL",
         [`%${name}%`, branchId]
       );
     } else {
       rows = await db.all(
-        "SELECT * FROM users WHERE username LIKE ?",
+        "SELECT * FROM users WHERE username LIKE ? AND deleted_at IS NULL",
         [`%${name}%`]
       );
     }
@@ -177,7 +178,7 @@ async function getById(event,  id ) {
     const db = getDatabase();
     
     // Get user basic info
-    const users = await db.all("SELECT * FROM users WHERE id = ?", [id]);
+    const users = await db.all("SELECT * FROM users WHERE id = ? AND deleted_at IS NULL", [id]);
     if (users.length === 0) {
       return {
         success: false,
@@ -226,20 +227,20 @@ async function search(
     let search = [{total:0}];
     if (branchId) {
       rows = await db.all(
-        "SELECT * FROM users WHERE username LIKE ? AND branchId = ? LIMIT ? OFFSET ?",
+        "SELECT * FROM users WHERE username LIKE ? AND branchId = ? AND deleted_at IS NULL LIMIT ? OFFSET ?",
         [`%${name}%`, branchId, limit, offset]
       );
       search = await db.all(
-        "SELECT COUNT(*) as total FROM users WHERE username LIKE ? AND branchId = ?",
+        "SELECT COUNT(*) as total FROM users WHERE username LIKE ? AND branchId = ? AND deleted_at IS NULL",
         [`%${name}%`, branchId]
       );
     } else {
       rows = await db.all(
-        "SELECT * FROM users WHERE username LIKE ? LIMIT ? OFFSET ?",
+        "SELECT * FROM users WHERE username LIKE ? AND deleted_at IS NULL LIMIT ? OFFSET ?",
         [`%${name}%`, limit, offset]
       );
       search = await db.all(
-        "SELECT COUNT(*) as total FROM users WHERE username LIKE ?",
+        "SELECT COUNT(*) as total FROM users WHERE username LIKE ? AND deleted_at IS NULL",
         [`%${name}%`]
       );
     }
@@ -268,7 +269,7 @@ async function update(event, user) {
 
     // Check if username already exists for another user
     const rows = await db.all(
-      "SELECT * FROM users WHERE username = ? AND id != ?",
+      "SELECT * FROM users WHERE username = ? AND id != ? AND deleted_at IS NULL",
       [username, id]
     );
     if (rows.length > 0) {
@@ -338,7 +339,7 @@ async function deleteUser(event, id) {
     const db = getDatabase();
     
     // Check if user exists
-    const rows = await db.all("SELECT * FROM users WHERE id = ?", [id]);
+    const rows = await db.all("SELECT * FROM users WHERE id = ? AND deleted_at IS NULL", [id]);
     if (rows.length === 0) {
       throw new Error("مستخدم غير موجود");
     }
@@ -347,10 +348,12 @@ async function deleteUser(event, id) {
 
     try {
       // Delete user permissions first (due to foreign key constraint)
-      await db.run("DELETE FROM user_permissions WHERE user_id = ?", [id]);
+       await db.run("UPDATE users SET name = ?, deleted_at = ? WHERE id = ?", [
+      `deleted_${rows[0].name}_${id}`,
+      new Date(),
+      id,
+    ]);
 
-      // Delete user
-      await db.run("DELETE FROM users WHERE id = ?", [id]);
 
       // Commit transaction
 

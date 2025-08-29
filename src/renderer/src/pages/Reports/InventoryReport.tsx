@@ -49,11 +49,12 @@ const InventoryReport: React.FC<InventoryReportProps> = ({
   };
   useEffect(() => {
     if (reportData?.products) {
+      console.log("report data10", reportData)
       const filtered = reportData.products.filter((product: any) => {
         const matchesSearch = product.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()));
         console.log("report data", reportData.count)
-          setTotal(reportData.count[0].total_count || 0);    
+          setTotal(reportData.count || 0);    
         return matchesSearch;
       });
       setFilteredProducts(filtered);

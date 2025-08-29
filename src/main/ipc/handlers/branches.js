@@ -26,7 +26,7 @@ async function createBranch(event, data) {
   try {
     const db = getDatabase();
     const existingBranch = await db.get(
-      "SELECT * FROM branches WHERE name = ?",
+      "SELECT * FROM branches WHERE name = ? AND deleted_at IS NULL",
       [name]
     );
     if (existingBranch) {
@@ -59,10 +59,10 @@ async function getAll(
 
     // Find user in database
     const branches = await db.all(
-      "SELECT * FROM branches ORDER BY id DESC LIMIT ? OFFSET ?",
+      "SELECT * FROM branches WHERE deleted_at IS NULL ORDER BY id DESC LIMIT ? OFFSET ?",
       [limit, offset]
     );
-    const rows = await db.all("SELECT COUNT(*) as total FROM branches");
+    const rows = await db.all("SELECT COUNT(*) as total FROM branches WHERE deleted_at IS NULL");
     return {
       success: true,
       branches,
@@ -82,7 +82,7 @@ async function getAllWithoutPagination(
 
     // Find user in database
     const branches = await db.all(
-      "SELECT * FROM branches ORDER BY id DESC"
+      "SELECT * FROM branches WHERE deleted_at IS NULL ORDER BY id DESC"
     );
     return {
       success: true,
@@ -118,12 +118,12 @@ async function search(
     const whereSQL = whereClauses.length > 0 ? whereClauses.join(" AND ") : "1=1";
 
     const rows = await db.all(
-      `SELECT * FROM branches WHERE ${whereSQL} ORDER BY id DESC LIMIT ? OFFSET ?`,
+      `SELECT * FROM branches WHERE ${whereSQL} AND deleted_at IS NULL ORDER BY id DESC LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
 
     const search = await db.all(
-      `SELECT COUNT(*) as total FROM branches WHERE ${whereSQL}`,
+      `SELECT COUNT(*) as total FROM branches WHERE ${whereSQL} AND deleted_at IS NULL`,
       params
     );
 
@@ -146,13 +146,20 @@ async function deleteBranch(event, id) {
 
   try {
     const db = getDatabase();
-    const rows = await db.all("SELECT * FROM branches WHERE id LIKE ?", [
+    const rows = await db.all("SELECT * FROM branches WHERE id LIKE ? AND deleted_at IS NULL", [
       `%${id}%`,
     ]);
     if (rows.length === 0) {
       throw new Error("الفرع غير موجود");
     }
-    await db.run("DELETE FROM branches WHERE id LIKE ?", [`%${id}%`]);
+
+    await db.run("UPDATE branches SET name = ?, deleted_at = ? WHERE id = ?", [
+      `deleted_${rows[0].name}_${id}`,
+      new Date(),
+      id,
+    ]);
+
+
 
     return {
       success: true,
@@ -173,7 +180,7 @@ async function switchBranch(event, id) {
 
   try {
     const db = getDatabase();
-    const rows = await db.all("SELECT * FROM branches WHERE id LIKE ?", [
+    const rows = await db.all("SELECT * FROM branches WHERE id LIKE ? AND deleted_at IS NULL", [
       `%${id}%`,
     ]);
     if (rows.length === 0) {

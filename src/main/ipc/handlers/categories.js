@@ -27,7 +27,7 @@ if (!name) {
     const db = getDatabase();
 
     const rows = await db.all(
-      "SELECT * FROM categories WHERE name LIKE ?",
+      "SELECT * FROM categories WHERE name LIKE ? AND deleted_at IS NULL",
       [`%${name}%`]
     );
     if (rows.length > 0) {
@@ -53,7 +53,7 @@ async function getAll(event) {
     const db = getDatabase();
 
     // Find user in database
-    const data = await db.all("SELECT * FROM categories");
+    const data = await db.all("SELECT * FROM categories WHERE deleted_at IS NULL");
     return {
       success: true,
       data,
@@ -69,7 +69,7 @@ async function getByName(name) {
     const db = getDatabase();
 
     const rows = await db.all(
-      "SELECT * FROM categories WHERE username LIKE ?",
+      "SELECT * FROM categories WHERE username LIKE ? AND deleted_at IS NULL",
       [`%${name}%`]
     );
 
@@ -88,7 +88,7 @@ async function findById(event, id) {
   try {
     const db = getDatabase();
     // Find user in database
-    const rows = await db.all("SELECT * FROM categories WHERE id = ?", [
+    const rows = await db.all("SELECT * FROM categories WHERE id = ? AND deleted_at IS NULL", [
       id,
     ]);
     if (rows.length === 0) {
@@ -113,7 +113,7 @@ async function search(event, name) {
 
     // Find user in database
     const rows = await db.all(
-      "SELECT * FROM categories WHERE name LIKE ?",
+      "SELECT * FROM categories WHERE name LIKE ? AND deleted_at IS NULL",
       [`%${name}%`]
     );
 
@@ -138,7 +138,7 @@ async function update(event, user) {
     const db = getDatabase();
 
     const rows = await db.all(
-      "SELECT * FROM categories WHERE username LIKE ?",
+      "SELECT * FROM categories WHERE username LIKE ? AND deleted_at IS NULL",
       [`%${name}%`]
     );
     if (rows.length > 0 && rows[0].id !== id) {
@@ -169,13 +169,18 @@ async function deleteCategory(event, id) {
   try {
     const db = getDatabase();
     const rows = await db.all(
-      "SELECT * FROM categories WHERE id LIKE ?",
+      "SELECT * FROM categories WHERE id LIKE ? AND deleted_at IS NULL",
       [`%${id}%`]
     );
     if (rows.length === 0) {
       throw new Error("قسم غير موجود");
     }
-    await db.run("DELETE FROM categories WHERE id LIKE ?", [`%${id}%`]);
+
+    await db.run("UPDATE categories SET name = ?, deleted_at = ? WHERE id = ?", [
+      `deleted_${rows[0].name}_${id}`,
+      new Date(),
+      id,
+    ]);
 
     return {
       success: true,

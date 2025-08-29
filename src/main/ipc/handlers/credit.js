@@ -24,7 +24,7 @@ async function createCredit(event, data) {
   try {
     const db = getDatabase();
     const rows = await db.all(
-      "SELECT * FROM daily WHERE closed_at IS NULL AND branchId = ? LIMIT 1",
+      "SELECT * FROM daily WHERE closed_at IS NULL AND branchId = ? AND deleted_at IS NULL LIMIT 1",
       [branchId]
     );
     console.log(rows);
@@ -75,7 +75,12 @@ try {
 
     // params for SELECT (where params + limit + offset)
     const selectParams = [...whereParams, limit, offset];
-
+    if(whereString === ""){
+      whereString = "WHERE deleted_at IS NULL";
+    }
+    else {
+      whereString += " AND deleted_at IS NULL";
+    }
     // run select (with pagination)
     const dataRows = await db.all(
       `SELECT * FROM credit ${whereString} ORDER BY id DESC LIMIT ? OFFSET ?`,
@@ -110,7 +115,7 @@ async function getCreditByDaily(
 
     
     const rows = await db.all(
-      "SELECT * FROM daily WHERE closed_at IS NULL AND branchId = ? LIMIT 1",
+      "SELECT * FROM daily WHERE closed_at IS NULL AND branchId = ? AND deleted_at IS NULL LIMIT 1",
       [branchId]
     );
     if (rows.length === 0) {
@@ -136,6 +141,7 @@ async function getCreditByDaily(
       whereClause += " AND name LIKE ?";
       params.push(`%${name}%`);
     }
+    whereClause += " AND deleted_at IS NULL";
 
     // جلب البيانات مع الباجي ناشن
     const data = await db.all(
@@ -169,13 +175,18 @@ async function deleteCredit(event, id) {
 
   try {
     const db = getDatabase();
-    const rows = await db.all("SELECT * FROM credit WHERE id LIKE ?", [
+    const rows = await db.all("SELECT * FROM credit WHERE id LIKE ? AND deleted_at IS NULL", [
       `%${id}%`,
     ]);
     if (rows.length === 0) {
       throw new Error("منتج غير موجود");
     }
-    await db.run("DELETE FROM credit WHERE id LIKE ?", [`%${id}%`]);
+
+      await db.run("UPDATE credit SET  deleted_at = ? WHERE id = ?", [
+      new Date(),
+      id,
+    ]);
+
 
     return {
       success: true,

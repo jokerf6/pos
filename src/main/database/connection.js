@@ -5,13 +5,13 @@ const path = require('path');
 let database = null;
 const { app } = require('electron');
 
-// كود SQL لإنشاء الجداول وإدراج البيانات
 const schemaSQL = `
 -- Table structure for table 'categories'
 CREATE TABLE IF NOT EXISTS categories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   image TEXT,
   name TEXT NOT NULL,
+    deleted_at TIMESTAMP DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS branches (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
   address TEXT,
+    deleted_at TIMESTAMP DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS users (
   branchId INTEGER,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP DEFAULT NULL,
   last_login TIMESTAMP,
   FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL
 
@@ -74,6 +76,7 @@ CREATE TABLE IF NOT EXISTS credit (
   branchId INTEGER,
   daily_id INTEGER,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP DEFAULT NULL,
   FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL,
   FOREIGN KEY (daily_id) REFERENCES daily(id) ON DELETE SET NULL
 );
@@ -115,10 +118,12 @@ CREATE TABLE IF NOT EXISTS invoices (
   total DECIMAL(10,2) NOT NULL,
   totalAfterDiscount DECIMAL(10,2) NOT NULL,
   dailyId INTEGER,
-    branchId INTEGER,
+  branchId INTEGER,
+  userId INTEGER,
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (dailyId) REFERENCES daily(id) ON DELETE SET NULL,
-  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL
+  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL,
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- Table structure for table 'invoiceItems'
@@ -285,13 +290,7 @@ UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM transactions) WHERE name =
 UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM units) WHERE name = 'units';
 UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM user_permissions) WHERE name = 'user_permissions';
 `;
-const updateSql =`
-ALTER TABLE invoices ADD COLUMN userId INTEGER REFERENCES users(id);
-UPDATE invoices 
-SET userId = (
-  SELECT userId FROM daily WHERE daily.id = invoices.dailyId
-);
-`
+
 async function initDatabase() {
   try {
     const dbPath = path.join(app.getPath('userData'), 'casher.db');
@@ -319,21 +318,6 @@ async function initDatabase() {
       log.info("Database already initialized, skipping schema creation");
     }
 
-    // التأكد من وجود العمود userId في invoices
-    const columnCheck = await database.all(`PRAGMA table_info(invoices)`);
-    const hasUserId = columnCheck.some(col => col.name === 'userId');
-    if (!hasUserId) {
-      log.info("Adding userId column to invoices...");
-      await database.exec(`
-        ALTER TABLE invoices ADD COLUMN userId INTEGER REFERENCES users(id);
-      `);
-      await database.exec(`
-        UPDATE invoices 
-        SET userId = (
-          SELECT userId FROM daily WHERE daily.id = invoices.dailyId
-        );
-      `);
-    }
 
     return database;
   } catch (error) {
