@@ -4,7 +4,6 @@ const path = require("path");
 const fs = require("fs");
 async function createCategory(event, data) {
   const { name } = data;
-  let savedImagePath = null;
 if (!name) {
   throw new Error("برجاء إدخال اسم القسم");
 }
@@ -20,7 +19,6 @@ if (!name) {
     }
     await db.run("INSERT INTO categories (name) VALUES (?)", [
       name,
-      null,
     ]);
 
     return {
