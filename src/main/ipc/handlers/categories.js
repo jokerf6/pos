@@ -3,26 +3,11 @@ const { getDatabase } = require("../../database/connection.js");
 const path = require("path");
 const fs = require("fs");
 async function createCategory(event, data) {
-
-
-  const { name, image } = data;
-  console.warn("createCategory data:", data);
+  const { name } = data;
   let savedImagePath = null;
 if (!name) {
   throw new Error("برجاء إدخال اسم القسم");
 }
-  const dirname = path.join(__dirname, `../../public/uploads/${name}`);
-  if (image) {
-
-        const buffer = Buffer.from(data.image.buffer);
-
-    const filePath = path.join(__dirname, "uploads", data.image.name);
-    fs.writeFileSync(filePath, buffer);
-
-    
-
-    savedImagePath = `${filePath}`; // You can use this path in frontend
-  }
   try {
     const db = getDatabase();
 
@@ -33,9 +18,9 @@ if (!name) {
     if (rows.length > 0) {
       throw new Error("اسم القسم موجود بالفعل");
     }
-    await db.run("INSERT INTO categories (name, image) VALUES (?, ?)", [
+    await db.run("INSERT INTO categories (name) VALUES (?)", [
       name,
-      savedImagePath || null,
+      null,
     ]);
 
     return {
@@ -128,7 +113,7 @@ async function search(event, name) {
 }
 
 async function update(event, user) {
-  const { id, name, image } = user;
+  const { id, name } = user;
 
   if (!name) {
     throw new Error("برجاء إدخال اسم  القسم");

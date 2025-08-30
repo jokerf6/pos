@@ -29,20 +29,9 @@ function CreateCategoryPage() {
     e.preventDefault();
 
     try {
-      let imageData = null;
-      if (formData.image instanceof File) {
-        const arrayBuffer = await formData.image.arrayBuffer();
-        console.log("here",arrayBuffer);
-        imageData = {
-          name: formData.image.name,
-          type: formData.image.type,
-          buffer: Array.from(new Uint8Array(arrayBuffer)), // convert to serializable format
-        };
-      }
-
+ 
       const payload = {
         name: formData.name,
-        image: imageData,
       };
 
       const result = await dispatch(createCategory(payload));
@@ -79,10 +68,7 @@ function CreateCategoryPage() {
           onChange={handleChange}
           placeholder="اسم القسم"
         />
-        <div className="grid w-full max-w-sm items-center gap-3">
-          {/* <Label htmlFor="picture">Picture</Label> */}
-          <Input id="picture" type="file" onChange={handleFileChange} />
-        </div>
+     
         <div className="flex justify-between gap-4">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>
             إلغاء
