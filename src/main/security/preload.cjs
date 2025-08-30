@@ -44,7 +44,6 @@ const validChannels = {
   "products:search": true,
   "products:getByBarcode": true,
   "products:generateBarCode": true,
-  "products:addToBranch": true,
 
   // Invoice channels
   "invoice:create": true,
@@ -95,15 +94,6 @@ const validChannels = {
 
   // pdf channels
   "pdf:generate-report": true,
-
-  // Branch channels
-  "branches:getAll": true,
-  "branches:create": true,
-  "branches:delete": true,
-  "branches:search": true,
-  "branches:switch": true,
-  "branches:getAllWithoutPagination": true,
-
 
 
   "units:getAll": true,

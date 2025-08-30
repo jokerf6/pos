@@ -7,14 +7,8 @@ async function openDaily(event, openPrice = 0) {
   const userId = store.get("user.id");
   try {
     const db = getDatabase();
-    const store = new Store();
-    const branchId = store.get("branch.id");
-    if(!branchId){
-      throw new Error("برجاء اختيار الفرع");
-    }
     const data = await db.all(
-      "SELECT * FROM daily where closed_at IS NULL AND branchId = ? Limit 1",
-      [branchId]
+      "SELECT * FROM daily where closed_at IS NULL Limit 1"
     );
     if (data.length > 0) {
       return {
@@ -22,10 +16,9 @@ async function openDaily(event, openPrice = 0) {
         message: "هناك يوم مفتوح بالفعل",
       };
     }
-    await db.run("INSERT INTO daily (userId, openPrice, branchId) VALUES (?, ?, ?)", [
+    await db.run("INSERT INTO daily (userId, openPrice) VALUES (?, ?)", [
       userId,
-      openPrice,
-      branchId
+      openPrice
     ]);
     return {
       success: true,
@@ -40,12 +33,10 @@ async function openDaily(event, openPrice = 0) {
 async function closeDaily(event, closePrice = 0) {
   const store = new Store();
   const userId = store.get("user.id");
-    const branchId = store.get("branch.id");
   try {
     const db = getDatabase();
     const data = await db.all(
-      "SELECT * FROM daily where closed_at IS NULL AND branchId = ?  Limit 1",
-      [branchId]
+      "SELECT * FROM daily where closed_at IS NULL Limit 1"
     );
     if (data.length === 0) {
       return {
@@ -72,19 +63,12 @@ async function getDaily(event) {
   try {
     const db = getDatabase();
     const store = new Store();
-    const branchId = store.get("branch.id");
-
+    
     let dailyRows;
-    if (branchId) {
-      dailyRows = await db.all(
-        "SELECT * FROM daily WHERE closed_at IS NULL AND branchId = ?",
-        [branchId]
-      );
-    } else {
-      dailyRows = await db.all(
-        "SELECT * FROM daily WHERE closed_at IS NULL"
-      );
-    }
+    dailyRows = await db.all(
+      "SELECT * FROM daily WHERE closed_at IS NULL",
+    );
+    
 
     if (dailyRows.length === 0) {
       return { success: false, message: "لا توجد يومية مفتوحة" };
@@ -93,8 +77,6 @@ async function getDaily(event) {
     const dailyIds = dailyRows.map(d => d.id);
 
     const placeholders = dailyIds.map(() => "?").join(",");
-    console.log("---1--->", branchId)
-    console.log("------->", dailyIds);
     const { total_sales } = await db.get(
       `SELECT COALESCE(SUM(totalAfterDiscount), 0) AS total_sales 
        FROM invoices 
@@ -134,7 +116,7 @@ async function getDaily(event) {
        WHERE daily_id IN (${placeholders})`,
       dailyIds
     );
-
+    
     const average_invoice = count_sales > 0 ? total_sales / count_sales : 0;
     console.log(   total_sales,
         total_returns,

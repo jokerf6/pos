@@ -25,10 +25,6 @@ async function getDailySalesReport(event, date) {
     const endDate = endOfDay(reportDate);
     const start = toSqliteDate(startDate);
     const end = toSqliteDate(endDate);
-    const store = new Store();
-    const branchId = store.get("branch.id");
-    const branchFilter = branchId ? "AND inv.branchId = ?" : "";
-    const branchParams = branchId ? [branchId] : [];
     
     // Get all invoices of the day
     const all = await db.all(
@@ -37,9 +33,8 @@ async function getDailySalesReport(event, date) {
       FROM invoices inv
       WHERE inv.createdAt BETWEEN ? AND ? 
       AND inv.paymentType != 'مرتجع' 
-      ${branchFilter}
       `,
-      [start, end, ...branchParams]
+      [start, end]
     );
     
     // Daily summary
@@ -57,9 +52,8 @@ async function getDailySalesReport(event, date) {
       FROM invoices inv
       WHERE inv.createdAt BETWEEN ? AND ? 
       AND inv.paymentType != 'مرتجع'
-      ${branchFilter}
       `,
-      [start, end, ...branchParams]
+      [start, end]
     );
     
     // Hourly breakdown
@@ -72,11 +66,10 @@ async function getDailySalesReport(event, date) {
       FROM invoices inv
       WHERE inv.createdAt BETWEEN ? AND ? 
       AND inv.paymentType != 'مرتجع'
-      ${branchFilter}
       GROUP BY strftime('%H', inv.createdAt)
       ORDER BY hour
       `,
-      [start, end, ...branchParams]
+      [start, end]
     );
     
     // Top products
@@ -94,12 +87,11 @@ async function getDailySalesReport(event, date) {
       WHERE inv.createdAt BETWEEN ? AND ? 
       AND inv.paymentType != 'مرتجع'
       AND i.deleted_at IS NULL
-      ${branchFilter}
       GROUP BY i.id, i.name, i.barcode
       ORDER BY total_sales DESC
       LIMIT 10
       `,
-      [start, end, ...branchParams]
+      [start, end]
     );
     
     // Cashier performance
@@ -115,13 +107,12 @@ async function getDailySalesReport(event, date) {
       LEFT JOIN invoices inv ON inv.dailyId = d.id 
         AND inv.createdAt BETWEEN ? AND ?
         AND inv.paymentType != 'مرتجع'
-        ${branchFilter}
       WHERE d.opened_at BETWEEN ? AND ?
       AND u.deleted_at IS NULL
       GROUP BY u.id, u.username
       ORDER BY total_sales DESC
       `,
-      [start, end, start, end, ...branchParams]
+      [start, end, start, end]
     );
     
     // Payment method breakdown
@@ -134,10 +125,9 @@ async function getDailySalesReport(event, date) {
       FROM invoices inv
       WHERE inv.createdAt BETWEEN ? AND ? 
       AND inv.paymentType != 'مرتجع'
-      ${branchFilter}
       GROUP BY inv.paymentType
       `,
-      [start, end, ...branchParams]
+      [start, end]
     );
     
     return {
@@ -180,11 +170,6 @@ async function getMonthlySalesReport(event, year, month) {
     );
     const startDate = startOfMonth(reportDate);
     const endDate = endOfMonth(reportDate);
-    const store = new Store();
-    const branchId = store.get("branch.id");
-    // فلتر البرانش على مستوى الفواتير
-    const branchFilter = branchId ? "AND inv.branchId = ?" : "";
-    const branchParams = branchId ? [branchId] : [];
     
     // Get monthly summary
     const summaryRows = await db.all(
@@ -201,9 +186,8 @@ async function getMonthlySalesReport(event, year, month) {
       FROM invoices inv
       WHERE inv.createdAt BETWEEN ? AND ? 
       AND inv.paymentType != 'مرتجع'
-      ${branchFilter}
     `,
-      [startDate, endDate, ...branchParams]
+      [startDate, endDate]
     );
     
     // Get daily breakdown
@@ -216,11 +200,10 @@ async function getMonthlySalesReport(event, year, month) {
       FROM invoices inv
       WHERE inv.createdAt BETWEEN ? AND ? 
       AND inv.paymentType != 'مرتجع'
-      ${branchFilter}
       GROUP BY DATE(inv.createdAt)
       ORDER BY date
     `,
-      [startDate, endDate, ...branchParams]
+      [startDate, endDate]
     );
     
     // Get top products
@@ -238,12 +221,11 @@ async function getMonthlySalesReport(event, year, month) {
       WHERE inv.createdAt BETWEEN ? AND ? 
       AND inv.paymentType != 'مرتجع'
       AND i.deleted_at IS NULL
-      ${branchFilter}
       GROUP BY i.id, i.name, i.barcode
       ORDER BY total_sales DESC
       LIMIT 20
     `,
-      [startDate, endDate, ...branchParams]
+      [startDate, endDate]
     );
     
     // Get category performance
@@ -262,11 +244,10 @@ async function getMonthlySalesReport(event, year, month) {
       AND inv.paymentType != 'مرتجع'
       AND i.deleted_at IS NULL
       AND c.deleted_at IS NULL
-      ${branchFilter}
       GROUP BY c.id, c.name
       ORDER BY total_sales DESC
     `,
-      [startDate, endDate, ...branchParams]
+      [startDate, endDate]
     );
     
     return {
@@ -308,22 +289,10 @@ async function getProductPerformanceReport(
     const offset = (page - 1) * limit;
     const start = toSqliteDate(startDate ? new Date(startDate) : startOfMonth(new Date()));
     const end = toSqliteDate(endDate ? new Date(endDate) : endOfMonth(new Date()));
-    const store = new Store();
-    const branchId = store.get("branch.id");
-    
+   
     // Get stock quantity based on branch
-    let stockQuery;
-    if (branchId) {
-      stockQuery = `(SELECT COALESCE(bs.quantity, 0) FROM BranchStock bs WHERE bs.productId = i.id AND bs.branchId = ?)`;
-    } else {
-      stockQuery = `(SELECT COALESCE(SUM(bs.quantity), 0) FROM BranchStock bs WHERE bs.productId = i.id)`;
-    }
     
-    // فلتر البرانش
-    const branchFilter = branchId ? "AND i.branchId = ?" : "";
-    const branchParams = branchId ? [branchId] : [];
     
-    // المنتجات
     const productRows = await db.all(
       `
       SELECT
@@ -333,7 +302,7 @@ async function getProductPerformanceReport(
         c.name as category,
         i.price as current_price,
         i.buy_price as current_cost,
-        ${stockQuery} as current_stock,
+        i.quantity as current_stock,
         SUM(ii.quantity) as total_sold,
         SUM(ii.totalPriceAfterDiscount) as total_revenue,
         AVG(ii.pricePerUnit) as average_selling_price,
@@ -349,12 +318,11 @@ async function getProductPerformanceReport(
         AND inv.createdAt BETWEEN ? AND ?
       WHERE i.deleted_at IS NULL
       AND (c.deleted_at IS NULL OR c.deleted_at IS NULL)
-      ${branchFilter}
       GROUP BY i.id, i.name, i.barcode, c.name, i.price, i.buy_price
       ORDER BY total_revenue DESC
       LIMIT ? OFFSET ?
       `,
-      [start, end, ...branchParams, ...branchParams, limit, offset]
+      [start, end,  limit, offset]
     );
     
     // إعدادات المخزون
@@ -380,11 +348,10 @@ async function getProductPerformanceReport(
           AND inv.createdAt BETWEEN ? AND ?
         WHERE i.deleted_at IS NULL
         AND (c.deleted_at IS NULL OR c.deleted_at IS NULL)
-        ${branchFilter}
         GROUP BY i.id
       ) AS subquery
       `,
-      [start, end, ...branchParams]
+      [start, end]
     );
     
     // المنتجات النشطة (اللي مخزونها > 0)
@@ -402,12 +369,11 @@ async function getProductPerformanceReport(
           AND inv.createdAt BETWEEN ? AND ?
         WHERE i.deleted_at IS NULL
         AND (c.deleted_at IS NULL OR c.deleted_at IS NULL)
-        AND ${stockQuery} > 0
-        ${branchFilter}
+        AND i.quantity > 0
         GROUP BY i.id
       ) AS subquery
       `,
-      [start, end, ...branchParams, ...branchParams]
+      [start, end]
     );
     
     return {
@@ -440,10 +406,6 @@ async function getCashierPerformanceReport(
     const start = toSqliteDate(startDate ? new Date(startDate) : startOfMonth(new Date()));
     const end = toSqliteDate(endDate ? new Date(endDate) : endOfMonth(new Date()));
     const store = new Store();
-    const branchId = store.get("branch.id");
-    // فلتر البرانش
-    const branchFilter = branchId ? "AND u.branchId = ?" : "";
-    const branchParams = branchId ? [branchId] : [];
     
     // البيانات الرئيسية
     const cashierRows = await db.all(
@@ -466,12 +428,11 @@ async function getCashierPerformanceReport(
         AND i.paymentType IN ('خالص','أجل')
       WHERE u.role IN ('cashier', 'manager', 'admin')
       AND u.deleted_at IS NULL
-      ${branchFilter}
       GROUP BY u.id, u.username, u.role
       ORDER BY total_sales DESC
       LIMIT ? OFFSET ?
       `,
-      [start, end, ...branchParams, limit, offset]
+      [start, end, limit, offset]
     );
     
     // عدد الصفوف
@@ -485,9 +446,8 @@ async function getCashierPerformanceReport(
         AND i.paymentType IN ('خالص','أجل')
       WHERE u.role IN ('cashier', 'manager', 'admin')
       AND u.deleted_at IS NULL
-      ${branchFilter}
       `,
-      [start, end, ...branchParams]
+      [start, end]
     );
     
     return {
@@ -516,7 +476,6 @@ async function getInventoryReport(
     const db = getDatabase();
     const offset = (page - 1) * limit;
     const store = new Store();
-    const branchId = store.get("branch.id");
     
     const settings = await db.get(`
       SELECT value
@@ -526,12 +485,7 @@ async function getInventoryReport(
     `);
     
     // Get stock quantity based on branch
-    let stockQuery;
-    if (branchId) {
-      stockQuery = `(SELECT COALESCE(bs.quantity, 0) FROM BranchStock bs WHERE bs.productId = i.id AND bs.branchId = ?)`;
-    } else {
-      stockQuery = `(SELECT COALESCE(SUM(bs.quantity), 0) FROM BranchStock bs WHERE bs.productId = i.id)`;
-    }
+    
     
     // Base conditions
     const conditions = ["i.deleted_at IS NULL"];
@@ -547,11 +501,11 @@ async function getInventoryReport(
         i.barcode,
         i.price,
         i.buy_price,
-        ${stockQuery} AS stock_quantity,
-        (${stockQuery} * i.buy_price) AS inventory_value,
+        i.quantity AS stock_quantity,
+        (i.quantity * i.buy_price) AS inventory_value,
         CASE 
-          WHEN ${stockQuery} = 0 THEN 'نفد'
-          WHEN ${stockQuery} <= ${+settings.value} THEN 'منخفض'
+          WHEN i.quantity = 0 THEN 'نفد'
+          WHEN i.quantity <= ${+settings.value} THEN 'منخفض'
           ELSE 'متوفر'
         END AS stock_status,
         c.name AS category_name,
@@ -564,7 +518,7 @@ async function getInventoryReport(
       LIMIT ${limit} OFFSET ${offset};
     `;
     
-    const branchParams = branchId ? [branchId] : [];
+    const branchParams =  [];
     const inventoryRows = await db.all(query, [...branchParams]);
     
     // Count query
@@ -580,23 +534,22 @@ async function getInventoryReport(
     
     // Summary query
     const summaryConditions = ["i.deleted_at IS NULL"];
-    if (branchId) summaryConditions.push(`i.branchId = ?`);
     
     const summaryWhereClause = `WHERE ${summaryConditions.join(" AND ")}`;
     
     const summaryQuery = `
       SELECT 
         COUNT(*) as total_products,
-        SUM((${stockQuery}) * buy_price) as total_inventory_value,
-        SUM(CASE WHEN ${stockQuery} <= ${+settings.value} THEN 1 ELSE 0 END) as low_stock_count,
-        SUM(CASE WHEN ${stockQuery} = 0 THEN 1 ELSE 0 END) as out_of_stock_count
+        SUM((i.quantity) * buy_price) as total_inventory_value,
+        SUM(CASE WHEN (i.quantity) <= ${+settings.value} THEN 1 ELSE 0 END) as low_stock_count,
+        SUM(CASE WHEN (i.quantity) = 0 THEN 1 ELSE 0 END) as out_of_stock_count
       FROM items i
       LEFT JOIN categories c ON i.category_id = c.id
       ${summaryWhereClause}
       AND (c.deleted_at IS NULL OR c.deleted_at IS NULL);
     `;
     
-    const summaryBranchParams = branchId ? [branchId] : [];
+    const summaryBranchParams =  [];
     const summaryRows = await db.get(summaryQuery, [...summaryBranchParams, ...summaryBranchParams]);
     
     return {
@@ -628,11 +581,10 @@ async function getFinancialSummaryReport(event, { from: startDate, to: endDate }
     const start = toSqliteDate(startDate ? new Date(startDate) : startOfMonth(new Date()));
     const end = toSqliteDate(endDate ? new Date(endDate) : endOfMonth(new Date()));
     const store = new Store();
-    const branchId = store.get("branch.id");
     
     // branch filter helper
-    const branchFilter = branchId ? "AND branchId = ?" : "";
-    const branchParams = branchId ? [branchId] : [];
+    const branchFilter =  "";
+    const branchParams =  [];
     
     // Get sales summary
     const salesRows = await db.get(

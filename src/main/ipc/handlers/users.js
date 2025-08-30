@@ -14,10 +14,6 @@ async function createUser(event, credentials) {
     throw new Error("برجاء إدخال اسم المستخدم وكلمة المرور");
   }
         const store = new Store();
-    const branchId = store.get("branch.id");
-  if(!branchId){
-    throw new Error("برجاء اختيار فرع");
-  }
   try {
     const db = getDatabase();
 
@@ -32,7 +28,6 @@ async function createUser(event, credentials) {
 
     // Start transaction
     await db.run("BEGIN TRANSACTION");
-   console.log("branch", branchId)
     try {
       // Hash password
       const saltRounds = 12;
@@ -40,8 +35,8 @@ async function createUser(event, credentials) {
       
       // Create user (without role)
       const result = await db.run(
-        "INSERT INTO users (username, branchId, password_hash, active, created_at) VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)",
-        [username, branchId, passwordHash]
+        "INSERT INTO users (username,  password_hash, active, created_at) VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)",
+        [username,  passwordHash]
       );
 
       const userId = result.lastID;
@@ -88,31 +83,10 @@ async function getAll(
     const db = getDatabase();
     const offset = (page - 1) * limit;
     const store = new Store();
-    const branchId = store.get("branch.id");
     // Get users with their permissions count
     let users = [];
     let rows = [{total:0}];
-    if(branchId){
-users = await db.all(`
-  SELECT 
-    u.id, 
-    u.username, 
-    u.active, 
-    u.created_at, 
-    u.last_login,
-    COUNT(up.permission_id) as permissions_count
-  FROM users u
-  LEFT JOIN user_permissions up ON u.id = up.user_id
-  WHERE u.branchId = ? AND u.deleted_at IS NULL
-  GROUP BY u.id, u.username, u.active, u.created_at, u.last_login
-  ORDER BY u.created_at DESC
-  LIMIT ? OFFSET ?
-`, [branchId, limit, offset]);
 
-  rows = await db.all("SELECT COUNT(*) as total FROM users WHERE branchId = ? AND deleted_at IS NULL", [branchId]);
-  }
-    else{
-      console.log("no branch")
      users = await db.all(`
       SELECT u.id, u.username, u.active, u.created_at, u.last_login,
              COUNT(up.permission_id) as permissions_count
@@ -124,7 +98,7 @@ users = await db.all(`
       LIMIT ? OFFSET ?
     `, [limit, offset]);
     rows = await db.all("SELECT COUNT(*) as total FROM users WHERE deleted_at IS NULL");
-    }
+    
 
     return {
       success: true,
@@ -141,20 +115,13 @@ async function getByName(name) {
   try {
     const db = getDatabase();
   const store = new Store();
-    const branchId = store.get("branch.id");
 
     let rows = [];
-    if (branchId) {
-      rows = await db.all(
-        "SELECT * FROM users WHERE username LIKE ? AND branchId = ? AND deleted_at IS NULL",
-        [`%${name}%`, branchId]
-      );
-    } else {
+
       rows = await db.all(
         "SELECT * FROM users WHERE username LIKE ? AND deleted_at IS NULL",
         [`%${name}%`]
       );
-    }
 
     if (rows.length === 0) {
       return {
@@ -221,20 +188,9 @@ async function search(
     const db = getDatabase();
     const offset = (page - 1) * limit;
   const store = new Store();
-    const branchId = store.get("branch.id");
     // Find user in database
     let rows = [];
     let search = [{total:0}];
-    if (branchId) {
-      rows = await db.all(
-        "SELECT * FROM users WHERE username LIKE ? AND branchId = ? AND deleted_at IS NULL LIMIT ? OFFSET ?",
-        [`%${name}%`, branchId, limit, offset]
-      );
-      search = await db.all(
-        "SELECT COUNT(*) as total FROM users WHERE username LIKE ? AND branchId = ? AND deleted_at IS NULL",
-        [`%${name}%`, branchId]
-      );
-    } else {
       rows = await db.all(
         "SELECT * FROM users WHERE username LIKE ? AND deleted_at IS NULL LIMIT ? OFFSET ?",
         [`%${name}%`, limit, offset]
@@ -243,7 +199,6 @@ async function search(
         "SELECT COUNT(*) as total FROM users WHERE username LIKE ? AND deleted_at IS NULL",
         [`%${name}%`]
       );
-    }
 
     return {
       success: true,

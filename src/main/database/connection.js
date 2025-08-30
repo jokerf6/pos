@@ -15,14 +15,6 @@ CREATE TABLE IF NOT EXISTS categories (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE IF NOT EXISTS branches (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
-  address TEXT,
-    deleted_at TIMESTAMP DEFAULT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
 -- Table structure for table 'users'
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,7 +22,6 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   role TEXT CHECK(role IN ('admin','manager','cashier')) DEFAULT 'cashier',
   active INTEGER DEFAULT 1,
-  branchId INTEGER,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP DEFAULT NULL,
@@ -40,18 +31,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 
-CREATE TABLE IF NOT EXISTS BranchStock (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  branchId INTEGER NOT NULL,
-  productId INTEGER NOT NULL,
-  quantity INTEGER NOT NULL DEFAULT 0,
-  updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE CASCADE,
-  FOREIGN KEY (productId) REFERENCES items(id) ON DELETE CASCADE
-);
-
--- Table structure for table 'daily'
 CREATE TABLE IF NOT EXISTS daily (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   date DATE DEFAULT (date('now')),
@@ -59,11 +39,9 @@ CREATE TABLE IF NOT EXISTS daily (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   userId INTEGER NOT NULL,
   closed_at DATETIME,
-  branchId INTEGER,
   opened_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   openPrice INTEGER,
   closePrice INTEGER,
-  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL,
   FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -73,11 +51,9 @@ CREATE TABLE IF NOT EXISTS credit (
   reason TEXT NOT NULL,
   price DECIMAL(10,2) NOT NULL,
   reciever TEXT,
-  branchId INTEGER,
   daily_id INTEGER,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP DEFAULT NULL,
-  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL,
   FOREIGN KEY (daily_id) REFERENCES daily(id) ON DELETE SET NULL
 );
 
@@ -108,7 +84,6 @@ CREATE TABLE IF NOT EXISTS items (
   FOREIGN KEY (unitId) REFERENCES units(id)
   );
 
--- Table structure for table 'invoices'
 CREATE TABLE IF NOT EXISTS invoices (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   customerName TEXT,
@@ -118,11 +93,9 @@ CREATE TABLE IF NOT EXISTS invoices (
   total DECIMAL(10,2) NOT NULL,
   totalAfterDiscount DECIMAL(10,2) NOT NULL,
   dailyId INTEGER,
-  branchId INTEGER,
   userId INTEGER,
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (dailyId) REFERENCES daily(id) ON DELETE SET NULL,
-  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL,
   FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
 );
 
@@ -168,13 +141,11 @@ CREATE TABLE IF NOT EXISTS transactions (
   item_id INTEGER NOT NULL,
   transaction_type TEXT CHECK(transaction_type IN ('purchase','return','sale')) NOT NULL,
   quantity INTEGER NOT NULL,
-  branchId INTEGER,
   unit_price DECIMAL(10,2) NOT NULL,
   total_value DECIMAL(10,2) AS (quantity * unit_price),
   transaction_date DATE NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (item_id) REFERENCES items(id),
-  FOREIGN KEY (branchId) REFERENCES branches(id) ON DELETE SET NULL
 
 );
 

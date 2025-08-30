@@ -8,6 +8,7 @@ const path = require("path");
 const { fileURLToPath } = require("url");
 const log = require("electron-log");
  const isDev = !app.isPackaged;
+const { machineIdSync } = require("node-machine-id");
 
 // Fix for ES modules
 // const __filename = __filename || fileURLToPath(require.main.filename);
@@ -20,6 +21,11 @@ let mainWindow;
 log.transports.file.level = "info";
 log.info("App starting...");
 
+// مكان نخزن فيه الـ license (ممكن تحطه DB/Secure storage)
+const licenseFile = path.join(app.getPath("userData"), "license.json");
+
+// الـ machine id الخاص بالجهاز الحالي
+const currentMachineId = machineIdSync();
 // Create window function
 function createWindow() {
   // Get primary display dimensions
@@ -123,7 +129,45 @@ mainWindow.webContents.on("did-fail-load", (event, errorCode, errorDescription) 
 
   return mainWindow;
 }
+// تحقق من الترخيص
+function checkLicense() {
+  if (fs.existsSync(licenseFile)) {
+    const data = JSON.parse(fs.readFileSync(licenseFile, "utf8"));
+    if (data.machineId === currentMachineId) {
+      return true; // ✅ مسموح
+    } else {
+      return false; // ❌ جهاز مختلف
+    }
+  } else {
+    return false; // ❌ مفيش license
+  }
+}
 
+// حفظ license لأول مرة (انت ممكن تخليه من API عندك بدل كده)
+function saveLicense() {
+  fs.writeFileSync(
+    licenseFile,
+    JSON.stringify({ machineId: currentMachineId }, null, 2),
+    "utf8"
+  );
+}
+
+app.whenReady().then(() => {
+  // لو أول تشغيل → خزّن الـ machineId كترخيص
+  if (!fs.existsSync(licenseFile)) {
+    saveLicense();
+  }
+
+  if (checkLicense()) {
+    createWindow();
+  } else {
+    dialog.showErrorBox(
+      "جهاز غير معروف",
+      `البرنامج غير مرخص لهذا الجهاز برجاء التواصل مع الدعم الفني ${process.env.sailentra}`
+    );
+    app.quit();
+  }
+});
 // Security: Prevent new window creation
 app.on("web-contents-created", (event, contents) => {
   contents.on("new-window", (event, navigationUrl) => {

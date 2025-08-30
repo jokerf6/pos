@@ -100,32 +100,9 @@ async function getAll(
   try {
     const db = getDatabase();
     const offset = (page - 1) * limit;
-     const store = new Store();
-     const branchId = store.get("branch.id");
+    
     // Find user in database
-    let products = branchId ?  await db.all(
-      `SELECT 
-  i.id,
-  i.name,
-  i.barcode,
-  i.price,
-  i.buy_price,
-  i.category_id,
-  i.unitId,
-  COALESCE(bs.quantity, 0) AS quantity,
-  i.created_at,
-  i.description,
-  u.name AS unitName
-FROM items i
-LEFT JOIN BranchStock bs 
-  ON i.id = bs.productId AND bs.branchId = ?
-LEFT JOIN units u
-  ON i.unitId = u.id
-WHERE i.deleted_at IS NULL
-  ORDER BY i.id DESC
-LIMIT ? OFFSET ?;`,
-      [branchId, limit, offset]
-    ) : await db.all(
+    let products =  await db.all(
       `SELECT 
   i.id,
   i.name,
@@ -134,13 +111,11 @@ LIMIT ? OFFSET ?;`,
   i.unitId,
   i.buy_price,
   i.category_id,
-  COALESCE(SUM(bs.quantity), 0) AS quantity,
+  i.quantity,
   i.created_at,
   u.name AS unitName,
   i.description
 FROM items i
-LEFT JOIN BranchStock bs 
-  ON i.id = bs.productId
 LEFT JOIN units u 
   ON i.unitId = u.id
 WHERE i.deleted_at IS NULL
@@ -164,38 +139,8 @@ LIMIT ? OFFSET ?;`,
 async function getByName(name) {
   try {
     const db = getDatabase();
-     const store = new Store();
-     const branchId = store.get("branch.id");
 let rows;
 
-if (branchId) {
-  // لو في فرع محدد
-  rows = await db.all(
-    `
-    SELECT 
-      i.id,
-      i.name,
-      i.barcode,
-      i.price,
-      i.buy_price,
-      i.unitId,
-      i.category_id,
-      COALESCE(bs.quantity, 0) AS quantity,
-      i.created_at,
-      u.name AS unitName,
-      i.description
-    FROM items i
-    LEFT JOIN BranchStock bs 
-      ON i.id = bs.productId AND bs.branchId = ?
-    LEFT JOIN units u
-      ON i.unitId = u.id
-    WHERE (i.name LIKE ? OR i.barcode LIKE ?) AND i.deleted_at IS NULL
-    ORDER BY i.id DESC
-    LIMIT ? OFFSET ?
-    `,
-    [branchId, `%${name}%`, `%${name}%`, limit, offset]
-  );
-} else {
   // لو مفيش فرع -> نجمع من كل الفروع
   rows = await db.all(
     `
@@ -206,14 +151,12 @@ if (branchId) {
       i.price,
       i.buy_price,
       i.category_id,
-      u.name AS unitName
+      u.name AS unitName,
       i.unitId,
-      COALESCE(SUM(bs.quantity), 0) AS quantity,
+      i.quantity,
       i.created_at,
       i.description
     FROM items i
-    LEFT JOIN BranchStock bs 
-      ON i.id = bs.productId
     LEFT JOIN units u
       ON i.unitId = u.id
     WHERE (i.name LIKE ? OR i.barcode LIKE ?) AND i.deleted_at IS NULL
@@ -223,7 +166,6 @@ if (branchId) {
     `,
     [`%${name}%`, `%${name}%`, limit, offset]
   );
-}
 
     return {
       success: true,
@@ -259,38 +201,8 @@ async function getBybarcode(event, data) {
 
   try {
     const db = getDatabase();
-     const store = new Store();
-     const branchId = store.get("branch.id");
    let rows;
 
-if (branchId) {
-  // لو في فرع محدد
-  rows = await db.all(
-    `
-    SELECT 
-      i.id,
-      i.name,
-      i.barcode,
-      i.price,
-      i.unitId,
-      i.buy_price,
-      i.category_id,
-      COALESCE(bs.quantity, 0) AS quantity,
-      u.name AS unitName,
-      i.created_at,
-      i.description
-    FROM items i
-    LEFT JOIN BranchStock bs 
-      ON i.id = bs.productId AND bs.branchId = ?
-    LEFT JOIN units u
-      ON i.unitId = u.id
-    WHERE i.barcode LIKE ? AND i.deleted_at IS NULL
-    ORDER BY i.id DESC
-    LIMIT 1
-    `,
-    [branchId, `%${name}%`]
-  );
-} else {
   // لو مفيش فرع -> نجمع من كل الفروع
   rows = await db.all(
     `
@@ -302,13 +214,11 @@ if (branchId) {
       i.unitId,
       i.buy_price,
       i.category_id,
-      COALESCE(SUM(bs.quantity), 0) AS quantity,
+      i.quantity,
       i.created_at,
       i.description,
       u.name AS unitName
     FROM items i
-    LEFT JOIN BranchStock bs 
-      ON i.id = bs.productId
     LEFT JOIN units u
       ON i.unitId = u.id
     WHERE i.barcode LIKE ? AND i.deleted_at IS NULL
@@ -318,7 +228,7 @@ if (branchId) {
     `,
     [`%${name}%`]
   );
-}
+
 
 
     return {
@@ -335,36 +245,7 @@ async function findById(event, { id }) {
     const db = getDatabase();
     // Find user in database
 let rows;
-const store = new Store();
-const branchId = store.get("branch.id");
 
-if (branchId) {
-  // لو في فرع محدد
-  rows = await db.all(
-    `
-    SELECT 
-      i.id,
-      i.name,
-      i.barcode,
-      i.price,
-      i.unitId,
-      i.buy_price,
-      i.category_id,
-      COALESCE(bs.quantity, 0) AS quantity,
-      i.created_at,
-      i.description,
-      u.name AS unitName
-    FROM items i
-    LEFT JOIN BranchStock bs 
-      ON i.id = bs.productId AND bs.branchId = ?
-    LEFT JOIN units u
-      ON i.unitId = u.id
-    WHERE i.id = ? AND i.deleted_at IS NULL
-    LIMIT 1
-    `,
-    [branchId, id]
-  );
-} else {
   // لو مفيش فرع -> نجمع من كل الفروع
   rows = await db.all(
     `
@@ -376,13 +257,11 @@ if (branchId) {
       i.unitId,
       i.buy_price,
       i.category_id,
-      COALESCE(SUM(bs.quantity), 0) AS quantity,
+      i.quantity,
       i.created_at,
       i.description,
       u.name AS unitName
     FROM items i
-    LEFT JOIN BranchStock bs 
-      ON i.id = bs.productId
     LEFT JOIN units u
       ON i.unitId = u.id
     WHERE i.id = ? AND i.deleted_at IS NULL
@@ -391,7 +270,7 @@ if (branchId) {
     `,
     [id]
   );
-}    if (rows.length === 0) {
+    if (rows.length === 0) {
       return {
         success: false,
         message: "Product not found",
@@ -421,8 +300,6 @@ async function search(
   } = {}
 ) {
   try {
-    const store = new Store();
-    const branchId = store.get("branch.id");
     const db = getDatabase();
     const offset = (page - 1) * limit;
 
@@ -454,29 +331,7 @@ async function search(
 
     // SQL الأساسي
     let baseSQL;
-    if (branchId) {
-      // لو في فرع محدد
-      baseSQL = `
-        SELECT 
-          i.id,
-          i.name,
-          i.barcode,
-          i.price,
-          i.unitId,
-          i.buy_price,
-          i.category_id,
-          COALESCE(bs.quantity, 0) AS quantity,
-          i.created_at,
-          i.description,
-          u.name AS unitName
-        FROM items i
-        LEFT JOIN BranchStock bs 
-          ON i.id = bs.productId AND bs.branchId = ?
-        LEFT JOIN units u
-          ON i.unitId = u.id
-      `;
-      params.unshift(branchId); // أول param هو branchId
-    } else {
+ 
       // لو مفيش فرع: اجمع الكميات من كل الفروع
       baseSQL = `
         SELECT 
@@ -487,23 +342,21 @@ async function search(
           i.unitId,
           i.buy_price,
           i.category_id,
-          COALESCE(SUM(bs.quantity), 0) AS quantity,
+          i.quantity,
           i.created_at,
           i.description,
           u.name AS unitName
         FROM items i
-        LEFT JOIN BranchStock bs 
-          ON i.id = bs.productId
         LEFT JOIN units u
           ON i.unitId = u.id
       `;
-    }
+    
 
     // بناء WHERE
     const whereSQL = whereClauses.length > 0 ? "WHERE " + whereClauses.join(" AND ") : "";
 
     // GROUP BY لما مفيش فرع
-    const groupBy = branchId ? "" : "GROUP BY i.id";
+    const groupBy = "GROUP BY i.id";
 
     // فلترة بالكمية (بعد ما حسبناها)
     if (filters.quantityFrom) {
@@ -573,38 +426,7 @@ async function update(event, data) {
 }
 
 
-async function AddQuantityToBranch(event, data) {
-  const { id, quantity } = data;
-  const store = new Store();
-  const branchId = store.get("branch.id"); 
-  // Validate input
-  if (!branchId) {
-    throw new Error("برجاء اختيار الفرع");
-  }
-  if(!quantity){
-    throw new Error("برجاء إدخال الكمية");
-  }
-  try {
-    const db = getDatabase();
-    const product = await db.get("SELECT * FROM items WHERE barcode = ?", [id]);
-    const isFound = await db.get("SELECT * FROM BranchStock WHERE branchId = ? AND productId = ?", [branchId, product.id]);
-    if (!isFound) {
-      await db.run("INSERT INTO BranchStock (branchId, productId, quantity) VALUES (?, ?, ?)", [branchId, product.id, quantity]);
-    }
-    await db.run(
-      "UPDATE BranchStock SET quantity = ? WHERE branchId = ? AND productId = ?",
-      [quantity, branchId, product.id]
-    );
 
-    return {
-      success: true,
-      message: "Product updated successfully",
-    };
-  } catch (error) {
-    log.error("User updated error:", error.message);
-    throw error;
-  }
-}
 
 
 
@@ -647,5 +469,4 @@ module.exports = {
   deleteProduct,
   generateBarCode,
   getBybarcode,
-  AddQuantityToBranch
 };

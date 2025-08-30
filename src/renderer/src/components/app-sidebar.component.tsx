@@ -57,13 +57,6 @@ const items = [
     permissions: ["users.view"], // Requires users.view permission
   },
   {
-    title: "الفروع",
-    url: "/branches",
-    group: [],
-    icon: GitBranch,
-    permissions: ["branches.view"], // Requires branches.view permission
-  },
-  {
     title: "الاقسام",
     url: "/categories",
     group: [],
@@ -274,11 +267,6 @@ export function AppSidebar() {
             </SidebarGroupLabel>
           </SidebarGroup>
         </SidebarContent>
-        
-        {/* Branches component moved to footer to appear at bottom */}
-        <SidebarFooter className="px-4 pb-4">
-          <Branches />
-        </SidebarFooter>
       </Sidebar>
     </div>
   );

@@ -38,7 +38,6 @@ const user = await db.get(
     u.username, 
     u.password_hash, 
     u.role, 
-    u.branchId, 
     u.created_at,
     COALESCE(GROUP_CONCAT(p.name), '') as permissions
   FROM users u
@@ -56,7 +55,6 @@ if (user && user.permissions) {
   user.permissions = [];
 }
 
-    store.set("branch.id", user.branchId);
     if (!user) {
       log.warn("Login failed: User not found:", username);
       throw new Error("Invalid username or password");
@@ -91,7 +89,6 @@ const permissions = permissionsRows? permissionsRows?.map((row) => row.name):[];
         userId: user.id,
         username: user.username,
         role: user.role,
-        branchId: user.branchId,
         permissions,
       },
       JWT_SECRET,
@@ -143,8 +140,6 @@ async function logout(event) {
   try {
     if (currentSession) {
       log.info("Logging out user:", currentSession.username);
-            const store = new Store();
-      store.set("branch.id", null);
       currentSession = null;
 
     }
