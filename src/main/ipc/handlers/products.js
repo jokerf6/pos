@@ -12,6 +12,7 @@ async function createProduct(event, data) {
     description,
     price,
     buy_price,
+    quantity,
     category_id,
     barcode,
     unitId,
@@ -26,13 +27,13 @@ async function createProduct(event, data) {
     !buy_price ||
     !category_id ||
     !unitId ||
+    !quantity ||
     (!barcode && !generated_code)
   ) {
     throw new Error(
       "برجاء إدخال اسم المنتج والكمية والسعر و الوحدات وسعر الشراءوالفئة والباركود"
     );
   }
-  const quantity = 0;
   try {
     const db = getDatabase();
     if (generated_code) {
@@ -62,7 +63,8 @@ async function createProduct(event, data) {
         [generated_code]
       );
       await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?,?)", [find[0].id, "purchase", quantity, price,  new Date()]);
-    } else {
+    } 
+    else {
       const rows = await db.all(
         "SELECT * FROM items WHERE barcode = ? LIMIT 1",
         [barcode]
@@ -409,12 +411,14 @@ async function update(event, data) {
   console.log("Update product data:", quantity,id);
   try {
     const db = getDatabase();
-
+     const find = await db.all("SELECT * FROM items WHERE barcode = ?", [id]);
     await db.run(
       "UPDATE items SET name = ?, quantity = ?, price = ?, buy_price=? WHERE barcode = ?",
       [name, quantity, price, buy_price, id]
     );
-
+  if(quantity){
+       await db.run("INSERT INTO transactions (item_id,transaction_type, quantity,unit_price, transaction_date) VALUES (?, ?, ?, ?, ?)", [find[0].id, "purchase", quantity, price,  new Date()]);
+  }
     return {
       success: true,
       message: "Product updated successfully",

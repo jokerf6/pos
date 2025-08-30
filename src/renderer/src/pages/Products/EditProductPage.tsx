@@ -164,6 +164,7 @@ const EditProductPage = () => {
     { name: "name", placeholder: "اسم المنتج" },
     { name: "price", placeholder: "سعر البيع", type: "number" },
     { name: "buy_price", placeholder: "سعر الشراء", type: "number" },
+    { name: "new_quantity", placeholder: "إضافة كمية", type: "number" },
   ];
 
   if (isLoading) {

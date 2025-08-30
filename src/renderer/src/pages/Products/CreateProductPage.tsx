@@ -141,9 +141,11 @@ const CreateProductPage = () => {
   const handleChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target;
+      
       if (name === "barcode") {
         await handleSearch(value);
       }
+      
       setFormData((prev) => ({ ...prev, [name]: value }));
     },
     []
@@ -198,11 +200,13 @@ const CreateProductPage = () => {
     e.preventDefault();
 
     const submitData = { ...formData };
-
     if (isExistingProduct) {
       submitData.quantity = originalQuantity + Number(formData.new_quantity);
     }
-
+    else{
+      submitData.quantity = Number(formData.new_quantity);
+    }
+    console.log("submitData", submitData);
     const result = await dispatch(createProduct(submitData) as any);
     if (!result.error) {
       showSuccess("تم إضافه المنتج بنجاح");
@@ -247,7 +251,7 @@ const CreateProductPage = () => {
       { name: "quantity", placeholder: "الكمية الموجودة", type: "number", disabled: true },
       { name: "new_quantity", placeholder: "الكمية الجديدة", type: "number" }
     ] : [
-      // { name: "new_quantity", placeholder: "الكمية", type: "number" },
+      { name: "new_quantity", placeholder: "الكمية", type: "number" },
     ]),
     { name: "price", placeholder: "سعر البيع", type: "number" },
     { name: "buy_price", placeholder: "سعر الشراء", type: "number" },
@@ -388,7 +392,7 @@ const CreateProductPage = () => {
             ))}
 
             {/* مجموع الكمية */}
-              {/* <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="text-sm text-gray-600">
                   <p><strong>الكمية الحالية:</strong> {originalQuantity}</p>
                   <p><strong>الكمية الجديدة:</strong> {formData.new_quantity}</p>
@@ -396,7 +400,7 @@ const CreateProductPage = () => {
                     <strong>إجمالي الكمية:</strong> {originalQuantity + Number(formData.new_quantity)}
                   </p>
                 </div>
-              </div> */}
+              </div>
 
             <div className="flex gap-4 pt-6 border-t border-gray-200">
               <Button 

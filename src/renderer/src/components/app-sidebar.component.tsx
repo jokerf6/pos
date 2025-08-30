@@ -30,7 +30,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
 } from "./ui/sidebar";
 import { useSelector } from "react-redux";
 import {
@@ -38,7 +37,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@radix-ui/react-collapsible";
-import { Branches } from "./common/branches.component";
 
 // Menu items with required permissions
 const items = [
@@ -47,6 +45,7 @@ const items = [
     url: "/",
     group: [],
     icon: Home,
+    daily: false,
     permissions: [], // No permissions required for home page
   },
   {
@@ -54,6 +53,8 @@ const items = [
     url: "/users",
     group: [],
     icon: Users,
+    daily: false,
+
     permissions: ["users.view"], // Requires users.view permission
   },
   {
@@ -61,6 +62,7 @@ const items = [
     url: "/categories",
     group: [],
     icon: FolderOpen,
+    daily: false,
     permissions: ["category.view"], // Requires inventory.view permission
   },
   {
@@ -68,6 +70,7 @@ const items = [
     group: [],
     url: "/products",
     icon: Package,
+    daily: false,
     permissions: ["inventory.view"], // Show if user has inventory view permission
   },
   {
@@ -75,11 +78,13 @@ const items = [
     url: "/units",
     group: [],
     icon: Boxes,
+    daily: false,
     permissions: ["units.view"], // Requires units.view permission
   },
   {
     title: "إدارة الفواتير",
     url: "/invoiceManagement",
+    daily: true,
     group: [
       {
         title: "إنشاء فاتورة",
@@ -99,6 +104,7 @@ const items = [
   },
   {
     title: "إداره المصروفات",
+    daily: true,
     group: [
       {
         title: "مصروفات اليوم",
@@ -121,6 +127,7 @@ const items = [
     title: "التقارير",
     url: "/reports",
     group: [],
+    daily: false,
     icon: BarChart3,
     permissions: ["reports.view"], // Requires reports.view permission
   },
@@ -128,6 +135,7 @@ const items = [
     title: "الاعدادات",
     url: "/settings",
     group: [],
+    daily: false,
     icon: Settings,
     permissions: ["settings.view"], // Requires system.settings permission
   },
@@ -136,7 +144,7 @@ const items = [
 export function AppSidebar() {
   const { user } = useSelector((state: any) => state.auth);
   const location = useLocation();
-
+  const { daily } = useSelector((state: any) => state.daily);
   // Helper function to check if user has any of the required permissions
   const hasPermission = (requiredPermissions: string[]): boolean => {
     console.log("Checking permissions for user:", requiredPermissions);
@@ -184,10 +192,12 @@ export function AppSidebar() {
                         key={item.title}
                         className={`w-full rounded-lg transition-all duration-200 ease-in-out
                       ${item.active ? "bg-blue-600 " : " hover:bg-sidebar-accent"}
-                      ${item.hide ? "hidden" : ""}`}
-                      >
+                      ${(item?.daily === true && daily?.success === false)|| item.hide ? "hidden" : ""}`}
+                     
+                     >
                         <SidebarMenuButton
                           asChild
+                          disabled={!item.daily && !daily}
                           className={`flex items-center gap-3 py-3 px-4 w-full text-right
                         ${item.active ? "text-white" : "text-[#111111]"}
                       `}
@@ -203,9 +213,9 @@ export function AppSidebar() {
                     ) : (
                       <Collapsible
                         key={item.title}
-                        className={`group/collapsible rounded-lg 
-                     
-                      ${item.hide ? "hidden" : ""}`}
+                        className={`group/collapsible rounded-lg
+
+                      ${(item.daily === true && daily?.success === false) || item.hide ? "hidden" : ""}`}
                       >
                         <SidebarGroupLabel asChild>
                           <CollapsibleTrigger
