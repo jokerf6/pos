@@ -145,8 +145,8 @@ const DataTable = <T extends Record<string, any>>({
           onChange={handleSearch}
           className="max-w-sm"
         />
-        {(user.role === "admin" || user?.permissions?.includes("branches.create")) && <Button onClick={() => navigate("/branches/create")}>
-          <span className="flex items-center gap-2">
+        {(user.role === "admin" || user?.permissions?.includes("branches.create")) && <Button className="bg-[#1B67B3]" onClick={() => navigate("/branches/create")}>
+          <span className="flex items-center gap-2 bg-[#1B67B3]">
             <Pencil size={16} />
             إنشاء
           </span>

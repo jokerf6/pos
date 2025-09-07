@@ -275,7 +275,7 @@ const DataTable = <T extends Record<string, any>>({
           </div>
        {(user.role === "admin" || user?.permissions?.includes("inventory.create")) &&   <Button 
             onClick={() => navigate("/products/create")}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200 px-6 py-2.5"
+            className="bg-[#1B67B3] hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200 px-6 py-2.5"
           >
             <Plus className="h-4 w-4 ml-2" />
             إضافة منتج جديد
@@ -308,7 +308,7 @@ const DataTable = <T extends Record<string, any>>({
                 showFilters ? 'rotate-180' : ''
               }`} />
               {activeFiltersCount > 0 && (
-                <span className="absolute -top-1 -left-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -left-1 bg-[#1B67B3] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {activeFiltersCount}
                 </span>
               )}
@@ -583,7 +583,7 @@ const DataTable = <T extends Record<string, any>>({
                     onClick={() => handlePage(pageNum)}
                     className={`w-8 h-8 p-0 ${
                       page === pageNum 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        ? 'bg-[#1B67B3] text-white hover:bg-blue-700' 
                         : 'border-gray-300 hover:bg-gray-50'
                     }`}
                   >

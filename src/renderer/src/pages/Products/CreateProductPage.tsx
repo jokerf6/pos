@@ -422,29 +422,7 @@ const CreateProductPage = () => {
           </form>
         </div>
 
-        {/* Hidden print */}
-        <div className="hidden">
-          <div ref={printRef}>
-            {Array.from({ length: barcodeNumber }).map((_, idx) => (
-              <div key={idx} className="mb-4 flex flex-col items-center text-center">
-                <h1 className="font-bold">{process.env.REACT_APP_COMPANY_NAME}</h1>
-                <h2>{formData.name || "اسم المنتج"}</h2>
-                <div className="flex items-center justify-center gap-2">
-                  <span
-                    style={{
-                      writingMode: "vertical-rl",
-                      textOrientation: "mixed",
-                      fontSize: "1rem",
-                    }}
-                  >
-                    {formData.price.toFixed(2)}
-                  </span>
-                  <svg id={`barcode-${idx}`} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      
       </div>
     </div>
   );

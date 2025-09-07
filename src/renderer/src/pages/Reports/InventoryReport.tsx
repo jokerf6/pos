@@ -329,7 +329,7 @@ const InventoryReport: React.FC<InventoryReportProps> = ({
                     onClick={() => handlePage(pageNum)}
                     className={`w-8 h-8 p-0 ${
                       page === pageNum 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        ? 'bg-[#1B67B3] text-white hover:bg-blue-700' 
                         : 'border-gray-300 hover:bg-gray-50'
                     }`}
                   >

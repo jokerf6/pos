@@ -97,7 +97,7 @@ export default function DailyHeader() {
                     onClick={() => handleChange(index, value === "true" ? "false" : "true")}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                       value === "true"
-                        ? "bg-blue-600"
+                        ? "bg-[#1B67B3]"
                         : "bg-slate-300 dark:bg-slate-600"
                     }`}
                   >
@@ -175,7 +175,7 @@ export default function DailyHeader() {
             onClick={handelSubmit}
             type="submit"
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#1B67B3] hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>

@@ -141,15 +141,15 @@ const DataTable = <T extends Record<string, any>>({
   return (
     <div className="flex flex-col w-full gap-4 p-4 text-right" dir="rtl">
       {/* شريط البحث والأزرار */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 ">
         <Input
           placeholder="ابحث..."
           value={search}
           onChange={handleSearch}
           className="max-w-sm"
         />
-        {(user.role === "admin" || user.permissions.includes("users.create")) && <Button onClick={() => navigate("/users/create")}>
-          <span className="flex items-center gap-2">
+        {(user.role === "admin" || user.permissions.includes("users.create")) && <Button className="bg-[#1B67B3]" onClick={() => navigate("/users/create")}>
+          <span className="flex items-center gap-2 ">
             <Pencil size={16} />
             إنشاء
           </span>

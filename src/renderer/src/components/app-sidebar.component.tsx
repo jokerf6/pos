@@ -7,15 +7,12 @@ import {
   Package,
   Settings,
   ChevronDown,
-  LayoutDashboard,
   PlusCircle,
   ListOrdered,
   DollarSign,
   Wallet,
   Boxes,
-  MoveRight,
   BarChart3,
-  GitBranch,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -66,7 +63,7 @@ const items = [
     permissions: ["category.view"], // Requires inventory.view permission
   },
   {
-    title: "إداره الاصناف",
+    title: "الاصناف",
     group: [],
     url: "/products",
     icon: Package,
@@ -82,7 +79,7 @@ const items = [
     permissions: ["units.view"], // Requires units.view permission
   },
   {
-    title: "إدارة الفواتير",
+    title: "الفواتير",
     url: "/invoiceManagement",
     daily: true,
     group: [
@@ -103,7 +100,7 @@ const items = [
     permissions: ["sales.view", "sales.create"], // Show if user has any sales permission
   },
   {
-    title: "إداره المصروفات",
+    title: "المصروفات",
     daily: true,
     group: [
       {
@@ -174,7 +171,7 @@ export function AppSidebar() {
         <SidebarContent className="py-6 px-4">
           <SidebarGroup>
             <SidebarGroupLabel className="flex flex-col">
-              <SidebarGroupLabel className="pt-4 pb-8 font-bold text-3xl text-center flex items-center justify-center">
+              <SidebarGroupLabel className="pt-8 pb-8 font-bold text-3xl text-center flex items-center justify-center">
                 <img
                   src={"images/logo.png"}
                   alt="Logo"
@@ -184,21 +181,20 @@ export function AppSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu
                   dir="rtl"
-                  className="flex flex-col gap-2 text-lg mt-8"
+                  className="flex flex-col gap-3 text-lg mt-8"
                 >
                   {usedItems.map((item) =>
                     item?.group?.length === 0 ? (
                       <SidebarMenuItem
                         key={item.title}
                         className={`w-full rounded-lg transition-all duration-200 ease-in-out
-                      ${item.active ? "bg-blue-600 " : " hover:bg-sidebar-accent"}
-                      ${(item?.daily === true && daily?.success === false)|| item.hide ? "hidden" : ""}`}
-                     
-                     >
+                      ${item.active ? "bg-[#1B67B3]" : " hover:bg-sidebar-accent"}
+                      ${(item?.daily === true && daily?.success === false) || item.hide ? "hidden" : ""}`}
+                      >
                         <SidebarMenuButton
                           asChild
                           disabled={!item.daily && !daily}
-                          className={`flex items-center gap-3 py-3 px-4 w-full text-right
+                          className={`flex items-center gap-3 py-3 px-4 text-lg w-full text-right
                         ${item.active ? "text-white" : "text-[#111111]"}
                       `}
                         >
@@ -219,18 +215,18 @@ export function AppSidebar() {
                       >
                         <SidebarGroupLabel asChild>
                           <CollapsibleTrigger
-                            className={`flex justify-between items-center gap-3 py-3 px-4 w-full text-right rounded-lg
+                            className={`flex justify-between  items-center gap-3  py-3 px-4 w-full text-right rounded-lg
                           ${item.active ? "text-white" : "text-[#111111]"}
                         `}
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center  gap-3">
                               <span className="text-current">
                                 <item.icon
                                   size={20}
                                   className="text-[#111111]"
                                 />
                               </span>
-                              <span className="font-medium text-[#111111]">
+                              <span className="font-medium   text-[19px] text-[#111111]">
                                 {item.title}
                               </span>
                             </div>
@@ -248,12 +244,12 @@ export function AppSidebar() {
                             .map((subItem) => (
                               <SidebarMenuItem
                                 key={subItem.title}
-                                className={`w-full rounded-lg transition-all duration-200 ease-in-out
+                                className={`w-full rounded-lg  transition-all duration-200 ease-in-out
                             ${location.pathname === subItem.url ? "bg-blue-700" : ""}`}
                               >
                                 <SidebarMenuButton asChild>
                                   <Link
-                                    className={`flex items-center gap-3 py-2 px-4 w-full text-right
+                                    className={`flex  items-center gap-3 py-2 px-4  w-full text-right
                                 ${location.pathname === subItem.url ? "text-white" : "text-[#555555] hover:bg-sidebar-accent"}
                               `}
                                     to={subItem.url}
@@ -261,7 +257,7 @@ export function AppSidebar() {
                                     <span className="text-current">
                                       <subItem.icon size={18} />
                                     </span>
-                                    <span className="text-sm font-normal">
+                                    <span className=" text-lg font-normal">
                                       {subItem.title}
                                     </span>
                                   </Link>

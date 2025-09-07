@@ -258,7 +258,7 @@ export default function AllInvoicesFixed() {
         <Button
           onClick={previous}
           disabled={!canGoBefore || isLoading}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
+          className="flex items-center gap-2 px-4 py-2 bg-[#1B67B3] hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
         >
           {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
           <ChevronRight className="w-4 h-4" />
@@ -277,7 +277,7 @@ export default function AllInvoicesFixed() {
         <Button
           disabled={!canGoAfter || isLoading}
           onClick={after}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
+          className="flex items-center gap-2 px-4 py-2 bg-[#1B67B3] hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
         >
           التالي
           <ChevronLeft className="w-4 h-4" />

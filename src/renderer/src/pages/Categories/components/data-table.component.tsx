@@ -127,7 +127,7 @@ const DataTable = <T extends Record<string, any>>({
           onChange={handleSearch}
           className="max-w-sm"
         />
-       { (user.role === "admin" || user?.permissions?.includes("category.create")) && <Button onClick={() => navigate("/categories/create")}>
+       { (user.role === "admin" || user?.permissions?.includes("category.create")) && <Button className="bg-[#1B67B3]" onClick={() => navigate("/categories/create")}>
           <span className="flex items-center gap-2">
             <Pencil size={16} />
             إنشاء
