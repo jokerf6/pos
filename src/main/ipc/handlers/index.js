@@ -115,6 +115,8 @@ function setupIPC() {
   ipcMain.handle("products:update", secureHandler(productsH.update));
   ipcMain.handle("products:delete", secureHandler(productsH.deleteProduct));
   ipcMain.handle("products:search", secureHandler(productsH.search));
+  ipcMain.handle("products:printBarcode", secureHandler(productsH.printBarcode));
+
   ipcMain.handle(
     "products:generateBarCode",
     secureHandler(productsH.generateBarCode)

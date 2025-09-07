@@ -3,10 +3,7 @@ const log = require("electron-log");
 const { getDatabase } = require("../../database/connection.js");
 const { startOfDay, endOfDay } = require("date-fns");
 const pkg = require("electron-pos-printer");
-const escpos = require('escpos');
-const escposUsb = require('escpos-usb');
 const { PosPrinter } = pkg;
-escpos.USB = escposUsb;
 const Store = require("electron-store");
 
 /**

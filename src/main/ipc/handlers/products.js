@@ -2,7 +2,13 @@ const bcrypt = require("bcryptjs");
 const log = require("electron-log");
 const { getDatabase } = require("../../database/connection.js");
 const Store = require("electron-store");
+const PDFDocument = require("pdfkit");
+const { createCanvas, loadImage } = require("canvas");
 
+const fs = require("fs");
+
+const bwipjs = require("bwip-js");
+const { BrowserWindow } = require("electron");
 /**
  * Product handler
  */
@@ -463,6 +469,75 @@ async function deleteProduct(event, id) {
     throw error;
   }
 }
+
+
+function mmToPt(mm) {
+  return mm * 2.83465;
+}
+async function createLabel(productName, barcodeValue, outputFile) {
+  return new Promise((resolve, reject) => {
+    bwipjs.toBuffer(
+      {
+        bcid: "code128",
+        text: barcodeValue,
+        scale: 2,
+        height: 12,
+        includetext: true,
+        textxalign: "center",
+      },
+      async (err, png) => {
+        if (err) return reject(err);
+
+        // أبعاد الملصق (بالبكسل على حسب DPI الطباعة)
+        const width = 300;  // ~50mm على 150dpi
+        const height = 180; // ~30mm على 150dpi
+        const canvas = createCanvas(width, height);
+        const ctx = canvas.getContext("2d");
+
+        // خلفية بيضاء
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, width, height);
+
+        // النص
+        ctx.fillStyle = "black";
+        ctx.font = "16px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(productName, width / 2, 20);
+
+        // الباركود
+        const img = await loadImage(png);
+        const x = (width - img.width) / 2;
+        ctx.drawImage(img, x, 40);
+
+        const buffer = canvas.toBuffer("image/png");
+        fs.writeFileSync(outputFile, buffer);
+
+        resolve(outputFile);
+      }
+    );
+  });
+}
+
+async function printBarcode(event) {
+/*  const productName = "test";
+  const barcode = "1234567890123";
+  const filePath = "label.pdf";
+  await createLabel(productName, barcode, filePath);
+ await printer.print(filePath, {
+    printer: "Xprinter XP-235B",
+    // لو كنت تحتاج تخصص حجم الورق هنا، حسب النظام:
+    unix: ['-o media=Custom.50x30mm'],
+    win32: ['-print-settings "PaperSize=Custom.50x30mm"']
+  });
+  console.log("تمت الطباعة ✔️");
+  */
+const win = new BrowserWindow({ show: false });
+win.loadFile('label.html');
+win.webContents.on('did-finish-load', () => {
+  win.webContents.print({ silent: true, deviceName: "Xprinter XP-235B" });
+});
+
+}
 module.exports = {
   createProduct,
   getAll,
@@ -473,4 +548,5 @@ module.exports = {
   deleteProduct,
   generateBarCode,
   getBybarcode,
+  printBarcode
 };

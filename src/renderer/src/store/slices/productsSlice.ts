@@ -98,6 +98,25 @@ export const searchProducts = createAsyncThunk(
   }
 );
 
+
+export const printBarcode = createAsyncThunk(
+  "products/printBarcode",
+  async (data: any, { rejectWithValue }) => {
+    try {
+      if (window.electronAPI) {
+        const result = await window.electronAPI.products.printBarcode(data);
+        return result;
+      } else {
+        return null;
+      }
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+
+
 export const createProduct = createAsyncThunk(
   "products/create",
   async (data: ProductPayload, { rejectWithValue }) => {

@@ -44,6 +44,11 @@ const validChannels = {
   "products:search": true,
   "products:getByBarcode": true,
   "products:generateBarCode": true,
+  "products:printBarcode": true,
+
+
+
+  
 
   // Invoice channels
   "invoice:create": true,
@@ -179,6 +184,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getByBarcode: (data) => safeInvoke("products:getByBarcode", data),
     generateBarCode: () => safeInvoke("products:generateBarCode"),
     AddQuantityToBranch: (data) => safeInvoke("products:addToBranch", data),
+    printBarcode: (data) => safeInvoke("products:printBarcode", data),
   },
 
    branches: {

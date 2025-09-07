@@ -5,6 +5,7 @@ import {
   createProduct,
   ProductByBarcode,
   generateBarCode,
+  printBarcode,
 } from "../../store/slices/productsSlice";
 import {
   getCategories,
@@ -238,9 +239,10 @@ const CreateProductPage = () => {
     }
   }, [formData.generated_code, formData.barcode, barcodeNumber]);
 
-  const handelPrint = useReactToPrint({
-    contentRef: printRef,
-  });
+
+ async function handelPrint(){
+   await dispatch(printBarcode({}))
+  }
 
   const fields = [
     { name: "barcode", placeholder: "الباركود" , disabled:true,},

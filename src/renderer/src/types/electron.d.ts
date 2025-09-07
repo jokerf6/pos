@@ -86,6 +86,7 @@ interface ElectronAPI {
     getByBarcode: (barcode: string) => Promise<any>;
     generateBarCode: (data: any) => Promise<any>;
     AddQuantityToBranch: (data: any) => Promise<any>;
+    printBarcode: (data: any) => Promise<any>;
   };
 
   branches: {
