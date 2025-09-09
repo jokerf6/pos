@@ -1,53 +1,74 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <style>
     @page {
+      size: 38mm 25mm;
       margin: 0;
     }
+
     body {
       margin: 0;
       padding: 0;
     }
+
     .label {
+      width: 38mm;
+      height: 25mm;
       display: flex;
-      border: 1px solid black;
-      border-radius: 10px;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       font-family: Arial, sans-serif;
-      font-size: 5pt;
-           overflow: hidden;
-
-
+      font-size: 8pt;
+      overflow: hidden;
     }
-    svg {
-      width: 100%; /* خليه يملى العرض */
-      height: auto; /* يضبط الطول تلقائي */
+
+    img {
+      width: 50%;
+      height: auto;      /* 🟢 الطول يفضل طبيعي من JsBarcode */
+      object-fit: contain;
+    
     }
-   
+
+    #name {
+      margin-bottom: 2px;
+      /* تقليل المسافة بين الاسم والباركود */
+      font-weight: bold;
+      text-align: center;
+      width: 100%;
+    }
   </style>
 </head>
+
 <body>
   <div class="label">
-    
-    <!-- <div id="name">Product Name</div> -->
-    <svg id="barcode"></svg>
+    <div id="name">My Product</div>
+    <img id="barcodeImg" />
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script>
-    JsBarcode("#barcode", "123456789012", {
+    // إنشاء باركود كصورة PNG
+    const canvas = document.createElement("canvas");
+    JsBarcode(canvas, "123456789012", {
       format: "CODE128",
       displayValue: true,
-      fontSize: 12,
-      width: 2,
-      height: 40
+      fontOptions: "bold",
+      fontSize: 12, // تقليل حجم الخط قليلاً ليتناسب مع العرض
+      width: 2,     // عرض الأعمدة
+      height: 200,  // 🔥 زود الطول بحيث يملأ اللابل
+      margin: 0
     });
-    document.getElementById("name").innerText = "Product Name";
-    window.print(); // يطبع مباشرة
+    document.getElementById("barcodeImg").src = canvas.toDataURL("image/png");
+
+    // استنى شوية قبل الطباعة
+    setTimeout(() => {
+      window.print();
+    }, 500);
   </script>
 </body>
+
 </html>
