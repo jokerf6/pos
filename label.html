@@ -1,81 +1,101 @@
 <!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <style>
-      @page {
-        size: 38mm 25mm;
-        margin: 0;
-      }
+<html lang="ar">
 
-      body {
-        margin: 0;
-        padding: 0;
-      }
+<head>
+  <meta charset="utf-8" />
+  <style>
+    @page {
+      size: 38mm 25mm;
+      margin: 0;
+    }
 
-      .label {
-        width: 38mm;
-        height: 25mm;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        font-family: Arial, sans-serif;
-        font-size: 8pt;
-        overflow: hidden;
-      }
+    body {
+      margin: 0;
+      padding: 0;
+       width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-      img {
-        width: 50%;
-        height: auto; /* 🟢 الطول يفضل طبيعي من JsBarcode */
-        object-fit: contain;
-      }
+    .label {
+      width: 38mm;
+      height: 25mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      font-size: 8pt;
+      overflow: hidden;
+      text-align: center;
+    }
 
-      #name {
-        margin-bottom: 2px;
-        /* تقليل المسافة بين الاسم والباركود */
-        font-weight: bold;
-        text-align: center;
-        width: 100%;
-      }
+    img {
+      width: 50%;
+      height: auto;
+      margin-top: 2px;
+      object-fit: contain;
+    }
+
+    #name2 {
+      font-weight: bold;
+      font-size: 9pt;
+    }
+
+    #name {
+      font-weight: bold;
+      font-size: 9pt;
+      margin: 2px 0;
+    }
+
+    #price {
+      font-weight: bold;
+      font-size: 9pt;
+      margin-top: 2px;
+    }
+
+    #printButton {
+      margin-top: 10px;
+      padding: 5px 15px;
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    @media print {
       #printButton {
-        margin-top: 30px;
-        background-color: red;
-        display: block;
-        @media print {
-          display: none;
-        }
+        display: none;
       }
-    </style>
-  </head>
+    }
+  </style>
+</head>
 
-  <body>
-    <div class="label">
-      <div id="name">My Product</div>
-      <img id="barcodeImg" height="100" width="100" />
-      <button
-        id="printButton"
-        onclick="window.print()"
-        style="margin-top: 30px; background-color: red"
-      >
-        Print
-      </button>
-    </div>
+<body>
+  <div class="label">
+    <div id="name2">فابريكا السلطان</div>
+    <div id="name">My Product</div>
+    <img id="barcodeImg" />
+    <div id="price">1500 L.E</div>
+    <button id="printButton" onclick="window.print()">Print</button>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-    <script>
-      // إنشاء باركود كصورة PNG
-      const canvas = document.createElement("canvas");
-      JsBarcode(canvas, "123456789012", {
-        format: "CODE128",
-        displayValue: true,
-        fontOptions: "bold",
-        fontSize: 12, // تقليل حجم الخط قليلاً ليتناسب مع العرض
-        // width: 2, // عرض الأعمدة
-        // height: 200, // 🔥 زود الطول بحيث يملأ اللابل
-        margin: 0,
-      });
-      document.getElementById("barcodeImg").src = canvas.toDataURL("image/png");
-    </script>
-  </body>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script>
+    // إنشاء باركود
+    const canvas = document.createElement("canvas");
+    JsBarcode(canvas, "123456789012", {
+      format: "CODE128",
+      displayValue: true,
+      fontOptions: "bold",
+      fontSize: 24, // حجم رقم الباركود
+      margin: 0
+    });
+    document.getElementById("barcodeImg").src = canvas.toDataURL("image/png");
+  </script>
+</body>
+
 </html>
