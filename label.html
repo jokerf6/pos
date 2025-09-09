@@ -1,74 +1,81 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @page {
+        size: 38mm 25mm;
+        margin: 0;
+      }
 
-<head>
-  <meta charset="utf-8">
-  <style>
-    @page {
-      size: 38mm 25mm;
-      margin: 0;
-    }
+      body {
+        margin: 0;
+        padding: 0;
+      }
 
-    body {
-      margin: 0;
-      padding: 0;
-    }
+      .label {
+        width: 38mm;
+        height: 25mm;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        font-size: 8pt;
+        overflow: hidden;
+      }
 
-    .label {
-      width: 38mm;
-      height: 25mm;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-family: Arial, sans-serif;
-      font-size: 8pt;
-      overflow: hidden;
-    }
+      img {
+        width: 50%;
+        height: auto; /* 🟢 الطول يفضل طبيعي من JsBarcode */
+        object-fit: contain;
+      }
 
-    img {
-      width: 50%;
-      height: auto;      /* 🟢 الطول يفضل طبيعي من JsBarcode */
-      object-fit: contain;
-    
-    }
+      #name {
+        margin-bottom: 2px;
+        /* تقليل المسافة بين الاسم والباركود */
+        font-weight: bold;
+        text-align: center;
+        width: 100%;
+      }
+      #printButton {
+        margin-top: 30px;
+        background-color: red;
+        display: block;
+        @media print {
+          display: none;
+        }
+      }
+    </style>
+  </head>
 
-    #name {
-      margin-bottom: 2px;
-      /* تقليل المسافة بين الاسم والباركود */
-      font-weight: bold;
-      text-align: center;
-      width: 100%;
-    }
-  </style>
-</head>
+  <body>
+    <div class="label">
+      <div id="name">My Product</div>
+      <img id="barcodeImg" height="100" width="100" />
+      <button
+        id="printButton"
+        onclick="window.print()"
+        style="margin-top: 30px; background-color: red"
+      >
+        Print
+      </button>
+    </div>
 
-<body>
-  <div class="label">
-    <div id="name">My Product</div>
-    <img id="barcodeImg" />
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-  <script>
-    // إنشاء باركود كصورة PNG
-    const canvas = document.createElement("canvas");
-    JsBarcode(canvas, "123456789012", {
-      format: "CODE128",
-      displayValue: true,
-      fontOptions: "bold",
-      fontSize: 12, // تقليل حجم الخط قليلاً ليتناسب مع العرض
-      width: 2,     // عرض الأعمدة
-      height: 200,  // 🔥 زود الطول بحيث يملأ اللابل
-      margin: 0
-    });
-    document.getElementById("barcodeImg").src = canvas.toDataURL("image/png");
-
-    // استنى شوية قبل الطباعة
-    setTimeout(() => {
-      window.print();
-    }, 500);
-  </script>
-</body>
-
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script>
+      // إنشاء باركود كصورة PNG
+      const canvas = document.createElement("canvas");
+      JsBarcode(canvas, "123456789012", {
+        format: "CODE128",
+        displayValue: true,
+        fontOptions: "bold",
+        fontSize: 12, // تقليل حجم الخط قليلاً ليتناسب مع العرض
+        // width: 2, // عرض الأعمدة
+        // height: 200, // 🔥 زود الطول بحيث يملأ اللابل
+        margin: 0,
+      });
+      document.getElementById("barcodeImg").src = canvas.toDataURL("image/png");
+    </script>
+  </body>
 </html>
