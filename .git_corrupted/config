@@ -1,0 +1,62 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	hooksPath = .husky
+[remote "origin"]
+	url = git@github-second:jokerf6/pos.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main
+	vscode-merge-base = origin/main
+[pull]
+	rebase = false
+[branch "typescript-v"]
+	remote = origin
+	merge = refs/heads/typescript-v
+	vscode-merge-base = origin/typescript-v
+[branch "homepage-ui-improvements"]
+	remote = origin
+	merge = refs/heads/homepage-ui-improvements
+	vscode-merge-base = origin/homepage-ui-improvements
+[branch "sidebar-header-improvements"]
+	remote = origin
+	merge = refs/heads/sidebar-header-improvements
+	vscode-merge-base = origin/sidebar-header-improvements
+[branch "users"]
+	remote = origin
+	merge = refs/heads/users
+	vscode-merge-base = origin/users
+[branch "improve-products-ui-ux"]
+	remote = origin
+	merge = refs/heads/improve-products-ui-ux
+	vscode-merge-base = origin/improve-products-ui-ux
+[branch "feature/professional-settings-ui"]
+	remote = origin
+	merge = refs/heads/feature/professional-settings-ui
+	vscode-merge-base = origin/feature/professional-settings-ui
+[branch "v2-sqllite"]
+	vscode-merge-base = origin/main
+	remote = origin
+	merge = refs/heads/v2-sqllite
+[branch "v3"]
+	vscode-merge-base = origin/v2-sqllite
+	remote = origin
+	merge = refs/heads/v3
+[branch "v4"]
+	vscode-merge-base = origin/v3
+	remote = origin
+	merge = refs/heads/v4
+[branch "feature/units"]
+	remote = origin
+	merge = refs/heads/feature/units
+	vscode-merge-base = origin/feature/units
+[branch "units-improvement-professional"]
+	remote = origin
+	merge = refs/heads/units-improvement-professional
+[branch "v4-basic"]
+	vscode-merge-base = origin/v4
+	remote = origin
+	merge = refs/heads/v4-basic

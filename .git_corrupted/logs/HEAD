@@ -1,0 +1,128 @@
+0000000000000000000000000000000000000000 3ce9a04d322389e862893c28c791a5f0347efb9c fahd-74 <fhakem75@gmail.com> 1751747887 +0300	clone: from github.com:jokerf6/pos.git
+3ce9a04d322389e862893c28c791a5f0347efb9c 25cea77e2926e2a1e62139f6366186dca1b8ae23 fahd-74 <fhakem75@gmail.com> 1751748029 +0300	commit: init
+25cea77e2926e2a1e62139f6366186dca1b8ae23 613af1815dec3f4e85e88a37a6f93504f63ab046 fahd-74 <fhakem75@gmail.com> 1751913218 +0300	commit: fix
+613af1815dec3f4e85e88a37a6f93504f63ab046 6432299c6d6f8487cb3c10e4effaedd25bc6fb74 fahd-74 <fhakem75@gmail.com> 1751968127 +0300	commit: fix
+6432299c6d6f8487cb3c10e4effaedd25bc6fb74 e0b2b6cfbb6e51d770709dda26349cd5c8092cfa fahd-74 <fhakem75@gmail.com> 1752000066 +0300	commit: fix
+e0b2b6cfbb6e51d770709dda26349cd5c8092cfa 6bf0df825ebd48f0c2cc358a5785c62fde7f6917 fahd-74 <fhakem75@gmail.com> 1752020463 +0300	commit: finish:user
+6bf0df825ebd48f0c2cc358a5785c62fde7f6917 7f191639b2839378d5dab82413f2c135ec0e682d fahd-74 <fhakem75@gmail.com> 1752057947 +0300	commit: feat:user finisheddddddddddd
+7f191639b2839378d5dab82413f2c135ec0e682d 0fee913e4f7fa5a867e213ee80046975c4b9162d fahd-74 <fhakem75@gmail.com> 1752063060 +0300	commit: finish :login and the flow
+0fee913e4f7fa5a867e213ee80046975c4b9162d 34bc1669a07a22fc0902a7c861c322f2fb83a3de fahd-74 <fhakem75@gmail.com> 1752275967 +0300	commit: feat: categories
+34bc1669a07a22fc0902a7c861c322f2fb83a3de 51a6628a05ebc43a9c0a11805365fb9974088a74 fahd-74 <fhakem75@gmail.com> 1752275988 +0300	pull: Merge made by the 'ort' strategy.
+51a6628a05ebc43a9c0a11805365fb9974088a74 fcb935e509e7aa43da795ea221ee34f865c6c952 fahd-74 <fhakem75@gmail.com> 1752276123 +0300	commit: feat: categories
+fcb935e509e7aa43da795ea221ee34f865c6c952 e31b1be6aa770ab200382629a68c307d0435a9ba fahd-74 <fhakem75@gmail.com> 1752326806 +0300	commit: feat:products
+e31b1be6aa770ab200382629a68c307d0435a9ba 2f96c4236fc36c081d6391aefac122b0190ce159 fahd-74 <fhakem75@gmail.com> 1752326812 +0300	pull: Merge made by the 'ort' strategy.
+2f96c4236fc36c081d6391aefac122b0190ce159 ef40c229fe8f959a19d816bae9eb5b0de8740930 fahd-74 <fhakem75@gmail.com> 1752343437 +0300	commit: fix
+ef40c229fe8f959a19d816bae9eb5b0de8740930 935a4aa4c51b0cf1cec7fb1dfeb86aec588e2437 fahd-74 <fhakem75@gmail.com> 1752343481 +0300	commit (merge): fix
+935a4aa4c51b0cf1cec7fb1dfeb86aec588e2437 e45e341beaeeda978c7e9d384d63949000cb9724 fahd-74 <fhakem75@gmail.com> 1752673293 +0300	commit: ff
+e45e341beaeeda978c7e9d384d63949000cb9724 40d35093a22737c2ac7d3401f729c898fc680e0d fahd-74 <fhakem75@gmail.com> 1752673299 +0300	pull: Merge made by the 'ort' strategy.
+40d35093a22737c2ac7d3401f729c898fc680e0d 3e967254809e62d8fe31bce97349233cee6ebd07 fahd-74 <fhakem75@gmail.com> 1752856930 +0300	commit: fix
+3e967254809e62d8fe31bce97349233cee6ebd07 59fe507248f268fb4e7b3270a06542c5da7585c8 fahd-74 <fhakem75@gmail.com> 1752856988 +0300	commit (merge): Merge branch 'main' of github.com:jokerf6/pos
+59fe507248f268fb4e7b3270a06542c5da7585c8 5fd3facf21eaad8eda9f6625153e6cf7953e1679 fahd-74 <fhakem75@gmail.com> 1752857280 +0300	pull: Merge made by the 'ort' strategy.
+5fd3facf21eaad8eda9f6625153e6cf7953e1679 3e967254809e62d8fe31bce97349233cee6ebd07 fahd-74 <fhakem75@gmail.com> 1752863813 +0300	checkout: moving from main to 3e967254809e62d8fe31bce97349233cee6ebd07
+3e967254809e62d8fe31bce97349233cee6ebd07 318613d46d4817fcef79a79f3fd01206d0d21d6f fahd-74 <fhakem75@gmail.com> 1753400224 +0300	commit: التعديلات بناءً على commit قديم
+318613d46d4817fcef79a79f3fd01206d0d21d6f 5fd3facf21eaad8eda9f6625153e6cf7953e1679 fahd-74 <fhakem75@gmail.com> 1753400277 +0300	checkout: moving from 318613d46d4817fcef79a79f3fd01206d0d21d6f to main
+5fd3facf21eaad8eda9f6625153e6cf7953e1679 3e967254809e62d8fe31bce97349233cee6ebd07 fahd-74 <fhakem75@gmail.com> 1753400305 +0300	checkout: moving from main to 3e967254
+3e967254809e62d8fe31bce97349233cee6ebd07 5fd3facf21eaad8eda9f6625153e6cf7953e1679 fahd-74 <fhakem75@gmail.com> 1753400425 +0300	checkout: moving from 3e967254809e62d8fe31bce97349233cee6ebd07 to main
+5fd3facf21eaad8eda9f6625153e6cf7953e1679 c7ccd6d02a64601c51d42669421eda9c9890d9cd fahd-74 <fhakem75@gmail.com> 1753400433 +0300	pull: Fast-forward
+c7ccd6d02a64601c51d42669421eda9c9890d9cd 90ac22270d452370529e3aeb1442e179cc946fbb fahd-74 <fhakem75@gmail.com> 1753400436 +0300	cherry-pick: التعديلات بناءً على commit قديم
+90ac22270d452370529e3aeb1442e179cc946fbb 7f9e63dad14d04ceeeaafd058d25a257e7bedcf2 fahd-74 <fhakem75@gmail.com> 1753603983 +0300	checkout: moving from main to typescript-v
+7f9e63dad14d04ceeeaafd058d25a257e7bedcf2 dfd8a5a58d3330e333cacf079f27edc23ebb5f74 fahd-74 <fhakem75@gmail.com> 1753649622 +0300	commit: fix
+dfd8a5a58d3330e333cacf079f27edc23ebb5f74 a2802fd6a83251a331b3f98764287335da9d0620 fahd-74 <fhakem75@gmail.com> 1753651589 +0300	pull: Fast-forward
+a2802fd6a83251a331b3f98764287335da9d0620 bc0e7e6055dca44a978e10b9d1e7208863493a48 fahd-74 <fhakem75@gmail.com> 1753653793 +0300	commit: fix
+bc0e7e6055dca44a978e10b9d1e7208863493a48 0b41c88c01f95b43dc1eac336dfb99252e7b66f1 fahd-74 <fhakem75@gmail.com> 1754143431 +0300	pull: Fast-forward
+0b41c88c01f95b43dc1eac336dfb99252e7b66f1 79489e9fc8125968dd567014fecd5b0fbabb7f76 fahd-74 <fhakem75@gmail.com> 1754145947 +0300	commit: fix:translation
+79489e9fc8125968dd567014fecd5b0fbabb7f76 ba9833b8b187073e592b381564c03e0669e9d3f9 fahd-74 <fhakem75@gmail.com> 1754338706 +0300	commit: fix
+ba9833b8b187073e592b381564c03e0669e9d3f9 fdead4de7e0ed24657c98a5a43d9fc2ec6d58812 fahd-74 <fhakem75@gmail.com> 1754341419 +0300	checkout: moving from typescript-v to homepage-ui-improvements
+fdead4de7e0ed24657c98a5a43d9fc2ec6d58812 18a1f1d351a99695a9d5aabdb69118b5299a4e98 fahd-74 <fhakem75@gmail.com> 1754341994 +0300	checkout: moving from homepage-ui-improvements to sidebar-header-improvements
+18a1f1d351a99695a9d5aabdb69118b5299a4e98 65d9664591b281d6560c8c73221736b52c70171b fahd-74 <fhakem75@gmail.com> 1754342333 +0300	pull: Fast-forward
+65d9664591b281d6560c8c73221736b52c70171b 17b2aeadb1956a656cb8f5154003ba4dadd3560c fahd-74 <fhakem75@gmail.com> 1754342564 +0300	commit: fix
+17b2aeadb1956a656cb8f5154003ba4dadd3560c 5f4506cee6e245364180012d0afe770c91dc9db2 fahd-74 <fhakem75@gmail.com> 1754481350 +0300	pull origin user-management-improvements: Merge made by the 'ort' strategy.
+5f4506cee6e245364180012d0afe770c91dc9db2 fdead4de7e0ed24657c98a5a43d9fc2ec6d58812 fahd-74 <fhakem75@gmail.com> 1754481622 +0300	checkout: moving from sidebar-header-improvements to homepage-ui-improvements
+fdead4de7e0ed24657c98a5a43d9fc2ec6d58812 5f4506cee6e245364180012d0afe770c91dc9db2 fahd-74 <fhakem75@gmail.com> 1754481875 +0300	checkout: moving from homepage-ui-improvements to sidebar-header-improvements
+5f4506cee6e245364180012d0afe770c91dc9db2 90ac22270d452370529e3aeb1442e179cc946fbb fahd-74 <fhakem75@gmail.com> 1754482097 +0300	checkout: moving from sidebar-header-improvements to main
+90ac22270d452370529e3aeb1442e179cc946fbb 5f4506cee6e245364180012d0afe770c91dc9db2 fahd-74 <fhakem75@gmail.com> 1754482333 +0300	checkout: moving from main to sidebar-header-improvements
+5f4506cee6e245364180012d0afe770c91dc9db2 17b2aeadb1956a656cb8f5154003ba4dadd3560c fahd-74 <fhakem75@gmail.com> 1754482405 +0300	reset: moving to HEAD~
+17b2aeadb1956a656cb8f5154003ba4dadd3560c 90ac22270d452370529e3aeb1442e179cc946fbb fahd-74 <fhakem75@gmail.com> 1754482565 +0300	checkout: moving from sidebar-header-improvements to main
+90ac22270d452370529e3aeb1442e179cc946fbb 17b2aeadb1956a656cb8f5154003ba4dadd3560c fahd-74 <fhakem75@gmail.com> 1754482583 +0300	pull origin sidebar-header-improvements: Fast-forward
+17b2aeadb1956a656cb8f5154003ba4dadd3560c 82f1da01facacd71d14143848044d4cd8b525aab fahd-74 <fhakem75@gmail.com> 1754482626 +0300	pull: Fast-forward
+82f1da01facacd71d14143848044d4cd8b525aab ea1e5483b4bedaf0d84a2ae5b0243ad62c1de581 fahd-74 <fhakem75@gmail.com> 1754488863 +0300	checkout: moving from main to users
+ea1e5483b4bedaf0d84a2ae5b0243ad62c1de581 aa071bfab6a267f9bbd95c309f9e76ca6cb4a9ff fahd-74 <fhakem75@gmail.com> 1754491149 +0300	pull: Fast-forward
+aa071bfab6a267f9bbd95c309f9e76ca6cb4a9ff bf364fd2d9a93e04686e96f58314eb22492d5328 fahd-74 <fhakem75@gmail.com> 1754491840 +0300	commit: feat
+bf364fd2d9a93e04686e96f58314eb22492d5328 82f1da01facacd71d14143848044d4cd8b525aab fahd-74 <fhakem75@gmail.com> 1754491854 +0300	checkout: moving from users to main
+82f1da01facacd71d14143848044d4cd8b525aab bf364fd2d9a93e04686e96f58314eb22492d5328 fahd-74 <fhakem75@gmail.com> 1754491869 +0300	pull origin users: Fast-forward
+bf364fd2d9a93e04686e96f58314eb22492d5328 16c206bd52751742da6a00ead4d71072ced5b9ec fahd-74 <fhakem75@gmail.com> 1754518061 +0300	commit: fix
+16c206bd52751742da6a00ead4d71072ced5b9ec a366d566cdb3cad7ac4acf3c186d6f351d8f3414 fahd-74 <fhakem75@gmail.com> 1754518461 +0300	pull origin main: Fast-forward
+a366d566cdb3cad7ac4acf3c186d6f351d8f3414 edaa68b12fc0b31e7b52758b7e3ed5905f1adbaa fahd-74 <fhakem75@gmail.com> 1754518962 +0300	commit: finish hone and users
+edaa68b12fc0b31e7b52758b7e3ed5905f1adbaa fc91ba091c3551e8a9b3b61e346e15e65583c4b0 fahd-74 <fhakem75@gmail.com> 1754565957 +0300	checkout: moving from main to improve-products-ui-ux
+fc91ba091c3551e8a9b3b61e346e15e65583c4b0 f7b7c8a32b7c9da0d42da4e9b5274998a0250ece fahd-74 <fhakem75@gmail.com> 1754567234 +0300	pull: Fast-forward
+f7b7c8a32b7c9da0d42da4e9b5274998a0250ece 62d7e4abc029ac067f7a560355d514d0d0ca1f74 fahd-74 <fhakem75@gmail.com> 1754573511 +0300	commit: fix
+62d7e4abc029ac067f7a560355d514d0d0ca1f74 edaa68b12fc0b31e7b52758b7e3ed5905f1adbaa fahd-74 <fhakem75@gmail.com> 1754573525 +0300	checkout: moving from improve-products-ui-ux to main
+edaa68b12fc0b31e7b52758b7e3ed5905f1adbaa 62d7e4abc029ac067f7a560355d514d0d0ca1f74 fahd-74 <fhakem75@gmail.com> 1754573591 +0300	checkout: moving from main to improve-products-ui-ux
+62d7e4abc029ac067f7a560355d514d0d0ca1f74 edaa68b12fc0b31e7b52758b7e3ed5905f1adbaa fahd-74 <fhakem75@gmail.com> 1754573598 +0300	checkout: moving from improve-products-ui-ux to main
+edaa68b12fc0b31e7b52758b7e3ed5905f1adbaa 62d7e4abc029ac067f7a560355d514d0d0ca1f74 fahd-74 <fhakem75@gmail.com> 1754573610 +0300	pull origin improve-products-ui-ux: Fast-forward
+62d7e4abc029ac067f7a560355d514d0d0ca1f74 62d7e4abc029ac067f7a560355d514d0d0ca1f74 fahd-74 <fhakem75@gmail.com> 1754574139 +0300	checkout: moving from main to improve-products-ui-ux
+62d7e4abc029ac067f7a560355d514d0d0ca1f74 50d89eb2bf859a19addc9201b35c3a27fbe3895b fahd-74 <fhakem75@gmail.com> 1754574187 +0300	pull: Fast-forward
+50d89eb2bf859a19addc9201b35c3a27fbe3895b 06d774c1242de5abc15c54f31a18d7a29346ade9 fahd-74 <fhakem75@gmail.com> 1754601724 +0300	commit: fix:issues
+06d774c1242de5abc15c54f31a18d7a29346ade9 62d7e4abc029ac067f7a560355d514d0d0ca1f74 fahd-74 <fhakem75@gmail.com> 1754601786 +0300	checkout: moving from improve-products-ui-ux to main
+62d7e4abc029ac067f7a560355d514d0d0ca1f74 06d774c1242de5abc15c54f31a18d7a29346ade9 fahd-74 <fhakem75@gmail.com> 1754601805 +0300	pull origin improve-products-ui-ux: Fast-forward
+06d774c1242de5abc15c54f31a18d7a29346ade9 2497d005dc3602ebf29b8172275b6e323c26d349 fahd-74 <fhakem75@gmail.com> 1754665604 +0300	commit: fix:all
+2497d005dc3602ebf29b8172275b6e323c26d349 f1a8dc6971ffe24778ca4258af3e0a607d412624 fahd-74 <fhakem75@gmail.com> 1754666361 +0300	checkout: moving from main to feature/professional-settings-ui
+f1a8dc6971ffe24778ca4258af3e0a607d412624 30b982c69ec46d4064b63b7320e9c3da47ab9a53 fahd-74 <fhakem75@gmail.com> 1754666823 +0300	commit: fix
+30b982c69ec46d4064b63b7320e9c3da47ab9a53 2497d005dc3602ebf29b8172275b6e323c26d349 fahd-74 <fhakem75@gmail.com> 1754666848 +0300	checkout: moving from feature/professional-settings-ui to main
+2497d005dc3602ebf29b8172275b6e323c26d349 30b982c69ec46d4064b63b7320e9c3da47ab9a53 fahd-74 <fhakem75@gmail.com> 1754666856 +0300	pull origin feature/professional-settings-ui: Fast-forward
+30b982c69ec46d4064b63b7320e9c3da47ab9a53 c2ce7ebdbcc4d9db3da7fb620783e02d957cd1a1 fahd-74 <fhakem75@gmail.com> 1754667466 +0300	commit: fix(settings): solve keys
+c2ce7ebdbcc4d9db3da7fb620783e02d957cd1a1 e04a20b8de6393bc7162ef5e0b4e8d94aa2ce839 fahd-74 <fhakem75@gmail.com> 1754674560 +0300	commit: fix:search
+e04a20b8de6393bc7162ef5e0b4e8d94aa2ce839 fc300f354d5283647ca7b35a5c93d68126048b0f fahd-74 <fhakem75@gmail.com> 1754678655 +0300	commit: fix:product- solve all product features
+fc300f354d5283647ca7b35a5c93d68126048b0f 9d0ff3aad1f86c7caacf8ccf38f439dbb2c1c663 fahd-74 <fhakem75@gmail.com> 1754694574 +0300	commit: finish
+9d0ff3aad1f86c7caacf8ccf38f439dbb2c1c663 ec4d8d250bd19cb15b32a1340bd48c089db5f75e fahd-74 <fhakem75@gmail.com> 1754699174 +0300	commit: finishhhhhhhhh
+ec4d8d250bd19cb15b32a1340bd48c089db5f75e 9d099a6ce1f79b1f8b67629f948150fad40be918 fahd-74 <fhakem75@gmail.com> 1755082373 +0300	pull: Fast-forward
+9d099a6ce1f79b1f8b67629f948150fad40be918 13b00c114fc0421c96277081737239c63437e2e4 fahd-74 <fhakem75@gmail.com> 1755083458 +0300	commit: fix:invoice
+13b00c114fc0421c96277081737239c63437e2e4 3904ca48f243c372740ba04dc24a4874cd4dc5c6 fahd-74 <fhakem75@gmail.com> 1755120396 +0300	commit: build in win7
+3904ca48f243c372740ba04dc24a4874cd4dc5c6 1ad6b5b72f48e82ea23d41bedbaecd97229276f0 fahd-74 <fhakem75@gmail.com> 1755120408 +0300	pull: Merge made by the 'ort' strategy.
+1ad6b5b72f48e82ea23d41bedbaecd97229276f0 ee276a0857e86b240681f5211060f0f162aade9b fahd-74 <fhakem75@gmail.com> 1755177790 +0300	commit: fix
+ee276a0857e86b240681f5211060f0f162aade9b 1ad6b5b72f48e82ea23d41bedbaecd97229276f0 fahd-74 <fhakem75@gmail.com> 1755178637 +0300	reset: moving to HEAD~
+1ad6b5b72f48e82ea23d41bedbaecd97229276f0 1ad6b5b72f48e82ea23d41bedbaecd97229276f0 fahd-74 <fhakem75@gmail.com> 1755179040 +0300	reset: moving to 1ad6b5b72f48e82ea23d41bedbaecd97229276f0
+1ad6b5b72f48e82ea23d41bedbaecd97229276f0 9857b207164160cc31367fb1892fc403aee8ef07 fahd-74 <fhakem75@gmail.com> 1755180216 +0300	commit: fix: build
+9857b207164160cc31367fb1892fc403aee8ef07 7555123f5704782a29b13c9d751f346f01e6eeaf fahd-74 <fhakem75@gmail.com> 1755180378 +0300	commit: fix
+7555123f5704782a29b13c9d751f346f01e6eeaf 7555123f5704782a29b13c9d751f346f01e6eeaf fahd-74 <fhakem75@gmail.com> 1755274147 +0300	checkout: moving from main to v2-sqllite
+7555123f5704782a29b13c9d751f346f01e6eeaf 792f6967ef20b97cc195dd51bf520626eb5edcd0 fahd-74 <fhakem75@gmail.com> 1755274163 +0300	commit: fix:database
+792f6967ef20b97cc195dd51bf520626eb5edcd0 7555123f5704782a29b13c9d751f346f01e6eeaf fahd-74 <fhakem75@gmail.com> 1755274233 +0300	checkout: moving from v2-sqllite to main
+7555123f5704782a29b13c9d751f346f01e6eeaf cc2daa62011ff418527f90d8cbc1eeb9e51116b5 fahd-74 <fhakem75@gmail.com> 1755274253 +0300	pull: Fast-forward
+cc2daa62011ff418527f90d8cbc1eeb9e51116b5 7282b920134b8167930dd1c0b45867ac2bec2ae8 fahd-74 <fhakem75@gmail.com> 1755290579 +0300	commit: fix
+7282b920134b8167930dd1c0b45867ac2bec2ae8 792f6967ef20b97cc195dd51bf520626eb5edcd0 fahd-74 <fhakem75@gmail.com> 1755290594 +0300	checkout: moving from main to v2-sqllite
+792f6967ef20b97cc195dd51bf520626eb5edcd0 f0c147e721e093f19b8467d00784cb8c42de96f4 fahd-74 <fhakem75@gmail.com> 1755290651 +0300	pull: Fast-forward
+f0c147e721e093f19b8467d00784cb8c42de96f4 e4ad677d4f2c702c37844177d9ab58a52f0f4e80 fahd-74 <fhakem75@gmail.com> 1755290862 +0300	commit: fix:.env
+e4ad677d4f2c702c37844177d9ab58a52f0f4e80 7282b920134b8167930dd1c0b45867ac2bec2ae8 fahd-74 <fhakem75@gmail.com> 1755290881 +0300	checkout: moving from v2-sqllite to main
+7282b920134b8167930dd1c0b45867ac2bec2ae8 fc1f7cf3378a85d604a74698277fac81abb8cf90 fahd-74 <fhakem75@gmail.com> 1755294590 +0300	commit: fix:login
+fc1f7cf3378a85d604a74698277fac81abb8cf90 e4ad677d4f2c702c37844177d9ab58a52f0f4e80 fahd-74 <fhakem75@gmail.com> 1755294602 +0300	checkout: moving from main to v2-sqllite
+e4ad677d4f2c702c37844177d9ab58a52f0f4e80 15703df1ad6739ed34241d6d8cefc2c5453161c7 fahd-74 <fhakem75@gmail.com> 1755294795 +0300	commit: fix:login
+15703df1ad6739ed34241d6d8cefc2c5453161c7 25dfc534a717b1059b874ee22b7be68278a98ed1 fahd-74 <fhakem75@gmail.com> 1755299755 +0300	commit: finish
+25dfc534a717b1059b874ee22b7be68278a98ed1 25dfc534a717b1059b874ee22b7be68278a98ed1 fahd-74 <fhakem75@gmail.com> 1755299801 +0300	checkout: moving from v2-sqllite to v3
+25dfc534a717b1059b874ee22b7be68278a98ed1 25dfc534a717b1059b874ee22b7be68278a98ed1 fahd-74 <fhakem75@gmail.com> 1755344334 +0300	checkout: moving from v3 to v4
+25dfc534a717b1059b874ee22b7be68278a98ed1 183c841ee3e5d1abb557c668865b49ab71dfe425 fahd-74 <fhakem75@gmail.com> 1755370364 +0300	commit: feat: reports
+183c841ee3e5d1abb557c668865b49ab71dfe425 ea2c94ae643c81e2c25eebba6ba518a1d836332f fahd-74 <fhakem75@gmail.com> 1755625580 +0300	commit: feat(report): finish report feature
+ea2c94ae643c81e2c25eebba6ba518a1d836332f fa1f713750f08521310087822bcd7b9416daaa3b fahd-74 <fhakem75@gmail.com> 1755893622 +0300	commit: fix(branch): solve invoice and product
+fa1f713750f08521310087822bcd7b9416daaa3b a4e4b67c2e33b99d40fc26120e9bbfb54b512530 fahd-74 <fhakem75@gmail.com> 1755897794 +0300	checkout: moving from v4 to feature/units
+a4e4b67c2e33b99d40fc26120e9bbfb54b512530 75d765c90c884dc4654a30eec9e8271ca84534e8 fahd-74 <fhakem75@gmail.com> 1755957820 +0300	commit: fix(units):
+75d765c90c884dc4654a30eec9e8271ca84534e8 fa1f713750f08521310087822bcd7b9416daaa3b fahd-74 <fhakem75@gmail.com> 1755957832 +0300	checkout: moving from feature/units to v4
+fa1f713750f08521310087822bcd7b9416daaa3b 75d765c90c884dc4654a30eec9e8271ca84534e8 fahd-74 <fhakem75@gmail.com> 1755957853 +0300	pull origin feature/units: Fast-forward
+75d765c90c884dc4654a30eec9e8271ca84534e8 b698f6a9e786c17584170c4f905e5cb19cc65417 fahd-74 <fhakem75@gmail.com> 1755958671 +0300	commit: update unirs
+b698f6a9e786c17584170c4f905e5cb19cc65417 3295fcd9d0cc58369feab911a9c940631913975a fahd-74 <fhakem75@gmail.com> 1755959400 +0300	checkout: moving from v4 to units-improvement-professional
+3295fcd9d0cc58369feab911a9c940631913975a b698f6a9e786c17584170c4f905e5cb19cc65417 fahd-74 <fhakem75@gmail.com> 1755959450 +0300	checkout: moving from units-improvement-professional to v4
+b698f6a9e786c17584170c4f905e5cb19cc65417 b0768cf642e01ff9e7903615a0d33b9470f07eef fahd-74 <fhakem75@gmail.com> 1755969333 +0300	commit: finish product
+b0768cf642e01ff9e7903615a0d33b9470f07eef 000868348fcd7b060f4e6504af4feb80773d1753 fahd-74 <fhakem75@gmail.com> 1756494301 +0300	commit: finish deleted at
+000868348fcd7b060f4e6504af4feb80773d1753 9053283d56049153f32d85b88f18f43cc9dcd345 fahd-74 <fhakem75@gmail.com> 1756561245 +0300	commit: fix
+9053283d56049153f32d85b88f18f43cc9dcd345 ea97342044d56a19d9ed1be5b78c2b07c744c036 fahd-74 <fhakem75@gmail.com> 1756566094 +0300	commit: fix
+ea97342044d56a19d9ed1be5b78c2b07c744c036 ea97342044d56a19d9ed1be5b78c2b07c744c036 fahd-74 <fhakem75@gmail.com> 1756566121 +0300	checkout: moving from v4 to v4-basic
+ea97342044d56a19d9ed1be5b78c2b07c744c036 f91e836ab8d590e8f3979fb251cf5667b170034a fahd-74 <fhakem75@gmail.com> 1756567157 +0300	commit: fix
+f91e836ab8d590e8f3979fb251cf5667b170034a ea97342044d56a19d9ed1be5b78c2b07c744c036 fahd-74 <fhakem75@gmail.com> 1756567188 +0300	checkout: moving from v4-basic to v4
+ea97342044d56a19d9ed1be5b78c2b07c744c036 173033ed0bf5c64c72405fe7770c1b1e63bb4b94 fahd-74 <fhakem75@gmail.com> 1756567208 +0300	commit: fix:connection
+173033ed0bf5c64c72405fe7770c1b1e63bb4b94 f91e836ab8d590e8f3979fb251cf5667b170034a fahd-74 <fhakem75@gmail.com> 1756567268 +0300	checkout: moving from v4 to v4-basic
+f91e836ab8d590e8f3979fb251cf5667b170034a 566a19d80bcc92ba201cf90ad26a88f91e1e8572 fahd-74 <fhakem75@gmail.com> 1756567407 +0300	commit: fix:ategoty name
+566a19d80bcc92ba201cf90ad26a88f91e1e8572 173033ed0bf5c64c72405fe7770c1b1e63bb4b94 fahd-74 <fahd@ijdcreatives.com> 1757000713 +0300	checkout: moving from v4-basic to v4
+173033ed0bf5c64c72405fe7770c1b1e63bb4b94 173033ed0bf5c64c72405fe7770c1b1e63bb4b94 fahd-74 <fahd@ijdcreatives.com> 1757000729 +0300	checkout: moving from v4 to v4
+173033ed0bf5c64c72405fe7770c1b1e63bb4b94 566a19d80bcc92ba201cf90ad26a88f91e1e8572 fahd-74 <fahd@ijdcreatives.com> 1757152707 +0300	checkout: moving from v4 to v4-basic
+566a19d80bcc92ba201cf90ad26a88f91e1e8572 07b1baba7f1e92b63f54ec5f2edfd39cc6068c28 fahd-74 <fahd@ijdcreatives.com> 1757262084 +0300	commit: fix
+07b1baba7f1e92b63f54ec5f2edfd39cc6068c28 c90118123687ca2e498942408b02d2871c841995 fahd-74 <fahd@ijdcreatives.com> 1757351243 +0300	pull: Fast-forward
+c90118123687ca2e498942408b02d2871c841995 6685ff91a5eef79efbebd605436112b0c8fca82a fahd-74 <fahd@ijdcreatives.com> 1757605846 +0300	pull: Fast-forward
+6685ff91a5eef79efbebd605436112b0c8fca82a f1356846a67dc49ff23b59497a19e571f8a9320b fahd-74 <fahd@ijdcreatives.com> 1757615143 +0300	commit: fix: barcode

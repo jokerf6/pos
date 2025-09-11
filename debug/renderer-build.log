@@ -1,0 +1,14 @@
+
+> casher-desktop@1.0.0 build:renderer
+> cd src/renderer && npm run build
+
+
+> casher-renderer@0.1.0 build
+> react-scripts build
+
+Creating an optimized production build...
+Failed to compile.
+
+Module not found: Error: Can't resolve 'jsbarcode' in 'C:\work\desktop\pos\src\renderer\src\pages\Products'
+
+

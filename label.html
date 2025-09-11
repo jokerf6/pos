@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    @page { size: 38mm 25mm; margin: 0; }
+    body {
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .label {
+      width: 38mm; height: 25mm;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      font-family: Arial, sans-serif; font-size: 8pt; text-align: center;
+      box-sizing: border-box;
+    }
+    img { width: 55%; height: auto; margin-top: 2px; object-fit: contain; }
+    #name2 { font-weight: bold; font-size: 9pt; }
+    #name, #price { font-weight: bold; font-size: 9pt; margin: 2px 0; }
+  </style>
+</head>
+<body>
+  <div class="label">
+    <div id="name2"></div>
+    <div id="name"></div>
+    <img id="barcodeImg" />
+    <div id="price"></div>
+  </div>
+
+  <script src="libs/JsBarcode.all.min.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const name2 = params.get("name2") || "Default Store";
+    const name = params.get("name") || "Unknown";
+    const price = params.get("price") || "0 L.E";
+    const barcode = params.get("barcode") || "000000000000";
+
+    document.getElementById("name2").textContent = name2;
+    document.getElementById("name").textContent = name;
+    document.getElementById("price").textContent = price;
+
+    const canvas = document.createElement("canvas");
+    JsBarcode(canvas, barcode, {
+      format: "CODE128",
+      displayValue: true,
+      fontOptions: "bold",
+      fontSize: 24,
+      margin: 0
+    });
+    document.getElementById("barcodeImg").src = canvas.toDataURL("image/png");
+  </script>
+</body>
+</html>

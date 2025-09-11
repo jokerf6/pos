@@ -1,0 +1,27 @@
+Error log started at 2025-07-16T15:46:28.768Z
+[2025-07-16T15:46:33.377Z] App error: [9516:0716/184633.377:VERBOSE1:device_event_log_impl.cc(194)] [18:46:33.363] Display: EVENT: screen_win.cc:828 Displays updated, count: 3
+
+[2025-07-16T15:46:33.378Z] App error: [9516:0716/184633.377:VERBOSE1:device_event_log_impl.cc(194)] [18:46:33.377] Display: EVENT: screen_win.cc:830 Display[2528732444] bounds=[0,0 1536x864], workarea=[0,0 1536x816], scale=1.25, rotation=0, panel_rotation=0 external detected
+[9516:0716/184633.377:VERBOSE1:device_event_log_impl.cc(194)] [18:46:33.377] Display: EVENT: screen_win.cc:830 Display[2779098405] bounds=[1536,-216 1920x1080], workarea=[1536,-216 1920x1032], scale=1, rotation=0, panel_rotation=0 external detected
+[9516:0716/184633.377:VERBOSE1:device_event_log_impl.cc(194)] [18:46:33.377] Display: EVENT: screen_win.cc:830 Display[2841568472] bounds=[-1680,20 1680x1050], workarea=[-1680,20 1680x1002], scale=1, rotation=0, panel_rotation=0 external detected
+[9516:0716/184633.377:VERBOSE1:pref_proxy_config_tracker_impl.cc(191)] 000075B00010F800: set chrome proxy config service to 000075B0000F72C0
+
+[2025-07-16T15:46:33.389Z] App error: [9516:0716/184633.388:VERBOSE1:media_stream_manager.cc(1410)] MSM::InitializeMaybeAsync([this=000075B0000B3E00])
+
+[2025-07-16T15:46:33.390Z] App error: [9516:0716/184633.388:VERBOSE1:media_stream_manager.cc(1410)] MDM::MediaDevicesManager()
+[9516:0716/184633.388:VERBOSE1:media_stream_manager.cc(1410)] MSM::MediaStreamManager([this=000075B0000B3E00]))
+
+[2025-07-16T15:46:33.428Z] App error: [9516:0716/184633.428:VERBOSE1:first_party_sets_handler_impl.cc(283)] Empty path. Failed initializing First-Party Sets database.
+
+[2025-07-16T15:46:33.444Z] App error: 18:46:33.443 > Database initialization failed: connect ECONNREFUSED ::1:3307
+
+[2025-07-16T15:46:33.449Z] App error: Error during app initialization: Error: connect ECONNREFUSED ::1:3307
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1555:16) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '::1',
+  port: 3307,
+  fatal: true
+}
+

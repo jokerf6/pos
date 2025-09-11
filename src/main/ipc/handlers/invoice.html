@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>فاتورة مبيعات</title>
+<style>
+  body {
+    font-family: "Tahoma", sans-serif;
+    margin: 0;
+    padding: 10px;
+    font-size: 18px;
+    line-height: 1.6;
+  }
+  .invoice {
+    width: 80mm; /* عرض رول الطابعة */
+  }
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+  .line {
+    border-top: 1px dashed #000;
+    margin: 8px 0;
+  }
+  .item {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+  }
+  .total {
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+  <div class="invoice">
+    <h1>فاتورة مبيعات</h1>
+    <div class="line"></div>
+    <div class="item"><span>منتج 1</span><span>50 EGP</span></div>
+    <div class="item"><span>منتج 2</span><span>30 EGP</span></div>
+    <div class="line"></div>
+    <div class="total">الإجمالي: 80 EGP</div>
+  </div>
+</body>
+</html>

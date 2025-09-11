@@ -1,0 +1,311 @@
+const { contextBridge, ipcRenderer } = require("electron");
+const log = require("electron-log");
+
+// Security: Validate channel names to prevent injection
+const validChannels = {
+  // Authentication channels
+  "auth:login": true,
+  "auth:logout": true,
+  "auth:check": true,
+  "auth:register": true,
+
+  // User channels
+  "users:create": true,
+  "users:getAll": true,
+  "users:getById": true,
+  "users:update": true,
+  "users:delete": true,
+  "users:search": true,
+
+  // Permissions channels
+  "permissions:getAll": true,
+  "permissions:getByCategory": true,
+  "permissions:getUserPermissions": true,
+  "permissions:updateUserPermissions": true,
+  "permissions:grant": true,
+  "permissions:revoke": true,
+  "permissions:hasPermission": true,
+
+
+  // Category channels
+  "categories:create": true,
+  "categories:getAll": true,
+  "categories:getById": true,
+  "categories:update": true,
+  "categories:delete": true,
+  "categories:search": true,
+
+  // Product channels
+  "products:getAll": true,
+  "products:getById": true,
+  "products:create": true,
+  "products:update": true,
+  "products:delete": true,
+  "products:search": true,
+  "products:getByBarcode": true,
+  "products:generateBarCode": true,
+  "products:printBarcode": true,
+
+
+
+  
+
+  // Invoice channels
+  "invoice:create": true,
+  "invoice:before": true,
+  "invoice:after": true,
+  "invoice:getAll": true,
+  "invoice:update": true,
+  "invoice:print": true,
+
+  
+
+  // Daily channels
+  "daily:get": true,
+  "daily:open": true,
+  "daily:close": true,
+
+  // Credit channels
+  "credit:create": true,
+  "credit:getAll": true,
+  "credit:getByDaily": true,
+  "credit:delete": true,
+
+  // Transaction channels
+  "transactions:get-product-transactions": true,
+ 
+  // Settings channels
+  "settings:getByDomain": true,
+  "settings:getByKey": true,
+  "settings:getAll": true,
+  "settings:update": true,
+  "settings:backupDatabase": true,
+
+  // System channels
+  "system:getVersion": true,
+  "system:restart": true,
+  "system:minimize": true,
+  "system:maximize": true,
+  "system:close": true,
+
+  // Report channels
+  "reports:daily-sales": true,
+  "reports:monthly-sales": true,
+  "reports:product-performance": true,
+  "reports:cashier-performance": true,
+  "reports:inventory": true,
+  "reports:financial-summary": true,
+
+
+  // pdf channels
+  "pdf:generate-report": true,
+
+
+  "units:getAll": true,
+  "units:create": true,
+  "units:update": true,
+  "units:delete": true
+
+};
+
+const safeInvoke = async (channel, ...args) => {
+  if (!validChannels[channel]) {
+    log.error("Invalid IPC channel:", channel);
+    throw new Error(`Invalid channel: ${channel}`);
+  }
+
+  try {
+    return await ipcRenderer.invoke(channel, ...args);
+  } catch (error) {
+    log.error("IPC invoke error:", { channel, error: error.message });
+    throw error;
+  }
+};
+
+const safeSend = (channel, ...args) => {
+  if (!validChannels[channel]) {
+    log.error("Invalid IPC channel:", channel);
+    throw new Error(`Invalid channel: ${channel}`);
+  }
+
+  try {
+    ipcRenderer.send(channel, ...args);
+  } catch (error) {
+    log.error("IPC send error:", { channel, error: error.message });
+    throw error;
+  }
+};
+
+contextBridge.exposeInMainWorld("electronAPI", {
+  auth: {
+    login: (credentials) => safeInvoke("auth:login", credentials),
+    logout: () => safeInvoke("auth:logout"),
+    checkAuth: () => safeInvoke("auth:check"),
+  },
+  users: {
+    create: (user) => safeInvoke("users:create", user),
+    getAll: (data) => safeInvoke("users:getAll", data),
+    getById: (id) => safeInvoke("users:getById", id),
+    search: (data) => safeInvoke("users:search", data),
+    update: (data) => safeInvoke("users:update", data),
+    delete: (id) => safeInvoke("users:delete", id),
+  },
+  permissions: {
+    getAll: () => safeInvoke("permissions:getAll"),
+    getByCategory: () => safeInvoke("permissions:getByCategory"),
+    getUserPermissions: (userId) => safeInvoke("permissions:getUserPermissions", userId),
+    updateUserPermissions: (data) => safeInvoke("permissions:updateUserPermissions", data),
+    grant: (data) => safeInvoke("permissions:grant", data),
+    revoke: (data) => safeInvoke("permissions:revoke", data),
+    hasPermission: (data) => safeInvoke("permissions:hasPermission", data),
+  },
+  settings: {
+    getAll: () => safeInvoke("settings:getAll"),
+    getByDomain: (key) => safeInvoke("settings:getByDomain", key),
+    update: (data) => safeInvoke("settings:update", data),
+    getByKey: (key) => safeInvoke("settings:getByKey", key),
+    backupDatabase: () => safeInvoke("settings:backupDatabase"),
+  },
+  categories: {
+    create: (data) => safeInvoke("categories:create", data),
+    getAll: (data) => safeInvoke("categories:getAll", data),
+    getById: (id) => safeInvoke("categories:getById", id),
+    search: (data) => safeInvoke("categories:search", data),
+    update: (data) => safeInvoke("categories:update", data),
+    delete: (id) => safeInvoke("categories:delete", id),
+  },
+  products: {
+    getAll: (data) => safeInvoke("products:getAll",data),
+    getById: (id) => safeInvoke("products:getById", id),
+    create: (product) => safeInvoke("products:create", product),
+    update: (id, product) => safeInvoke("products:update", id, product),
+    delete: (id) => safeInvoke("products:delete", id),
+    search: (query) => safeInvoke("products:search", query),
+    getByBarcode: (data) => safeInvoke("products:getByBarcode", data),
+    generateBarCode: () => safeInvoke("products:generateBarCode"),
+    AddQuantityToBranch: (data) => safeInvoke("products:addToBranch", data),
+    printBarcode: (data) => safeInvoke("products:printBarcode", data),
+  },
+
+   branches: {
+    getAll: (data) => safeInvoke("branches:getAll",data),
+    create: (branch) => safeInvoke("branches:create", branch),
+    delete: (id) => safeInvoke("branches:delete", id),
+    search: (query) => safeInvoke("branches:search", query),
+    switch: (id) => safeInvoke("branches:switch", id),
+    getAllWithoutPagination: () => safeInvoke("branches:getAllWithoutPagination"),
+  },
+
+  invoice: {
+    create: (data) => safeInvoke("invoice:create", data),
+    after: (data) => safeInvoke("invoice:after", data),
+    before: (data) => safeInvoke("invoice:before", data),
+    getAll: (data) => safeInvoke("invoice:getAll", data),
+    update: (data) => safeInvoke("invoice:update", data),
+    print: (data) => safeInvoke("invoice:print", data),
+
+    
+  },
+  credit: {
+    getAll: (data) => safeInvoke("credit:getAll",data),
+    getByDaily: (data) => safeInvoke("credit:getByDaily",data),
+    create: (data) => safeInvoke("credit:create", data),
+    delete: (id) => safeInvoke("credit:delete", id),
+  },
+  daily: {
+    get: () => safeInvoke("daily:get"),
+    open: (data) => safeInvoke("daily:open", data),
+    close: (data) => safeInvoke("daily:close", data),
+  },
+  transactions: {
+    getProductTransactions: (productId) => safeInvoke("transactions:get-product-transactions", productId),
+  },
+
+  system: {
+    getVersion: () => safeInvoke("system:getVersion"),
+    restart: () => safeInvoke("system:restart"),
+    minimize: () => safeInvoke("system:minimize"),
+    maximize: () => safeInvoke("system:maximize"),
+    close: () => safeInvoke("system:close"),
+  },
+
+  reports:{
+    dailySales: () => safeInvoke("reports:daily-sales"),
+    cashierPerformance: (data) => safeInvoke("reports:cashier-performance",data),
+    monthlySales: () => safeInvoke("reports:monthly-sales"),
+    productPerformance: (data) => safeInvoke("reports:product-performance",data),
+    inventory: (data) => safeInvoke("reports:inventory",data),
+    getFinancialSummaryReport: (data) => safeInvoke("reports:financial-summary",data),
+  },
+
+  pdf: {
+    generateReport: (data) => safeInvoke("pdf:generate-report", data),
+  },
+
+  units: {
+    create: (data) => safeInvoke("units:create", data),
+    getAll: () => safeInvoke("units:getAll"),
+    update: (id, data) => safeInvoke("units:update", id, data),
+    delete: (id) => safeInvoke("units:delete", id),
+  },
+
+  on: (channel, callback) => {
+    if (!validChannels[channel]) {
+      log.error("Invalid IPC channel for listener:", channel);
+      return;
+    }
+    ipcRenderer.on(channel, callback);
+  },
+  removeListener: (channel, callback) => {
+    if (!validChannels[channel]) {
+      log.error("Invalid IPC channel for removeListener:", channel);
+      return;
+    }
+    ipcRenderer.removeListener(channel, callback);
+  },
+  removeAllListeners: (channel) => {
+    if (!validChannels[channel]) {
+      log.error("Invalid IPC channel for removeAllListeners:", channel);
+      return;
+    }
+    ipcRenderer.removeAllListeners(channel);
+  },
+});
+  contextBridge.exposeInMainWorld("assets", {
+  /**
+   * يعطيك المسار الكامل للـ asset سواء في development أو build
+   * @param {string} relativePath - المسار النسبي من مجلد public أو build
+   */
+  getPath: (relativePath) => {
+    if (isDev) {
+      // أثناء التطوير: مجلد public
+      return path.join(__dirname, "../../renderer/public", relativePath);
+    } else {
+      // بعد build: مجلد build/resources أو مسار النسخة النهائية
+      return path.join(process.resourcesPath, "renderer", "build", relativePath);
+    }
+  },
+});
+
+contextBridge.exposeInMainWorld("electronEnv", {
+  platform: process.platform,
+  arch: process.arch,
+  versions: {
+    node: process.versions.node,
+    chrome: process.versions.chrome,
+    electron: process.versions.electron,
+  },
+});
+
+log.info("Preload script loaded successfully");
+
+// OPTIONAL: remove node globals
+delete global.require;
+delete global.exports;
+delete global.module;
+delete global.__dirname;
+delete global.__filename;
+delete global.process;
+delete global.Buffer;
+
+log.info("Node.js globals removed for security");
