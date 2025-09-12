@@ -204,10 +204,9 @@ INSERT INTO settings (id, domain, key, value, name, type) VALUES
 (3, 'daily', 'closeWithSchudledInvoice', 'false', 'غلف اليومية بوجود فواتير أجل', 'boolean'),
 (4, 'backup', 'backupPath', '/src/main/database/backup', 'مسار النسخ الاحتياطي لقاعدة البيانات', 'string'),
 (5, 'general', 'companyName', '', 'اسم الشركه', 'string'),
-(8, 'general', 'companyPhone', '', 'هاتف الشركة', 'string');
-(9, 'general', 'companyAddress', '', 'عنوان الشركة', 'string');
-(6, 'general', 'productPrinter', '', 'اسم طابعه المنتجات', 'string'),
-(7, 'general', 'invoicePrinter', '', 'اسم طابعه الفواتير', 'string');
+(6, 'general', 'companyPhone', '', 'هاتف الشركة', 'string'),
+(7, 'general', 'companyAddress', '', 'عنوان الشركة', 'string'),
+(8, 'general', 'invoicePrinter', '', 'اسم طابعه الفواتير', 'string');
 
 -- Insert initial data for user_permissions
 INSERT INTO user_permissions (id, user_id, permission_id, granted_by, granted_at) VALUES

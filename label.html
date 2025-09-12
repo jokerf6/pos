@@ -6,18 +6,27 @@
     @page { size: 38mm 25mm; margin: 0; }
     body {
       margin: 0; padding: 0;
-      width: 100vw; height: 100vh;
-      display: flex; justify-content: center; align-items: center;
+  width: 38mm; 
+      height: 25mm;      display: flex; justify-content: center; align-items: center;
+         direction: rtl;                /* ✅ اتجاه النصوص كله RTL */
+      unicode-bidi: bidi-override;   /* ✅ إجبار الالتزام بالـ RT */
+      page-break-after: avoid;
+page-break-before: avoid;
+page-break-inside: avoid;
     }
     .label {
       width: 38mm; height: 25mm;
       display: flex; flex-direction: column; justify-content: center; align-items: center;
       font-family: Arial, sans-serif; font-size: 8pt; text-align: center;
-      box-sizing: border-box;
+            overflow: hidden;
+            page-break-after: avoid;
+page-break-before: avoid;
+page-break-inside: avoid;
+
     }
-    img { width: 55%; height: auto; margin-top: 2px; object-fit: contain; }
-    #name2 { font-weight: bold; font-size: 9pt; }
-    #name, #price { font-weight: bold; font-size: 9pt; margin: 2px 0; }
+    img { width: 50%; height: 40%; margin-top: 2px; object-fit: contain; }
+    #name2 { font-weight: bold; font-size: 6pt;width: 100%; text-align: center; direction: rtl }
+    #name, #price { font-weight: bold; font-size: 6pt; margin: 2px 0; width: 100%; text-align: center;direction: rtl; }
   </style>
 </head>
 <body>

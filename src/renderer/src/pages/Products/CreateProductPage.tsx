@@ -337,20 +337,7 @@ const CreateProductPage = () => {
           confirmLabel="طباعة"
           cancelLabel="إلغاء"
         >
-          <div className="flex items-center gap-2 flex-row-reverse">
-            <label htmlFor="barcodeCount" className="text-sm whitespace-nowrap">
-              عدد الباركود
-            </label>
-            <Input
-              id="barcodeCount"
-              name="barcodeCount"
-              min={1}
-              max={100}
-              type="number"
-              value={barcodeNumber}
-              onChange={(e) => setBarcodeNumber(Number(e.target.value))}
-            />
-          </div>
+          
         </Modal>
 
         {/* Header */}
