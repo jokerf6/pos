@@ -471,16 +471,13 @@ async function deleteProduct(event, id) {
 async function printBarcode(event, data) {
   const {name,price,generated_code,barcode,copies} = data;
  const win = new BrowserWindow({
-    width: 300,
-    height: 200,
-    autoHideMenuBar: true,
-    show:false
+   autoHideMenuBar: true,
+  
+   show: false,
+
   });
     const db = getDatabase();
-const printer = await db.all(
-      "SELECT * FROM settings WHERE `key` = ? LIMIT 1",
-      ["productPrinter"]
-    );
+
   const company = await db.all(
       "SELECT * FROM settings WHERE `key` = ? LIMIT 1",
       ["companyName"]
@@ -496,14 +493,13 @@ const printer = await db.all(
   win.loadFile("label.html", { query: product });
 
   win.webContents.on("did-finish-load", () => {
-    const printerName = printer[0]?.value || ""; 
     
     win.webContents.print(
       {
-        silent: true,             
+        silent: false,             
         printBackground: true,
-        deviceName: printerName, 
-       copies: copies            
+        margins: { marginType: 'none' } // ✅ بدون هوامش
+       
       },
       (success, failureReason) => {
         if (!success) {

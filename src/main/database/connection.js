@@ -213,6 +213,7 @@ INSERT INTO settings (id, domain, key, value, name, type) VALUES
 (10, 'general', 'productPrinter', '', 'اسم طابعه المنتجات', 'string'),
 (11, 'general', 'invoicePrinter', '', 'اسم طابعه الفواتير', 'string');
 
+
 -- Insert initial data for user_permissions
 INSERT INTO user_permissions (id, user_id, permission_id, granted_by, granted_at) VALUES
 
