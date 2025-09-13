@@ -88,9 +88,11 @@ CREATE TABLE IF NOT EXISTS invoices (
   customerName TEXT,
   customerPhone TEXT,
   paymentType TEXT CHECK(paymentType IN ('خالص','أجل','مرتجع')) NOT NULL,
+  paymentMethod TEXT CHECK(paymentMethod IN ('كاش','فيزا')) NOT NULL,
   discount DECIMAL(10,2) DEFAULT 0.00,
   total DECIMAL(10,2) NOT NULL,
   totalAfterDiscount DECIMAL(10,2) NOT NULL,
+  tax DECIMAL(10,2) DEFAULT 0.00,
   dailyId INTEGER,
   userId INTEGER,
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -204,10 +206,12 @@ INSERT INTO settings (id, domain, key, value, name, type) VALUES
 (3, 'daily', 'closeWithSchudledInvoice', 'false', 'غلف اليومية بوجود فواتير أجل', 'boolean'),
 (4, 'backup', 'backupPath', '/src/main/database/backup', 'مسار النسخ الاحتياطي لقاعدة البيانات', 'string'),
 (5, 'general', 'companyName', '', 'اسم الشركه', 'string'),
-(8, 'general', 'companyPhone', '', 'هاتف الشركة', 'string');
-(9, 'general', 'companyAddress', '', 'عنوان الشركة', 'string');
-(6, 'general', 'productPrinter', '', 'اسم طابعه المنتجات', 'string'),
-(7, 'general', 'invoicePrinter', '', 'اسم طابعه الفواتير', 'string');
+(6, 'general', 'companyPhone', '', 'هاتف الشركة', 'string'),
+(7, 'general', 'companyAddress', '', 'عنوان الشركة', 'string'),
+(8, 'general', 'tax', '', 'الضريبة المضافة', 'number'),
+(9, 'general', 'showTax', 'true', 'إظهار الضريبة في الفاتورة', 'boolean'),
+(10, 'general', 'productPrinter', '', 'اسم طابعه المنتجات', 'string'),
+(11, 'general', 'invoicePrinter', '', 'اسم طابعه الفواتير', 'string');
 
 -- Insert initial data for user_permissions
 INSERT INTO user_permissions (id, user_id, permission_id, granted_by, granted_at) VALUES

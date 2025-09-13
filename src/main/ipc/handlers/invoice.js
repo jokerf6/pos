@@ -5,6 +5,7 @@ const { startOfDay, endOfDay } = require("date-fns");
 const pkg = require("electron-pos-printer");
 const { PosPrinter } = pkg;
 const Store = require("electron-store");
+const { t } = require('i18next');
 
 /**
  * Product handler
@@ -14,6 +15,7 @@ async function createInvoice(event, data) {
     customerName,
     customerPhone,
     paymentType,
+    paymentMethod,
     invoiceDiscount,
     total,
     netTotal,
@@ -42,13 +44,21 @@ async function createInvoice(event, data) {
     if (rows.length === 0) {
       throw new Error("برجاء فتح يومية جديدة");
     }
+   const data = await db.all(
+      "SELECT * FROM settings WHERE `key` = ? LIMIT 1",
+      ["tax"]
+    );
+    const settingTax = parseFloat(data[0]?.value) || 0;
+    const tax = total * (settingTax / 100);
 
     const invoice = await db.run(
-      "INSERT INTO invoices (customerName, customerPhone, paymentType,discount,total,totalAfterDiscount,dailyId) VALUES (?,?, ?, ?,?,?,?)",
+      "INSERT INTO invoices (tax, customerName, customerPhone, paymentType,paymentMethod,discount,total,totalAfterDiscount,dailyId) VALUES (?,?,?,?, ?, ?,?,?,?)",
       [
+        tax,
         customerName,
         customerPhone,
         paymentType,
+        paymentMethod,
         invoiceDiscount,
         total,
         netTotal,
@@ -313,6 +323,7 @@ async function getAllInvoices(event, data) {
         i.id AS invoice_id,
         i.customerName,
         i.paymentType,
+        i.paymentMethod,
         i.createdAt,
         COUNT(ii.id) AS total_items
       FROM invoices i
@@ -373,33 +384,6 @@ async function updateInvoice(event, data) {
 
 
 
-/*
- async function PrintInvoice() {
-  try {
-    // فتح اتصال مع الطابعة
-    const device = new escpos.USB();
-    const printer = new escpos.Printer(device, { encoding: "CP864" }); // CP864 للغة العربية
-
-    device.open(() => {
-      printer
-        .align('CT')
-        .size(2, 2)
-        .text('فاتورة مبيعات')
-        .size(1, 1)
-        .align('LT')
-        .text('--------------------------')
-        .text('المنتج: كيبورد')
-        .text('السعر: 150.00')
-        .text('--------------------------')
-        .cut()
-        .close();
-    });
-  } catch (err) {
-    console.error("خطأ في الطباعة:", err);
-  }
-}
-*/
-
 
  async function PrintInvoice(event, data) {
   try {
@@ -408,6 +392,7 @@ async function updateInvoice(event, data) {
     customerName,
     customerPhone,
     paymentType,
+    paymentMethod,
     invoiceDiscount,
     total,
     netTotal,
@@ -431,11 +416,20 @@ const printer = await db.all(
       ["companyAddress"]
     );
 
+       const keyys = await db.all(
+      "SELECT * FROM settings WHERE `key` = ? LIMIT 1",
+      ["tax"]
+    );
+    const settingTax = parseFloat(keyys[0]?.value) || 0;
+    console.log("settingTax", settingTax);
+    console.log(total);
+    console.log(netTotal);
+    const tax = total  * (settingTax / 100);
+    console.log(tax);
     const options = {
-    preview: false,
+    silent: false,
+    preview: true,
     margin: '0 0 0 0',
-    copies: 1,
-    printerName: printer[0]?.value || '', // اسم الطابعة كما هو معرف في النظام
     timeOutPerLine: 400,
     pageSize: '80mm', // page size,
         defaultStyle: {
@@ -582,20 +576,27 @@ data2.push(       {
             ],
             [
              { type: 'text', value: '', style: { textAlign: 'right', fontSize: '12px' } },
-                { type: 'text', value: 'كاش', style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
+                { type: 'text', value: paymentMethod, style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
                 { type: 'text', value: 'طريقة الدفع', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
             ],
             [
               { type: 'text', value: ' جنيه مصري', style: { textAlign: 'left', fontSize: '12px',fontWeight: 'bold' } },
-                { type: 'text', value: String(total), style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
+                { type: 'text', value: String(parseInt(total).toFixed(2)), style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
 
                 { type: 'text', value: 'الإجمالي', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
             ],
             [
+              { type: 'text', value: ' جنيه مصري', style: { textAlign: 'left', fontSize: '12px',fontWeight: 'bold' } },
+                { type: 'text', value: String(tax.toFixed(2)), style: { textAlign: 'center', fontSize: '12px',fontWeight: 'bold' } },
 
-                            { type: 'text', value: ' جنيه مصري', style: { textAlign: 'left',border: '1px dashed black', fontSize: '12px',fontWeight: 'bold' } },
+                { type: 'text', value: 'الضريبة', style: { textAlign: 'right', fontSize: '12px',fontWeight: 'bold' } }
+            ],
+            
+            [
 
-                { type: 'text', value: String(netTotal), style: { textAlign: 'left', fontSize: '12px', border: '1px dashed black',fontWeight: 'bold' } },
+              { type: 'text', value: ' جنيه مصري', style: { textAlign: 'left',border: '1px dashed black', fontSize: '12px',fontWeight: 'bold' } },
+
+                { type: 'text', value: String(Math.max((+netTotal), 0).toFixed(2)), style: { textAlign: 'center', fontSize: '12px', border: '1px dashed black',fontWeight: 'bold' } },
 
                 { type: 'text', value: 'المطلوب', style: { textAlign: 'right', fontSize: '12px', border: '1px dashed black',fontWeight: 'bold' } }
             ]

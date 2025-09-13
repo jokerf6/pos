@@ -35,6 +35,7 @@ import { showSuccess, showWarning } from "components/ui/sonner";
 import ProductsPage from "pages/Products";
 import ProductsDataTable from "./components/productsComponent";
 import columns from "pages/Products/components/columns.component";
+import { getByKey } from "store/slices/settingsSlice";
 
 // -------------------- Interfaces --------------------
 interface InvoiceHeaderProps {
@@ -67,6 +68,12 @@ interface InvoiceDetails {
   customerPhone: string;
   paymentType: string;
   invoiceDiscount: number;
+  paymentMethod: string;
+  tax?: number;
+  total?: number;
+  discount?: number;
+  totalAfterDiscount?: number;
+  
 }
 interface ProductTableProps {
   products: Product[];
@@ -78,8 +85,10 @@ interface ProductTableProps {
 interface InvoiceSummaryProps {
   products: Product[];
   discount: number;
+  details:any;
   onDiscountChange: (discount: number) => void;
   isReadOnly: boolean;
+  settingTax: number;
 }
 
 // -------------------- Components --------------------
@@ -179,7 +188,8 @@ const CustomerDetailsSection: React.FC<CustomerDetailsProps> = ({
           <select
             value={details.paymentType}
             onChange={async (e) => {
-              handleDetailChange("paymentType", e.target.value);
+              const newValue = e.target.value;
+              handleDetailChange("paymentType", newValue);
               if (isReadOnly) {
                 console.log(
                   "Payment type is read-only, cannot update.",
@@ -191,7 +201,7 @@ const CustomerDetailsSection: React.FC<CustomerDetailsProps> = ({
                   await dispatch(
                     updateInvoice({
                       invoiceId: currentInvoiceId,
-                      paymentType: e.target.value,
+                      paymentType: newValue,
                     })
                   );
                   showSuccess("تم تحديث الفاتورة بنجاح");
@@ -204,6 +214,31 @@ const CustomerDetailsSection: React.FC<CustomerDetailsProps> = ({
             <option value="خالص">خالص</option>
             <option value="أجل">أجل</option>
             <option value="مرتجع">مرتجع</option>
+          </select>
+        </div>
+
+        <div className="relative">
+          <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <select
+            value={details.paymentMethod}
+            onChange={async (e) => {
+              const newValue = e.target.value;
+              handleDetailChange("paymentMethod", newValue);
+              console.log("Payment method update");
+              if (currentInvoiceId) {
+                await dispatch(
+                  updateInvoice({
+                    invoiceId: currentInvoiceId,
+                    paymentMethod: newValue,
+                  })
+                );
+              }
+            }}
+            className={`w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 appearance-none cursor-pointer ${isPaymentTypeDisabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+            disabled={isPaymentTypeDisabled}
+          >
+            <option value="كاش">كاش</option>
+            <option value="فيزا">فيزا</option>
           </select>
         </div>
       </div>
@@ -379,17 +414,26 @@ const ProductTable: React.FC<ProductTableProps> = ({
 const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({
   products,
   discount,
+  details,
   onDiscountChange,
   isReadOnly,
+  settingTax,
 }) => {
-  const subtotal = products.reduce(
+
+  const subtotal = details.total || products.reduce(
     (sum, product) => sum + product.quantity * product.price,
     0
   );
-  const discountAmount = (subtotal * discount) / 100;
-  const total = subtotal - discountAmount;
+  const tax =details.tax ||  subtotal * (settingTax/100);
+  console.log("Subtotal:", subtotal,discount
+    , tax);
+
+  const discountAmount =((details.total +details.tax ) * (details.discount/100)) ||   ((subtotal+tax) * (discount/ 100));
+
+  const total =details.totalAfterDiscount ||  (subtotal+tax) - discountAmount;
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <pre>{JSON.stringify(details,null,2)}</pre>
       <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
         <Calculator className="h-5 w-5 text-gray-600" />
         ملخص الفاتورة
@@ -424,6 +468,17 @@ const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({
             <span className="text-gray-600">%</span>
             <span className="font-medium text-red-600 ml-2">
               -{discountAmount.toFixed(2)} ج.م
+            </span>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 pt-3">
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-semibold text-gray-900">
+              الضريبة المضافة:
+            </span>
+            <span className="text-xl font-bold text-green-600">
+              {tax.toFixed(2)} ج.م
             </span>
           </div>
         </div>
@@ -554,6 +609,8 @@ const PrintableInvoice: React.FC<{
 const CreateInvoicePage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  // State
   const [products, setProducts] = useState<Product[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [openPrint, setOpenPrint] = useState(false);
@@ -562,7 +619,17 @@ const CreateInvoicePage: React.FC = () => {
     customerPhone: "",
     paymentType: "خالص",
     invoiceDiscount: 0,
+    paymentMethod: "كاش",
+    tax:0,
+    total:0,
+    discount:0,
+    totalAfterDiscount:0,
   });
+  const [current, setCurrent] = useState(null);
+  
+  // Use ref to store current invoice details for save operations
+  const currentInvoiceDetailsRef = useRef(invoiceDetails);
+  
   const [currentInvoiceId, setCurrentInvoiceId] = useState<number | null>(null);
   const [isViewingArchived, setIsViewingArchived] = useState(false);
   const [isInvoiceCreated, setIsInvoiceCreated] = useState(false);
@@ -573,14 +640,21 @@ const CreateInvoicePage: React.FC = () => {
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [isFirstInvoice, setIsFirstInvoice] = useState(false);
   const [isLastInvoice, setIsLastInvoice] = useState(false);
+  const [settingTax, setTax] = useState(0);
+  
   const to = null;
   const from = null;
   const invoiceType = null;
 
+  // Update ref whenever invoiceDetails changes
+  useEffect(() => {
+    currentInvoiceDetailsRef.current = invoiceDetails;
+  }, [invoiceDetails]);
+
   const showWarningFunc = (message: string) => {
     setWarningMessage(message);
     showWarning(message);
-    setTimeout(() => setWarningMessage(null), 3000); // Auto-hide after 3 seconds
+    setTimeout(() => setWarningMessage(null), 3000);
   };
 
   const focusSearchInput = () => {
@@ -592,13 +666,11 @@ const CreateInvoicePage: React.FC = () => {
 
     // Keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl + / - Focus search input
       if (e.ctrlKey && e.key === "/") {
         e.preventDefault();
         focusSearchInput();
       }
 
-      // Ctrl + S - Save invoice
       if (e.ctrlKey && e.key === "s") {
         e.preventDefault();
         if (!isViewingArchived && products.length > 0) {
@@ -606,7 +678,6 @@ const CreateInvoicePage: React.FC = () => {
         }
       }
 
-      // Ctrl + P - Print invoice
       if (e.ctrlKey && e.key === "p") {
         e.preventDefault();
         if (products.length > 0) {
@@ -614,13 +685,11 @@ const CreateInvoicePage: React.FC = () => {
         }
       }
 
-      // Ctrl + N - New invoice
       if (e.ctrlKey && e.key === "n") {
         e.preventDefault();
         resetInvoice();
       }
 
-      // Enter - Add product
       if (e.key.toLowerCase() === "enter") {
         e.preventDefault();
         if (!isViewingArchived && searchValue.trim() !== "") {
@@ -628,7 +697,6 @@ const CreateInvoicePage: React.FC = () => {
         }
       }
 
-      // Escape - Clear search or close modals
       if (e.key === "Escape") {
         if (openPrint) {
           setOpenPrint(false);
@@ -637,7 +705,6 @@ const CreateInvoicePage: React.FC = () => {
         }
       }
 
-      // F1 - Show shortcuts help
       if (e.key === "F1") {
         e.preventDefault();
         alert(`اختصارات لوحة المفاتيح:
@@ -651,7 +718,6 @@ Escape : إلغاء/إغلاق
 F1 : عرض هذه المساعدة`);
       }
 
-      // Arrow keys for navigation between invoices
       if (e.ctrlKey && e.key === "ArrowLeft") {
         e.preventDefault();
         if (canGoBefore && !isLoading) {
@@ -688,6 +754,11 @@ F1 : عرض هذه المساعدة`);
       customerPhone: "",
       paymentType: "خالص",
       invoiceDiscount: 0,
+      paymentMethod: "كاش",
+      tax:0,
+      total:0,
+      discount:0,
+      totalAfterDiscount:0,
     });
     fetchPreviousInvoice(false);
     setCurrentInvoiceId(null);
@@ -700,12 +771,18 @@ F1 : عرض هذه المساعدة`);
     focusSearchInput();
   }, []);
 
-  const handleDetailChange = (field: string, value: string | number) => {
-    setInvoiceDetails((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  // Fixed handleDetailChange function
+  const handleDetailChange = useCallback((field: string, value: string | number) => {
+    console.log("Detail change:", field, value);
+    setInvoiceDetails((prev) => {
+      const newDetails = {
+        ...prev,
+        [field]: value,
+      };
+      console.log("Updated details:", newDetails);
+      return newDetails;
+    });
+  }, []);
 
   const handleUpdateQuantity = (index: number, quantity: number) => {
     setProducts((prev) =>
@@ -740,7 +817,6 @@ F1 : عرض هذه المساعدة`);
     );
     console.log("returned products->", searchValue, data);
 
-    // Check if product exists and has available quantity
     if (!data?.payload || data.payload.quantity <= 0) {
       showWarningFunc(
         `المنتج "${data?.payload?.name || searchValue}" غير متوفر في المخزون`
@@ -752,8 +828,8 @@ F1 : عرض هذه المساعدة`);
       id: data?.payload?.id,
       name: data?.payload?.name,
       price: +data?.payload?.price,
-      quantity: 1, // Default to 1
-      availableQuantity: data?.payload?.quantity, // Store available quantity separately
+      quantity: 1,
+      availableQuantity: data?.payload?.quantity,
       barcode: data.payload.barcode,
     };
     setProducts((prev) => [...prev, sampleProduct]);
@@ -767,12 +843,17 @@ F1 : عرض هذه المساعدة`);
     }
     setIsSaving(true);
     try {
+      // Use the ref to get the most current values
+      const currentDetails = currentInvoiceDetailsRef.current;
+      
       const subtotal = products.reduce(
         (sum, product) => sum + product.quantity * product.price,
         0
       );
-      const discountAmount = (subtotal * invoiceDetails.invoiceDiscount) / 100;
-      const total = subtotal - discountAmount;
+      const tax = subtotal * (settingTax/100);
+      const discountAmount = ((subtotal+tax ) * currentDetails.invoiceDiscount) / 100;
+      const total = (subtotal+tax) - discountAmount;
+      
       const invoiceData = {
         products: products.map((product) => ({
           id: product.id,
@@ -782,11 +863,13 @@ F1 : عرض هذه المساعدة`);
         })),
         total: subtotal,
         netTotal: total,
-        customerName: invoiceDetails.customerName,
-        customerPhone: invoiceDetails.customerPhone,
-        invoiceDiscount: invoiceDetails.invoiceDiscount,
-        paymentType: invoiceDetails.paymentType,
+        customerName: currentDetails.customerName,
+        customerPhone: currentDetails.customerPhone,
+        invoiceDiscount: currentDetails.invoiceDiscount,
+        paymentType: currentDetails.paymentType,
+        paymentMethod: currentDetails.paymentMethod,
       };
+      
       const result = await dispatch(createInvoice(invoiceData));
 
       if (result.meta.requestStatus === "fulfilled") {
@@ -796,15 +879,12 @@ F1 : عرض هذه المساعدة`);
         setIsViewingArchived(true);
         resetInvoice();
 
-        // After saving, check if there are previous/next invoices
         if (result.payload?.id) {
-          // Check if there's a previous invoice
           const prevResult = await dispatch(
             beforeInvoice({ id: result.payload.id })
           );
           setCanGoBefore(!!prevResult?.payload?.data);
 
-          // Check if there's a next invoice
           const nextResult = await dispatch(
             afterInvoice({
               id: result.payload.id,
@@ -824,19 +904,27 @@ F1 : عرض هذه المساعدة`);
     }
   };
 
-  const SaveAndPrintInvoice = async () => {
+  const SaveAndPrintInvoice = useCallback(async () => {
     if (products.length === 0) {
       alert("يجب إضافة منتج واحد على الأقل للفاتورة");
       return;
     }
+    console.log("Saving and printing invoice...");
     setIsSaving(true);
+    
     try {
+      // Use the ref to get the most current values
+      const currentDetails = currentInvoiceDetailsRef.current;
+      console.log("Current invoice details at save time:", currentDetails);
+      
       const subtotal = products.reduce(
         (sum, product) => sum + product.quantity * product.price,
         0
       );
-      const discountAmount = (subtotal * invoiceDetails.invoiceDiscount) / 100;
-      const total = subtotal - discountAmount;
+      const tax = subtotal * (settingTax/100);
+      const discountAmount = ((subtotal+tax ) * currentDetails.invoiceDiscount) / 100;
+      const total = (subtotal+tax) - discountAmount;
+      
       const invoiceData = {
         products: products.map((product) => ({
           id: product.id,
@@ -846,11 +934,14 @@ F1 : عرض هذه المساعدة`);
         })),
         total: subtotal,
         netTotal: total,
-        customerName: invoiceDetails.customerName,
-        customerPhone: invoiceDetails.customerPhone,
-        invoiceDiscount: invoiceDetails.invoiceDiscount,
-        paymentType: invoiceDetails.paymentType,
+        customerName: currentDetails.customerName,
+        customerPhone: currentDetails.customerPhone,
+        invoiceDiscount: currentDetails.invoiceDiscount,
+        paymentType: currentDetails.paymentType,
+        paymentMethod: currentDetails.paymentMethod,
       };
+      
+      console.log("Saving invoice with data:", invoiceData);
       const result = await dispatch(createInvoice(invoiceData));
       await dispatch(printInvoice(invoiceData));
 
@@ -859,17 +950,25 @@ F1 : عرض هذه المساعدة`);
         setIsInvoiceCreated(true);
         setCurrentInvoiceId(result.payload?.id || null);
         setIsViewingArchived(true);
+        
+        // Clear after save but keep current payment method preference
+        const savedPaymentMethod = currentDetails.paymentMethod;
         resetInvoice();
+        
+        // Restore the payment method after reset
+        setTimeout(() => {
+          setInvoiceDetails(prev => ({
+            ...prev,
+            paymentMethod: savedPaymentMethod
+          }));
+        }, 100);
 
-        // After saving, check if there are previous/next invoices
         if (result.payload?.id) {
-          // Check if there's a previous invoice
           const prevResult = await dispatch(
             beforeInvoice({ id: result.payload.id })
           );
           setCanGoBefore(!!prevResult?.payload?.data);
 
-          // Check if there's a next invoice
           const nextResult = await dispatch(
             afterInvoice({
               id: result.payload.id,
@@ -887,27 +986,33 @@ F1 : عرض هذه المساعدة`);
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [products, settingTax, dispatch, to, from, invoiceType, resetInvoice]);
 
-  const updateInvoiceUI = (data: any) => {
-    console.log("Updating invoice UI with data:", data);
+  const updateInvoiceUI = useCallback((data: any) => {
     setProducts(data.items || []);
+    console.log("------------------------");
+    console.log(data);
     setInvoiceDetails({
       customerName: data.customerName || "",
       customerPhone: data.customerPhone || "",
       paymentType: data.paymentType || "خالص",
-      invoiceDiscount: data.invoiceDiscount || 0,
+      invoiceDiscount: data.discount || 0,
+      tax: data.tax || 0,
+      total: data.total || 0,
+      totalAfterDiscount: data.totalAfterDiscount || 0,
+      discount: data.discount || 0,
+      paymentMethod: data.paymentMethod || "كاش",
     });
     setCurrentInvoiceId(data.id);
     setIsViewingArchived(true);
     setIsInvoiceCreated(true);
 
-    // Update navigation flags based on invoice position
     setIsFirstInvoice(!!data.first);
     setIsLastInvoice(!!data.last);
     setCanGoBefore(!data.first || data.first === data.id ? false : true);
     setCanGoAfter(!data ? false : true);
-  };
+  },[]);
+
   async function fetchPreviousInvoice(newInvoice = true) {
     console.log("Fetching previous invoice for ID:", currentInvoiceId);
     const result = await dispatch(
@@ -921,9 +1026,19 @@ F1 : عرض هذه المساعدة`);
       setCanGoBefore(true);
     }
   }
+
+  useEffect(() => {
+    async function fetchData() {
+      const data = await dispatch(getByKey("tax") as any);
+      setTax(data?.payload?.data.value || 0);
+    }
+    fetchData();
+  }, [dispatch]);
+
   useEffect(() => {
     fetchPreviousInvoice();
   }, []);
+
   const previous = async () => {
     console.log("inv->", currentInvoiceId);
     setIsLoading(true);
@@ -937,6 +1052,7 @@ F1 : عرض هذه المساعدة`);
         setCanGoBefore(false);
         setIsFirstInvoice(true);
       } else {
+        
         updateInvoiceUI(data);
       }
     } catch (error) {
@@ -975,18 +1091,18 @@ F1 : عرض هذه المساعدة`);
     }
   };
 
-  // Determine if payment type should be disabled
   const isPaymentTypeDisabled =
     isViewingArchived &&
     (invoiceDetails.paymentType === "خالص" ||
       invoiceDetails.paymentType === "مرتجع");
+
   const handelInfo = (item: any) => {
     addSampleProduct(item.barcode);
   };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6" dir="rtl">
       <div className="container mx-auto max-w-7xl">
-        {/* Warning Message */}
         {warningMessage && (
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded">
             <div className="flex">
@@ -1019,6 +1135,7 @@ F1 : عرض هذه المساعدة`);
           onNewInvoice={resetInvoice}
           isLoading={isLoading}
         />
+        
         <CustomerDetailsSection
           details={invoiceDetails}
           currentInvoiceId={currentInvoiceId}
@@ -1026,7 +1143,7 @@ F1 : عرض هذه المساعدة`);
           isReadOnly={isViewingArchived}
           isPaymentTypeDisabled={isPaymentTypeDisabled}
         />
-        {/* Search Section */}
+        
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Search className="h-5 w-5 text-gray-600" />
@@ -1066,6 +1183,7 @@ F1 : عرض هذه المساعدة`);
             />
           )}
         </div>
+        
         <ProductTable
           products={products}
           onUpdateQuantity={handleUpdateQuantity}
@@ -1073,12 +1191,15 @@ F1 : عرض هذه المساعدة`);
           onRemoveProduct={handleRemoveProduct}
           isReadOnly={isViewingArchived}
         />
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <InvoiceSummary
             products={products}
-            discount={invoiceDetails.invoiceDiscount}
+            discount={invoiceDetails.invoiceDiscount || 0}
+            details={invoiceDetails}
             onDiscountChange={handleDiscountChange}
             isReadOnly={isViewingArchived}
+            settingTax={settingTax}
           />
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -1151,7 +1272,7 @@ F1 : عرض هذه المساعدة`);
             </div>
           </div>
         </div>
-        {/* Print Modal */}
+        
         <Modal
           onConfirm={async () => {
             window.print();
@@ -1198,7 +1319,6 @@ F1 : عرض هذه المساعدة`);
                 </p>
               </div>
 
-              {/* Printable Invoice Preview */}
               <div className="border hidden border-gray-300 rounded-lg p-4 bg-white">
                 <PrintableInvoice
                   products={products}

@@ -3,7 +3,7 @@ import { useAppDispatch } from "../../../store";
 import { afterInvoice, beforeInvoice, updateInvoice } from "../../../store/slices/invoice";
 import { Button } from "../../../components/ui/button";
 import FilterSection from "./filterSection";
-import { ChevronLeft, ChevronRight, Printer, FileText, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Printer, FileText, Loader2, Percent } from "lucide-react";
 import { showSuccess } from "components/ui/sonner";
 
 export default function AllInvoicesFixed() {
@@ -34,7 +34,11 @@ export default function AllInvoicesFixed() {
     journal: "",
     date: new Date().toISOString().slice(0, 10),
     paymentType: "خالص",
+    paymentMethod: "كاش",
     invoiceDiscount: 0,
+    totalAfterDiscount: 0,
+    total: 0,
+    tax: 0,
   });
   
   // Enhanced useEffect to handle filter changes properly
@@ -61,7 +65,11 @@ export default function AllInvoicesFixed() {
         journal: "",
         date: new Date().toISOString().slice(0, 10),
         paymentType: "خالص",
+        paymentMethod: "كاش",
+        totalAfterDiscount: 0,
         invoiceDiscount: 0,
+        total:0,
+        tax: 0,
       });
       setProducts([]);
       setBeforeInvoiceData(undefined);
@@ -80,6 +88,10 @@ export default function AllInvoicesFixed() {
       date: data.date || new Date().toISOString().slice(0, 10),
       paymentType: data.paymentType || "خالص",
       invoiceDiscount: data.discount || 0,
+      tax: data.tax || 0,
+      total: data.total || 0,
+      totalAfterDiscount: data.totalAfterDiscount || 0,
+      paymentMethod: data.paymentMethod || "كاش",
     });
     setProducts(
       data.items.map((p: any) => ({
@@ -215,7 +227,7 @@ export default function AllInvoicesFixed() {
   const calculateRowTotal = (product: any) =>
     product.quantity * product.price - product.discount;
   const total = products.reduce((sum, p) => sum + calculateRowTotal(p), 0);
-  const netTotal = total - invoiceDetails.invoiceDiscount;
+  const netTotal = invoiceDetails.totalAfterDiscount || total + invoiceDetails.tax - invoiceDetails.invoiceDiscount;
   
   const handleClearFilters = () => {
     // Clear all filters - this will trigger the useEffect to refetch data
@@ -420,6 +432,33 @@ export default function AllInvoicesFixed() {
               ))}
             </div>
           </div>
+                <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">وسيلة الدفع</label>
+            <div className="flex gap-4">
+              {["كاش","فيزا"].map((type) => (
+                <label
+                  key={type}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value={type}
+                    checked={invoiceDetails.paymentMethod === type}
+                    
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 bg-gray-50"
+                    disabled={true}
+                    readOnly
+                  />
+                  <span
+                    className={`text-sm ${!products.length ? "text-gray-400" : "text-gray-700"}`}
+                  >
+                    {type}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
         
         {/* Financial Summary */}
@@ -428,12 +467,36 @@ export default function AllInvoicesFixed() {
             <span className="text-base font-medium text-gray-700">الإجمالي:</span>
             <span className="text-xl font-semibold text-gray-900">{total.toFixed(2)} ج</span>
           </div>
-          <div className="flex justify-between items-center">
-            <label className="text-base font-medium text-gray-700">الخصم:</label>
+
+                  <div className="flex justify-between items-center py-2">
+          <div className="flex items-center gap-2">
+            <Percent className="h-4 w-4 text-gray-400" />
+            <span className="text-gray-600">الخصم:</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              value={invoiceDetails?.invoiceDiscount}
+              
+              className="w-16 text-center border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              min="0"
+              max="100"
+              step="0.1"
+readOnly
+/>
+            <span className="text-gray-600">%</span>
+            <span className="font-medium text-red-600 ml-2">
+              -{((invoiceDetails.total + invoiceDetails.tax)* (invoiceDetails?.invoiceDiscount/100)).toFixed(2)} ج.م
+            </span>
+          </div>
+        </div>
+      
+                    <div className="flex justify-between items-center">
+            <label className="text-base font-medium text-gray-700">الضريبة:</label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                value={invoiceDetails.invoiceDiscount}
+                value={invoiceDetails?.tax?.toFixed(2)}
                 onChange={(e) =>
                   setInvoiceDetails({
                     ...invoiceDetails,
