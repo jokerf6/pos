@@ -27,12 +27,12 @@
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:main\" ",
     "dev:renderer": "cd src/renderer && npm start",
     "dev:main": "electron . --remote-debugging-port=9222",
-    "build": "npm run build:renderer && npm run build:main",
+    "build": "npm run check:node && npm run build:renderer && npm run build:main",
     "build:renderer": "cd src/renderer && npm run build",
     "clean": "rimraf dist",
-    "build:main": "electron-builder",
+    "build:main": "electron-builder --win --x64",
     "prebuild:win": "taskkill /f /im \"Casher Desktop.exe\" 2>nul & rmdir /s /q dist 2>nul & exit 0",
-    "build:win": "electron-builder --win --ia32 --x64=false",
+    "build:win": "electron-builder --win --x64",
     "build:win:smart": "node scripts/build-windows.cjs",
     "analyze:deps": "node scripts/analyze-dependencies.js",
     "debug:app": "node scripts/debug-app.js",
@@ -48,6 +48,7 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "type-check": "tsc --noEmit",
     "prepare": "husky install",
+    "check:node": "node -e \"const [maj,min]=process.versions.node.split('.').map(Number); if(maj < 20 || (maj === 20 && min < 19)){ console.error('Node.js 20.19+ is required for Vite 7 builds. Current: ' + process.versions.node); process.exit(1);} \"",
     "postinstall": "cd src/renderer && npm install"
   },
   "dependencies": {
@@ -158,7 +159,7 @@
         {
           "target": "nsis",
           "arch": [
-            "ia32"
+            "x64"
           ]
         }
       ],
@@ -190,7 +191,7 @@
     ]
   },
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=20.19.0",
     "npm": ">=8.0.0"
   }
 }
