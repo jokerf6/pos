@@ -16,6 +16,7 @@ import {
   AlertCircle,
   CheckCircle,
   Menu,
+  CreditCard,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -191,6 +192,20 @@ export default function MainHeader() {
                 </span>
               </div>
               <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-blue-500" />
+                <span className="text-sm text-gray-600">مبيعات كاش:</span>
+                <span className="font-semibold">
+                  {Number(dailyData?.total_cash_sales || 0).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-purple-600" />
+                <span className="text-sm text-gray-600">مبيعات فيزا:</span>
+                <span className="font-semibold">
+                  {Number(dailyData?.total_visa_sales || 0).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-red-600" />
                 <span className="text-sm text-gray-600">إجمالي المصروفات:</span>
                 <span className="font-semibold">
@@ -202,6 +217,13 @@ export default function MainHeader() {
                 <span className="text-sm text-gray-600">إجمالي المرتجعات:</span>
                 <span className="font-semibold">
                   {Number(dailyData?.total_returns || 0).toFixed(2)}
+                </span>
+              </div>
+               <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-gray-600" />
+                <span className="text-sm text-gray-600">المبلغ الافتتاحي:</span>
+                <span className="font-semibold">
+                  {Number(dailyData?.open_price || 0).toFixed(2)}
                 </span>
               </div>
             </div>

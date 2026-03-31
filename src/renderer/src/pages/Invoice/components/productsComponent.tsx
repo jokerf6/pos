@@ -113,7 +113,7 @@ const ProductsDataTable = <T extends Record<string, any>>({
     };
 
     fetchProducts();
-  }, [search, page, filters, dispatch, selectedBranch, products]);
+  }, [searchValue, page, filters, dispatch, selectedBranch]);
 
   useEffect(() => {
     dispatch(getCategories() as any);

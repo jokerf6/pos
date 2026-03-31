@@ -254,6 +254,20 @@ const productsSlice = createSlice({
         state.error = action.payload as string;
       })
 
+      .addCase(searchProducts.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(searchProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        // In searchProducts, the payload is { products, total } based on the fetch logic
+        state.products = action.payload?.products || [];
+        state.total = action.payload?.total || 0;
+      })
+      .addCase(searchProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
       .addCase(getProducts.pending, (state) => {
         state.loading = true;
       })

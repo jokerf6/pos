@@ -21,7 +21,7 @@ import {
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Modal from "../../components/common/dynamic-modal.component";
 import { Button } from "../../components/ui/button";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch } from "store";
 import {
   afterInvoice,
@@ -609,6 +609,7 @@ const PrintableInvoice: React.FC<{
 const CreateInvoicePage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const { products: searchResults } = useSelector((state: any) => state.products);
   
   // State
   const [products, setProducts] = useState<Product[]>([]);
@@ -693,7 +694,11 @@ const CreateInvoicePage: React.FC = () => {
       if (e.key.toLowerCase() === "enter") {
         e.preventDefault();
         if (!isViewingArchived && searchValue.trim() !== "") {
-          addSampleProduct();
+          if (searchResults && searchResults.length > 0) {
+            handelInfo(searchResults[0]);
+          } else {
+            addSampleProduct();
+          }
         }
       }
 
@@ -745,6 +750,7 @@ F1 : عرض هذه المساعدة`);
     canGoBefore,
     canGoAfter,
     isLoading,
+    searchResults,
   ]);
 
   const resetInvoice = useCallback(() => {
@@ -1173,7 +1179,7 @@ F1 : عرض هذه المساعدة`);
             </Button>
           </div>
 
-          {searchValue && searchValue.length >= 2 && (
+          {searchValue && searchValue.length >= 1 && (
             <ProductsDataTable
               searchValue={searchValue}
               columns={columns}

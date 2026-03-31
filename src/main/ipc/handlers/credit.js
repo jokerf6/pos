@@ -19,7 +19,7 @@ async function createCredit(event, data) {
   try {
     const db = getDatabase();
     const rows = await db.all(
-      "SELECT * FROM daily WHERE closed_at IS NULL AND deleted_at IS NULL LIMIT 1"
+      "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
     );
     console.log(rows);
     if (rows.length === 0) {
@@ -98,7 +98,7 @@ async function getCreditByDaily(
     const db = getDatabase();
 
     const rows = await db.all(
-      "SELECT * FROM daily WHERE closed_at IS NULL AND deleted_at IS NULL LIMIT 1"
+      "SELECT * FROM daily WHERE closed_at IS NULL LIMIT 1"
     );
     if (rows.length === 0) {
       return {
@@ -116,8 +116,8 @@ async function getCreditByDaily(
 
 
     if (name) {
-      whereClause += " AND name LIKE ?";
-      params.push(`%${name}%`);
+      whereClause += " AND (reason LIKE ? OR reciever LIKE ?)";
+      params.push(`%${name}%`, `%${name}%`);
     }
     whereClause += " AND deleted_at IS NULL";
 

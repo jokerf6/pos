@@ -77,20 +77,39 @@ async function getDaily(event) {
     const dailyIds = dailyRows.map(d => d.id);
 
     const placeholders = dailyIds.map(() => "?").join(",");
-    const { total_sales } = await db.get(
-      `SELECT COALESCE(SUM(totalAfterDiscount), 0) AS total_sales 
+    // إجمالي مبيعات "كاش"
+    const { total_cash_sales } = await db.get(
+      `SELECT COALESCE(SUM(totalAfterDiscount), 0) AS total_cash_sales 
        FROM invoices 
-       WHERE dailyId IN (${placeholders}) AND paymentType = 'خالص'`,
+       WHERE dailyId IN (${placeholders}) AND paymentType = 'خالص' AND paymentMethod = 'كاش'`,
       dailyIds
     );
 
-    // إجمالي المرتجعات
-    const { total_returns } = await db.get(
-      `SELECT COALESCE(SUM(totalAfterDiscount), 0) AS total_returns 
+    // إجمالي مبيعات "فيزا"
+    const { total_visa_sales } = await db.get(
+      `SELECT COALESCE(SUM(totalAfterDiscount), 0) AS total_visa_sales 
        FROM invoices 
-       WHERE dailyId IN (${placeholders}) AND paymentType = 'مرتجع'`,
+       WHERE dailyId IN (${placeholders}) AND paymentType = 'خالص' AND paymentMethod = 'فيزا'`,
       dailyIds
     );
+
+    // إجمالي المرتجعات كاش
+    const { total_cash_returns } = await db.get(
+      `SELECT COALESCE(SUM(totalAfterDiscount), 0) AS total_cash_returns 
+       FROM invoices 
+       WHERE dailyId IN (${placeholders}) AND paymentType = 'مرتجع' AND paymentMethod = 'كاش'`,
+      dailyIds
+    );
+
+    // إجمالي المرتجعات فيزا
+    const { total_visa_returns } = await db.get(
+      `SELECT COALESCE(SUM(totalAfterDiscount), 0) AS total_visa_returns 
+       FROM invoices 
+       WHERE dailyId IN (${placeholders}) AND paymentType = 'مرتجع' AND paymentMethod = 'فيزا'`,
+      dailyIds
+    );
+
+    const total_returns = total_cash_returns + total_visa_returns;
 
     // عدد الفواتير
     const { count_sales } = await db.get(
@@ -109,31 +128,41 @@ async function getDaily(event) {
       dailyIds
     );
 
-    // المصروفات
+    // المصروفات (مع استبعاد المحذوف)
     const { total_expenses } = await db.get(
       `SELECT COALESCE(SUM(price), 0) AS total_expenses 
        FROM credit 
-       WHERE daily_id IN (${placeholders})`,
+       WHERE daily_id IN (${placeholders}) AND deleted_at IS NULL`,
       dailyIds
     );
     
-    const average_invoice = count_sales > 0 ? total_sales / count_sales : 0;
-    console.log(   total_sales,
-        total_returns,
-        count_sales,
-        total_products_sold,
-        total_expenses,
-        average_invoice,)
-
+    // المبلغ الافتتاحي
+    const open_price = dailyRows.reduce((sum, d) => sum + (d.openPrice || 0), 0);
+    
+    // المبلغ الكلي في الدرج (المبلع الافتتاحي + مبيعات الكاش - مرتجعات الكاش - المصروفات)
+    const cashInDrawer = (open_price + total_cash_sales) - (total_cash_returns + total_expenses);
+    
+    // إجمالي المبيعات الصافي
+    const net_sales = (total_cash_sales + total_visa_sales) - total_returns;
+    
+    const average_invoice = count_sales > 0 ? (total_cash_sales + total_visa_sales) / count_sales : 0;
+    
     return {
       success: true,
       data: {
-        total_sales,
+        total_sales: net_sales,
+        total_cash_sales,
+        total_visa_sales,
         total_returns,
+        total_cash_returns,
+        total_visa_returns,
         count_sales,
         total_products_sold,
         total_expenses,
         average_invoice,
+        open_price,
+        cashInDrawer,
+        opened_at: dailyRows[0].opened_at,
       },
     };
 
